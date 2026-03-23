@@ -1,7 +1,13 @@
-export default function Home() {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold">Distill</h1>
-    </main>
-  );
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+
+export default async function Home() {
+  const cookieStore = await cookies()
+  const session = cookieStore.get('session')
+
+  if (session) {
+    redirect('/dashboard')
+  } else {
+    redirect('/login')
+  }
 }
