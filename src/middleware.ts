@@ -16,7 +16,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/dashboard/:path*',
-    '/api/intake',
+    '/api/intake/:path*',
     '/api/inputs/:path*',
     '/api/synthesis/:path*',
     '/api/themes/:path*',
