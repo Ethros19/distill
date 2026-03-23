@@ -1,5 +1,7 @@
 # Environment
 .env
+.env.local
+.env*.local
 .dev.vars
 
 # Dependencies
@@ -7,9 +9,11 @@ node_modules/
 
 # Build output
 dist/
+.next/
+out/
 
-# Cloudflare
-.wrangler/
+# Vercel
+.vercel
 
 # IDE
 .idea/
@@ -27,5 +31,10 @@ Thumbs.db
 .mcp.json
 .mcp.local.json
 
+# Drizzle
+migrations/meta/
+
 # Test coverage
 coverage/
+
+.vbw-planning/
