@@ -21,6 +21,5 @@ export const config = {
     '/api/synthesis/:path*',
     '/api/themes/:path*',
     '/api/digests/:path*',
-    '/api/cron/:path*',
   ],
 }
