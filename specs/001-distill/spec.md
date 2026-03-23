@@ -85,7 +85,7 @@ As a product team member, I want to explore specific themes across different tim
 
 ### Functional
 
-- **FR-001**: Email intake via configurable email routing (e.g., Cloudflare Email Routing → Worker)
+- **FR-001**: Email intake via Resend inbound webhook (POST to Next.js API route)
 - **FR-002**: Manual paste intake via authenticated web form on the dashboard
 - **FR-003**: Each input is structured into: id, timestamp, source, contributor, raw content, AI-generated summary, type, themes (array), urgency (1–5), confidence (0–1)
 - **FR-004**: Daily cron processes any unstructured inputs (catch-all)
@@ -104,7 +104,7 @@ As a product team member, I want to explore specific themes across different tim
 - **NFR-002**: Weekly synthesis completes in < 5 minutes for up to 200 inputs
 - **NFR-003**: Dashboard page load < 2 seconds
 - **NFR-004**: System handles up to 50 inputs/day without degradation
-- **NFR-005**: All data stored in a single SQLite-compatible database — no external database dependencies
+- **NFR-005**: All data stored in Vercel Postgres (Neon) — managed PostgreSQL, no self-hosted database dependencies
 - **NFR-006**: LLM API costs kept under $30/month at projected volume (< 50 inputs/day)
 - **NFR-007**: Fully configurable via environment variables — zero hardcoded secrets, URLs, or team-specific values
 
@@ -116,8 +116,8 @@ As a product team member, I want to explore specific themes across different tim
 - **OS-004**: `CONTRIBUTING.md` with setup instructions, PR guidelines, and code of conduct
 - **OS-005**: LLM provider is swappable — default to Anthropic Claude, but structurer/synthesizer accept a provider interface so contributors can plug in OpenAI, Ollama, etc.
 - **OS-006**: All configuration (email address, cron schedule, recipients, LLM model, auth password) via environment variables or a single config file
-- **OS-007**: `wrangler dev` (or equivalent) gets a contributor from zero to running locally in < 5 minutes
-- **OS-008**: No vendor-specific code in core logic — Cloudflare-specific bindings isolated to adapter layer
+- **OS-007**: `next dev` gets a contributor from zero to running locally in < 5 minutes
+- **OS-008**: No vendor-specific code in core logic — Vercel/Postgres-specific code isolated to adapter layer
 
 ## Edge Cases
 
@@ -140,11 +140,12 @@ As a product team member, I want to explore specific themes across different tim
 
 ## Assumptions
 
-- A configurable email address can be routed to the intake handler (e.g., via Cloudflare Email Routing, SendGrid Inbound Parse, or equivalent)
+- A configurable email address can be routed to the intake handler via Resend inbound webhook
 - Claude API (claude-sonnet-4-6 or equivalent) is sufficient for both structuring and synthesis tasks; other LLM providers can be swapped in
 - The deploying team will forward feedback consistently enough to generate meaningful weekly signals
-- Markdown file output is written to object storage (e.g., R2, S3) or included as an email attachment — not a local filesystem (serverless assumption)
+- Markdown file output is written to Vercel Blob storage or included as an email attachment — not a local filesystem (serverless assumption)
 - Weekly synthesis covers the prior 7 days by default; schedule is configurable
+- The deployer has a Vercel account and can provision Vercel Postgres (Neon) and Vercel Blob
 
 ## Open Questions
 
