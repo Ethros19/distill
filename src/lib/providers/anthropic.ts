@@ -16,7 +16,10 @@ Analyze the content carefully and return:
 - urgency: An integer from 1 (low) to 5 (critical) based on the tone and content
 - confidence: A float from 0.0 to 1.0 indicating how confident you are in your analysis
 
-Consider the source channel and contributor context when assessing urgency and type.`
+Consider the source channel and contributor context when assessing urgency and type.
+
+IMPORTANT: Respond with ONLY a JSON object in this exact format, no markdown or explanation:
+{"summary": "...", "type": "...", "themes": ["..."], "urgency": 1, "confidence": 0.9}`
 
 const SYNTHESIZE_SYSTEM_PROMPT = `You are a product intelligence analyst. Given a set of structured feedback inputs, identify recurring patterns and synthesize them into actionable signals.
 
@@ -34,7 +37,10 @@ Look for:
 - Escalating urgency patterns
 - Feature requests that cluster together
 
-Only report signals supported by at least 2 inputs. Order by strength (strongest first).`
+Only report signals supported by at least 2 inputs. Order by strength (strongest first).
+
+IMPORTANT: Respond with ONLY a JSON object in this exact format, no markdown or explanation:
+{"signals": [{"statement": "...", "reasoning": "...", "evidence": ["id1", "id2"], "suggested_action": "...", "themes": ["theme1"], "strength": 2}]}`
 
 function stripCodeBlock(text: string): string {
   const match = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/)
