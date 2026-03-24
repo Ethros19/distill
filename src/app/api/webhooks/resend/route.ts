@@ -57,10 +57,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ status: 'ignored' })
     }
 
-    const email = event.email as {
+    const email = (event.data || event.email) as {
       from: string
+      to: string[]
       subject?: string
       message_id?: string
+      id?: string
     } | undefined
 
     if (!email) {
@@ -69,7 +71,7 @@ export async function POST(request: NextRequest) {
 
     // Fetch full email body from Resend Received Emails API
     // (webhook payload only contains metadata, not the body)
-    const emailId = email.message_id || (event.id as string)
+    const emailId = email.id || email.message_id || (event.id as string)
     let emailBody = ''
 
     try {
@@ -86,8 +88,6 @@ export async function POST(request: NextRequest) {
     const content = [email.subject, emailBody].filter(Boolean).join('\n\n')
 
     if (!content) {
-      // No subject and no body — nothing to process, but acknowledge the webhook
-      console.warn('Webhook received with no subject or body, emailId:', emailId)
       return NextResponse.json({ status: 'skipped', reason: 'empty content' })
     }
 
