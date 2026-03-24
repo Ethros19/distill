@@ -25,7 +25,11 @@ export default function DashboardLayout({
           Logout
         </button>
       </header>
-      <main className="p-6">{children}</main>
+      <main className="p-6">
+        <div className="flex gap-6">
+          <div className="flex-1">{children}</div>
+        </div>
+      </main>
     </div>
   )
 }
