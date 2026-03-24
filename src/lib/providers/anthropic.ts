@@ -4,7 +4,7 @@ import type { RawInput, StructuredInput, SynthesisInput, LLMSignal } from '../ll
 import { StructuredInputSchema, SynthesisResultSchema } from '../llm/types'
 import { LLMError, LLMRateLimitError } from '../llm/errors'
 
-const STRUCTURE_MODEL = 'claude-haiku-4-5-20250313'
+const STRUCTURE_MODEL = 'claude-haiku-4-5-20251001'
 const SYNTHESIZE_MODEL = 'claude-sonnet-4-6-20250514'
 
 const STRUCTURE_SYSTEM_PROMPT = `You are a product feedback analyst. Given raw feedback content, its source channel, and contributor, extract structured fields.
@@ -36,6 +36,11 @@ Look for:
 
 Only report signals supported by at least 2 inputs. Order by strength (strongest first).`
 
+function stripCodeBlock(text: string): string {
+  const match = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/)
+  return match ? match[1].trim() : text.trim()
+}
+
 export class AnthropicProvider implements LLMProvider {
   private client: Anthropic
 
@@ -62,7 +67,7 @@ export class AnthropicProvider implements LLMProvider {
         throw new LLMError('No text response from Anthropic', 'anthropic', 'structure')
       }
 
-      const parsed = JSON.parse(textBlock.text)
+      const parsed = JSON.parse(stripCodeBlock(textBlock.text))
       return StructuredInputSchema.parse(parsed)
     } catch (error) {
       if (error instanceof LLMError) throw error
@@ -104,7 +109,7 @@ export class AnthropicProvider implements LLMProvider {
         throw new LLMError('No text response from Anthropic', 'anthropic', 'synthesize')
       }
 
-      const parsed = JSON.parse(textBlock.text)
+      const parsed = JSON.parse(stripCodeBlock(textBlock.text))
       const result = SynthesisResultSchema.parse(parsed)
       return result.signals
     } catch (error) {
