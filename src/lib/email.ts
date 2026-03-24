@@ -77,7 +77,7 @@ export async function sendDigestEmail(
     const resend = new Resend(process.env.RESEND_API_KEY!)
 
     await resend.emails.send({
-      from: 'Distill <signals@signals.example.com>',
+      from: process.env.RESEND_FROM_ADDRESS || 'Distill <distill@example.com>',
       to: recipients,
       subject,
       html: options.html,

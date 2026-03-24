@@ -160,7 +160,7 @@ describe('sendDigestEmail', () => {
 
     expect(mockEmailsSend).toHaveBeenCalledOnce()
     const sendArgs = mockEmailsSend.mock.calls[0][0]
-    expect(sendArgs.from).toBe('Distill <signals@signals.example.com>')
+    expect(sendArgs.from).toBe('Distill <distill@example.com>')
     expect(sendArgs.to).toEqual(['alice@example.com', 'bob@example.com'])
     expect(sendArgs.subject).toContain('3 signals')
     expect(sendArgs.subject).toContain('Mar 17')
