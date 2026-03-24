@@ -1,0 +1,158 @@
+import type { LLMProvider } from '../llm/provider'
+import type { RawInput, StructuredInput, SynthesisInput, LLMSignal } from '../llm/types'
+import { StructuredInputSchema, SynthesisResultSchema } from '../llm/types'
+import { LLMError } from '../llm/errors'
+
+const BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434'
+const STRUCTURE_MODEL = process.env.OLLAMA_STRUCTURE_MODEL || 'llama3.2'
+const SYNTHESIZE_MODEL = process.env.OLLAMA_SYNTHESIZE_MODEL || 'llama3.2'
+
+const STRUCTURE_SYSTEM_PROMPT = `You are a product feedback analyst. Given raw feedback content, its source channel, and contributor, extract structured fields.
+
+Analyze the content carefully and return:
+- summary: A concise one-paragraph summary of the feedback
+- type: One of "feature_request", "bug_report", "praise", "complaint", or "observation"
+- themes: An array of 1-5 theme keywords that capture the main topics
+- urgency: An integer from 1 (low) to 5 (critical) based on the tone and content
+- confidence: A float from 0.0 to 1.0 indicating how confident you are in your analysis
+
+Consider the source channel and contributor context when assessing urgency and type.
+
+You MUST respond with valid JSON only. No markdown formatting, no explanation, just the JSON object.
+IMPORTANT: Respond with ONLY a JSON object in this exact format, no markdown or explanation:
+{"summary": "...", "type": "...", "themes": ["..."], "urgency": 1, "confidence": 0.9}`
+
+const SYNTHESIZE_SYSTEM_PROMPT = `You are a product intelligence analyst. Given a set of structured feedback inputs, identify recurring patterns and synthesize them into actionable signals.
+
+For each signal you detect:
+- statement: A clear, one-line description of the pattern
+- reasoning: Why this pattern matters for the product team
+- evidence: Array of input IDs that support this signal
+- suggested_action: A concrete next step the team should take
+- themes: Theme keywords associated with the signal
+- strength: The number of supporting inputs
+
+Look for:
+- Recurring themes across multiple inputs
+- Complementary viewpoints on the same topic
+- Escalating urgency patterns
+- Feature requests that cluster together
+
+Only report signals supported by at least 2 inputs. Order by strength (strongest first).
+
+You MUST respond with valid JSON only. No markdown formatting, no explanation, just the JSON object.
+IMPORTANT: Respond with ONLY a JSON object in this exact format, no markdown or explanation:
+{"signals": [{"statement": "...", "reasoning": "...", "evidence": ["id1", "id2"], "suggested_action": "...", "themes": ["theme1"], "strength": 2}]}`
+
+function stripCodeBlock(text: string): string {
+  const match = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/)
+  return match ? match[1].trim() : text.trim()
+}
+
+export class OllamaProvider implements LLMProvider {
+  private baseUrl: string
+
+  constructor() {
+    this.baseUrl = BASE_URL
+  }
+
+  async structure(input: RawInput): Promise<StructuredInput> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: STRUCTURE_MODEL,
+          stream: false,
+          format: 'json',
+          messages: [
+            { role: 'system', content: STRUCTURE_SYSTEM_PROMPT },
+            {
+              role: 'user',
+              content: `Source: ${input.source}\nContributor: ${input.contributor}\n\nFeedback:\n${input.content}`,
+            },
+          ],
+        }),
+      })
+
+      if (!response.ok) {
+        throw new LLMError(
+          `Ollama returned ${response.status}: ${response.statusText}`,
+          'ollama',
+          'structure',
+        )
+      }
+
+      const data = await response.json()
+      const content = data?.message?.content
+      if (!content) {
+        throw new LLMError('No content in Ollama response', 'ollama', 'structure')
+      }
+
+      const parsed = JSON.parse(stripCodeBlock(content))
+      return StructuredInputSchema.parse(parsed)
+    } catch (error) {
+      if (error instanceof LLMError) throw error
+      throw new LLMError(
+        error instanceof Error ? error.message : 'Unknown error during structuring',
+        'ollama',
+        'structure',
+        error,
+      )
+    }
+  }
+
+  async synthesize(inputs: SynthesisInput[]): Promise<LLMSignal[]> {
+    try {
+      const inputContext = inputs
+        .map(
+          (i) =>
+            `[${i.id}] (${i.source}, ${i.type}, urgency:${i.urgency}) ${i.summary} | themes: ${i.themes.join(', ')}`,
+        )
+        .join('\n')
+
+      const response = await fetch(`${this.baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: SYNTHESIZE_MODEL,
+          stream: false,
+          format: 'json',
+          messages: [
+            { role: 'system', content: SYNTHESIZE_SYSTEM_PROMPT },
+            {
+              role: 'user',
+              content: `Analyze these ${inputs.length} feedback inputs and synthesize signals:\n\n${inputContext}`,
+            },
+          ],
+        }),
+      })
+
+      if (!response.ok) {
+        throw new LLMError(
+          `Ollama returned ${response.status}: ${response.statusText}`,
+          'ollama',
+          'synthesize',
+        )
+      }
+
+      const data = await response.json()
+      const content = data?.message?.content
+      if (!content) {
+        throw new LLMError('No content in Ollama response', 'ollama', 'synthesize')
+      }
+
+      const parsed = JSON.parse(stripCodeBlock(content))
+      const result = SynthesisResultSchema.parse(parsed)
+      return result.signals
+    } catch (error) {
+      if (error instanceof LLMError) throw error
+      throw new LLMError(
+        error instanceof Error ? error.message : 'Unknown error during synthesis',
+        'ollama',
+        'synthesize',
+        error,
+      )
+    }
+  }
+}
