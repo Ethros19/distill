@@ -3,6 +3,7 @@ import { syntheses, signals } from '@/lib/schema'
 import { eq, desc } from 'drizzle-orm'
 import { SynthesisHeader } from './components/synthesis-header'
 import { SignalCard } from './components/signal-card'
+import { TriggerButton } from './components/trigger-button'
 
 export default async function DashboardPage() {
   const [latest] = await db
@@ -21,7 +22,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <SynthesisHeader synthesis={latest ?? null} />
+      <div className="flex items-start justify-between gap-4">
+        <SynthesisHeader synthesis={latest ?? null} />
+        <TriggerButton />
+      </div>
 
       {signalRows.length > 0 && (
         <div className="space-y-4">
