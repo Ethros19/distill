@@ -35,18 +35,23 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-sm space-y-6 p-8">
+    <main className="relative flex min-h-screen items-center justify-center bg-canvas px-4">
+      <div
+        className="pointer-events-none fixed inset-0"
+        style={{ background: 'radial-gradient(ellipse at 50% 20%, var(--accent-wash), transparent 60%)' }}
+      />
+      <div className="relative w-full max-w-sm animate-fade-up">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">Distill</h1>
-          <p className="mt-2 text-sm text-gray-500">
-            Signals Synthesis & Intelligence
-          </p>
+          <h1 className="font-display text-5xl tracking-tight text-ink">Distill</h1>
+          <p className="mt-3 text-sm tracking-wide text-dim">Signal Intelligence</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="mt-12 space-y-5">
           <div>
-            <label htmlFor="password" className="block text-sm font-medium">
+            <label
+              htmlFor="password"
+              className="block text-xs font-medium uppercase tracking-wider text-dim"
+            >
               Password
             </label>
             <input
@@ -55,20 +60,19 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-gray-700 dark:bg-gray-900"
+              className="mt-2 block w-full rounded-lg border border-edge bg-panel px-4 py-3 text-ink placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+              placeholder="Enter your password"
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="text-sm text-sig-high">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-black px-4 py-2 text-white hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+            className="w-full rounded-lg bg-ink px-4 py-3 text-sm font-medium text-canvas transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? 'Signing in\u2026' : 'Sign in'}
           </button>
         </form>
       </div>

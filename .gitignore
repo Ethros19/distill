@@ -28,6 +28,7 @@ Thumbs.db
 
 # Claude Code
 .claude/settings.local.json
+.claude.json
 .mcp.json
 .mcp.local.json
 

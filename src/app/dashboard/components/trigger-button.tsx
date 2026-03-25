@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { PasteModal } from './paste-form'
+import { SynthesisOverlay } from './synthesis-overlay'
 
 export async function triggerSynthesis(): Promise<{ ok: boolean; error?: string }> {
   const res = await fetch('/api/synthesis', { method: 'POST' })
@@ -15,6 +17,7 @@ export async function triggerSynthesis(): Promise<{ ok: boolean; error?: string 
 export function TriggerButton() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [modalOpen, setModalOpen] = useState(false)
   const router = useRouter()
 
   async function handleClick() {
@@ -35,17 +38,24 @@ export function TriggerButton() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-2">
       <button
         onClick={handleClick}
         disabled={loading}
-        className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+        className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-canvas transition-opacity hover:opacity-90 disabled:opacity-50"
       >
-        {loading ? 'Running...' : 'Run Synthesis'}
+        {loading ? 'Running\u2026' : 'Run Synthesis'}
       </button>
-      {error && (
-        <p className="mt-2 text-sm text-red-600">{error}</p>
-      )}
+      <button
+        type="button"
+        onClick={() => setModalOpen(true)}
+        className="rounded-lg border border-edge px-4 py-2 text-sm font-medium text-dim transition-colors hover:border-accent/40 hover:text-accent"
+      >
+        + Add Feedback
+      </button>
+      {error && <p className="text-sm text-sig-high">{error}</p>}
+      <PasteModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <SynthesisOverlay active={loading} />
     </div>
   )
 }

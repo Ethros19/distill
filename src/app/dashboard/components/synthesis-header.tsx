@@ -7,7 +7,7 @@ function formatDateRange(start: Date, end: Date): string {
     ...opts,
     year: 'numeric',
   })
-  return `${startStr} - ${endStr}`
+  return `${startStr} \u2013 ${endStr}`
 }
 
 function formatRelativeTime(date: Date): string {
@@ -25,18 +25,26 @@ function formatRelativeTime(date: Date): string {
 
 export function SynthesisHeader({
   synthesis,
+  action,
 }: {
   synthesis: Synthesis | null
+  action?: React.ReactNode
 }) {
   if (!synthesis) {
     return (
-      <div className="rounded-lg border border-gray-200 p-6 dark:border-gray-700">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          No synthesis yet
-        </h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Run your first synthesis to see signals here.
-        </p>
+      <div className="rounded-xl border border-edge bg-panel p-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="font-display text-lg italic text-ink">
+              Awaiting first synthesis
+            </h2>
+            <p className="mt-2 text-sm text-dim">
+              Send feedback via email or paste, then run a synthesis to surface
+              signals.
+            </p>
+          </div>
+          {action && <div className="ml-4 shrink-0">{action}</div>}
+        </div>
       </div>
     )
   }
@@ -44,36 +52,48 @@ export function SynthesisHeader({
   const dateRange = formatDateRange(synthesis.periodStart, synthesis.periodEnd)
 
   return (
-    <div className="rounded-lg border border-gray-200 p-6 dark:border-gray-700">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Latest Synthesis
-        </h2>
-        <span
-          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-            synthesis.trigger === 'manual'
-              ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-              : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-          }`}
-        >
-          {synthesis.trigger}
-        </span>
-      </div>
-      <p className="mt-1 text-sm text-gray-500">{dateRange}</p>
-      <div className="mt-3 flex gap-4 text-sm">
-        <span className="text-gray-700 dark:text-gray-300">
-          <strong>{synthesis.signalCount}</strong> signals
-        </span>
-        <span className="text-gray-700 dark:text-gray-300">
-          from <strong>{synthesis.inputCount}</strong> inputs
-        </span>
-        <span className="text-gray-400">
-          {formatRelativeTime(synthesis.createdAt)}
-        </span>
+    <div className="rounded-xl border border-edge bg-panel p-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-dim">
+              Latest Synthesis
+            </h2>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                synthesis.trigger === 'manual'
+                  ? 'bg-accent-wash text-accent'
+                  : 'bg-panel-alt text-dim'
+              }`}
+            >
+              {synthesis.trigger}
+            </span>
+          </div>
+          <p className="mt-2 font-display text-xl text-ink">{dateRange}</p>
+          <div className="mt-3 flex items-center gap-4 text-sm">
+            <span className="text-ink">
+              <strong className="font-mono">
+                {synthesis.signalCount}
+              </strong>{' '}
+              <span className="text-dim">signals</span>
+            </span>
+            <span className="text-muted">&middot;</span>
+            <span className="text-ink">
+              <strong className="font-mono">
+                {synthesis.inputCount}
+              </strong>{' '}
+              <span className="text-dim">inputs</span>
+            </span>
+            <span className="text-muted">&middot;</span>
+            <span className="text-xs text-muted">
+              {formatRelativeTime(synthesis.createdAt)}
+            </span>
+          </div>
+        </div>
+        {action && <div className="shrink-0">{action}</div>}
       </div>
     </div>
   )
 }
 
-// Export helpers for testing
 export { formatDateRange, formatRelativeTime }

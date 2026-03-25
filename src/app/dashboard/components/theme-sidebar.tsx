@@ -24,43 +24,45 @@ export async function ThemeSidebar() {
     .from(signals)
 
   const themes = aggregateThemes(allSignals)
-
-  if (themes.length === 0) {
-    return (
-      <aside className="w-64 shrink-0">
-        <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            Themes
-          </h3>
-          <p className="mt-2 text-xs text-gray-500">No themes detected yet</p>
-        </div>
-      </aside>
-    )
-  }
+  const maxCount = themes.length > 0 ? themes[0].count : 0
 
   return (
-    <aside className="w-64 shrink-0">
-      <div className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+    <aside className="w-60 shrink-0">
+      <div className="rounded-xl border border-edge bg-panel p-5">
+        <h3 className="text-sm font-medium uppercase tracking-wider text-dim">
           Themes
         </h3>
-        <ul className="mt-3 space-y-1">
-          {themes.map((theme) => (
-            <li key={theme.name}>
-              <Link
-                href={`/dashboard/themes/${encodeURIComponent(theme.name)}`}
-                className="flex items-center justify-between rounded px-2 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
-              >
-                <span className="text-gray-700 dark:text-gray-300">
-                  {theme.name}
-                </span>
-                <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                  {theme.count}
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {themes.length === 0 ? (
+          <p className="mt-4 text-xs italic text-muted">
+            No themes detected yet
+          </p>
+        ) : (
+          <ul className="mt-4 space-y-1.5">
+            {themes.map((theme) => (
+              <li key={theme.name}>
+                <Link
+                  href={`/dashboard/themes/${encodeURIComponent(theme.name)}`}
+                  className="group block rounded-lg px-2.5 py-2 transition-colors hover:bg-panel-alt"
+                >
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-ink transition-colors group-hover:text-accent">
+                      {theme.name}
+                    </span>
+                    <span className="font-mono text-xs text-muted">
+                      {theme.count}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-edge-dim">
+                    <div
+                      className="h-full rounded-full bg-accent/40 transition-all group-hover:bg-accent/60"
+                      style={{ width: `${(theme.count / maxCount) * 100}%` }}
+                    />
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </aside>
   )
