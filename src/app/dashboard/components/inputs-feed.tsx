@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
-import { desc } from 'drizzle-orm'
+import { count, desc, eq } from 'drizzle-orm'
 import Link from 'next/link'
 
 function formatTimeAgo(date: Date): string {
@@ -28,17 +28,32 @@ function statusBadge(status: string): string {
 }
 
 export async function InputsFeed() {
-  const recentInputs = await db
-    .select()
-    .from(inputs)
-    .orderBy(desc(inputs.createdAt))
-    .limit(5)
+  const [recentInputs, [{ value: totalCount }], [{ value: unprocessedCount }]] =
+    await Promise.all([
+      db
+        .select()
+        .from(inputs)
+        .orderBy(desc(inputs.createdAt))
+        .limit(5),
+      db.select({ value: count() }).from(inputs),
+      db
+        .select({ value: count() })
+        .from(inputs)
+        .where(eq(inputs.status, 'unprocessed')),
+    ])
 
   return (
     <div className="rounded-xl border border-edge bg-panel p-5">
-      <h3 className="text-sm font-medium uppercase tracking-wider text-dim">
-        Recent Inputs
-      </h3>
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-sm font-medium uppercase tracking-wider text-dim">
+          Recent Inputs
+          {totalCount > 0 && (
+            <span className="ml-2 normal-case tracking-normal text-muted">
+              ({totalCount} total{unprocessedCount > 0 && unprocessedCount !== totalCount ? `, ${unprocessedCount} unprocessed` : ''})
+            </span>
+          )}
+        </h3>
+      </div>
       {recentInputs.length > 0 ? (
         <ul className="mt-4 divide-y divide-edge-dim">
           {recentInputs.map((input) => (
