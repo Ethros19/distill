@@ -8,6 +8,7 @@ import {
   smallint,
   real,
   integer,
+  boolean,
   uniqueIndex,
   index,
 } from 'drizzle-orm/pg-core'
@@ -90,6 +91,23 @@ export const sessions = pgTable(
 )
 
 // ---------------------------------------------------------------------------
+// login_attempts — tracks login attempts per IP for rate limiting
+// ---------------------------------------------------------------------------
+export const loginAttempts = pgTable(
+  'login_attempts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    ip: varchar('ip', { length: 45 }).notNull(), // IPv6 max length
+    attemptedAt: timestamp('attempted_at', { withTimezone: true }).notNull().defaultNow(),
+    success: boolean('success').notNull().default(false),
+  },
+  (table) => [
+    index('login_attempts_ip_idx').on(table.ip),
+    index('login_attempts_attempted_at_idx').on(table.attemptedAt),
+  ],
+)
+
+// ---------------------------------------------------------------------------
 // Inferred types for use across the codebase
 // ---------------------------------------------------------------------------
 export type Input = typeof inputs.$inferSelect
@@ -100,3 +118,5 @@ export type Synthesis = typeof syntheses.$inferSelect
 export type NewSynthesis = typeof syntheses.$inferInsert
 export type Session = typeof sessions.$inferSelect
 export type NewSession = typeof sessions.$inferInsert
+export type LoginAttempt = typeof loginAttempts.$inferSelect
+export type NewLoginAttempt = typeof loginAttempts.$inferInsert
