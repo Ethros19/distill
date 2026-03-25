@@ -25,9 +25,11 @@ function formatRelativeTime(date: Date): string {
 
 export function SynthesisHeader({
   synthesis,
+  unprocessedCount = 0,
   action,
 }: {
   synthesis: Synthesis | null
+  unprocessedCount?: number
   action?: React.ReactNode
 }) {
   if (!synthesis) {
@@ -42,6 +44,12 @@ export function SynthesisHeader({
               Send feedback via email or paste, then run a synthesis to surface
               signals.
             </p>
+            {unprocessedCount > 0 && (
+              <p className="mt-3 text-sm font-medium text-sig-mid">
+                <strong className="font-mono">{unprocessedCount}</strong>{' '}
+                unprocessed
+              </p>
+            )}
           </div>
           {action && <div className="ml-4 shrink-0">{action}</div>}
         </div>
@@ -84,6 +92,15 @@ export function SynthesisHeader({
               </strong>{' '}
               <span className="text-dim">inputs</span>
             </span>
+            {unprocessedCount > 0 && (
+              <>
+                <span className="text-muted">&middot;</span>
+                <span className="text-sig-mid">
+                  <strong className="font-mono">{unprocessedCount}</strong>{' '}
+                  <span>unprocessed</span>
+                </span>
+              </>
+            )}
             <span className="text-muted">&middot;</span>
             <span className="text-xs text-muted">
               {formatRelativeTime(synthesis.createdAt)}

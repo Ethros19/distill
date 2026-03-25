@@ -1,8 +1,8 @@
 export const dynamic = 'force-dynamic'
 
 import { db } from '@/lib/db'
-import { syntheses, signals } from '@/lib/schema'
-import { eq, desc, gte } from 'drizzle-orm'
+import { syntheses, signals, inputs } from '@/lib/schema'
+import { eq, desc, gte, count } from 'drizzle-orm'
 import Link from 'next/link'
 import { SynthesisHeader } from './components/synthesis-header'
 import { SignalCard } from './components/signal-card'
@@ -19,11 +19,17 @@ export default async function DashboardPage({
   const { period } = await searchParams
   const isFiltered = period && period in periodLabels
 
-  const [latest] = await db
-    .select()
-    .from(syntheses)
-    .orderBy(desc(syntheses.createdAt))
-    .limit(1)
+  const [[latest], [{ value: unprocessedCount }]] = await Promise.all([
+    db
+      .select()
+      .from(syntheses)
+      .orderBy(desc(syntheses.createdAt))
+      .limit(1),
+    db
+      .select({ value: count() })
+      .from(inputs)
+      .where(eq(inputs.status, 'unprocessed')),
+  ])
 
   let signalRows: (typeof signals.$inferSelect)[]
 
@@ -64,6 +70,7 @@ export default async function DashboardPage({
       <div className="animate-fade-up">
         <SynthesisHeader
           synthesis={latest ?? null}
+          unprocessedCount={unprocessedCount}
           action={<TriggerButton />}
         />
       </div>
