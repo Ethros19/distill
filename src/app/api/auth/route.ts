@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSession, deleteAllSessions, deleteSession, verifyPassword } from '@/lib/auth'
+import { checkRateLimit, recordLoginAttempt } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
@@ -9,14 +10,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Password required' }, { status: 400 })
   }
 
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  const rateCheck = await checkRateLimit(ip)
+  if (!rateCheck.allowed) {
+    return NextResponse.json(
+      { error: 'Too many login attempts. Try again later.' },
+      { status: 429, headers: { 'Retry-After': String(rateCheck.retryAfterSeconds) } },
+    )
+  }
+
   try {
     if (!await verifyPassword(password)) {
+      await recordLoginAttempt(ip, false)
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
     }
   } catch {
+    await recordLoginAttempt(ip, false)
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
   }
 
+  await recordLoginAttempt(ip, true)
   await deleteAllSessions()
   const token = await createSession()
 
