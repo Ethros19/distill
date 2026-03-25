@@ -25,6 +25,7 @@ export async function GET(
       suggestedAction: signals.suggestedAction,
       themes: signals.themes,
       strength: signals.strength,
+      status: signals.status,
       periodStart: syntheses.periodStart,
       periodEnd: syntheses.periodEnd,
     })

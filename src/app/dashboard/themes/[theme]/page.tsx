@@ -30,6 +30,7 @@ export default async function ThemeDetailPage({
       suggestedAction: signals.suggestedAction,
       themes: signals.themes,
       strength: signals.strength,
+      status: signals.status,
     })
     .from(signals)
     .innerJoin(syntheses, eq(signals.synthesisId, syntheses.id))
