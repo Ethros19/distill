@@ -1,13 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const expired = searchParams.get('expired') === '1'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -46,7 +48,13 @@ export default function LoginPage() {
           <p className="mt-3 text-sm tracking-wide text-dim">Signal Intelligence</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-12 space-y-5">
+        {expired && (
+          <p className="mt-8 text-center text-sm text-sig-high">
+            Your session has expired. Please sign in again.
+          </p>
+        )}
+
+        <form onSubmit={handleSubmit} className={expired ? 'mt-5 space-y-5' : 'mt-12 space-y-5'}>
           <div>
             <label
               htmlFor="password"

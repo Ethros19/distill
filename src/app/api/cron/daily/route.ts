@@ -4,6 +4,8 @@ import { inputs } from '@/lib/schema'
 import { structureInput } from '@/lib/structurer'
 import { AnthropicProvider } from '@/lib/providers/anthropic'
 import { eq } from 'drizzle-orm'
+import { cleanExpiredSessions } from '@/lib/auth'
+import { cleanOldAttempts } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -53,6 +55,10 @@ export async function GET(request: NextRequest) {
         results.failed++
       }
     }
+
+    // Cleanup: expired sessions and old login attempts
+    await cleanExpiredSessions()
+    await cleanOldAttempts()
 
     return NextResponse.json(results)
   } catch (error) {
