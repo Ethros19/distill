@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { db } from '@/lib/db'
 import { syntheses, signals, inputs } from '@/lib/schema'
-import { eq, desc, gte, count } from 'drizzle-orm'
+import { eq, desc, gte, gt, and, count } from 'drizzle-orm'
 import Link from 'next/link'
 import { SynthesisHeader } from './components/synthesis-header'
 import { SignalCard } from './components/signal-card'
@@ -30,6 +30,14 @@ export default async function DashboardPage({
       .from(inputs)
       .where(eq(inputs.status, 'unprocessed')),
   ])
+
+  // Count processed inputs that arrived after the latest synthesis (ready for next run)
+  const [{ value: unsynthesizedCount }] = latest
+    ? await db
+        .select({ value: count() })
+        .from(inputs)
+        .where(and(eq(inputs.status, 'processed'), gt(inputs.createdAt, latest.createdAt)))
+    : [{ value: 0 }]
 
   let signalRows: (typeof signals.$inferSelect)[]
 
@@ -71,6 +79,7 @@ export default async function DashboardPage({
         <SynthesisHeader
           synthesis={latest ?? null}
           unprocessedCount={unprocessedCount}
+          unsynthesizedCount={unsynthesizedCount}
           action={<TriggerButton />}
         />
       </div>
