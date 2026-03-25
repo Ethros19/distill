@@ -18,7 +18,7 @@ describe('formatDateRange', () => {
     expect(result).toContain('Mar 17')
     expect(result).toContain('Mar 24')
     expect(result).toContain('2026')
-    expect(result).toContain(' - ')
+    expect(result).toContain(' – ')
   })
 
   it('handles cross-month ranges', () => {
@@ -62,18 +62,18 @@ describe('formatRelativeTime', () => {
 // ---------------------------------------------------------------------------
 
 describe('strengthColor', () => {
-  it('returns gray color for strength 1-2', () => {
-    expect(strengthColor(1)).toContain('bg-gray')
-    expect(strengthColor(2)).toContain('bg-gray')
+  it('returns low color for strength 1-2', () => {
+    expect(strengthColor(1)).toContain('sig-low')
+    expect(strengthColor(2)).toContain('sig-low')
   })
 
-  it('returns blue color for strength 3-4', () => {
-    expect(strengthColor(3)).toContain('bg-blue')
-    expect(strengthColor(4)).toContain('bg-blue')
+  it('returns mid color for strength 3-4', () => {
+    expect(strengthColor(3)).toContain('sig-mid')
+    expect(strengthColor(4)).toContain('sig-mid')
   })
 
-  it('returns red color for strength 5+', () => {
-    expect(strengthColor(5)).toContain('bg-red')
-    expect(strengthColor(8)).toContain('bg-red')
+  it('returns high color for strength 5+', () => {
+    expect(strengthColor(5)).toContain('sig-high')
+    expect(strengthColor(8)).toContain('sig-high')
   })
 })

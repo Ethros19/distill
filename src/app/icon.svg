@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Outer ring -->
+  <circle cx="16" cy="16" r="14" fill="none" stroke="#D4A847" stroke-width="1.5" opacity="0.6"/>
+  <!-- Inner ring -->
+  <circle cx="16" cy="16" r="8" fill="none" stroke="#D4A847" stroke-width="1" opacity="0.35"/>
+  <!-- Center dot -->
+  <circle cx="16" cy="16" r="2.5" fill="#D4A847"/>
+  <!-- Orbital dots -->
+  <circle cx="16" cy="2" r="1.5" fill="#D4A847" opacity="0.6"/>
+  <circle cx="28.5" cy="20" r="1.5" fill="#D4A847" opacity="0.45"/>
+  <circle cx="5" cy="23" r="1.5" fill="#D4A847" opacity="0.35"/>
+</svg>

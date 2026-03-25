@@ -15,7 +15,6 @@ export default async function ThemeDetailPage({
   const { from, to } = await searchParams
   const decodedTheme = decodeURIComponent(theme)
 
-  // Query signals joined with syntheses for date filtering
   let query = db
     .select({
       id: signals.id,
@@ -40,27 +39,22 @@ export default async function ThemeDetailPage({
 
   const rows = await query
 
-  // Filter to signals containing this theme
   const matching = rows.filter(
     (row) => row.themes && row.themes.includes(decodedTheme),
   )
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link
-          href="/dashboard"
-          className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-        >
-          &larr; Back to Dashboard
-        </Link>
-      </div>
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center gap-1.5 text-sm text-dim transition-colors hover:text-accent"
+      >
+        &larr; Back
+      </Link>
 
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          Theme: {decodedTheme}
-        </h2>
-        <span className="text-sm text-gray-500">
+      <div className="flex items-baseline justify-between">
+        <h2 className="font-display text-2xl text-ink">{decodedTheme}</h2>
+        <span className="font-mono text-sm text-muted">
           {matching.length} signal{matching.length !== 1 ? 's' : ''}
         </span>
       </div>
@@ -69,7 +63,7 @@ export default async function ThemeDetailPage({
         <div>
           <label
             htmlFor="from"
-            className="block text-xs font-medium text-gray-600 dark:text-gray-400"
+            className="block text-xs font-medium uppercase tracking-wider text-dim"
           >
             From
           </label>
@@ -78,13 +72,13 @@ export default async function ThemeDetailPage({
             id="from"
             name="from"
             defaultValue={from ?? ''}
-            className="mt-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-900"
+            className="mt-1.5 rounded-lg border border-edge bg-panel px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
           />
         </div>
         <div>
           <label
             htmlFor="to"
-            className="block text-xs font-medium text-gray-600 dark:text-gray-400"
+            className="block text-xs font-medium uppercase tracking-wider text-dim"
           >
             To
           </label>
@@ -93,26 +87,31 @@ export default async function ThemeDetailPage({
             id="to"
             name="to"
             defaultValue={to ?? ''}
-            className="mt-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm dark:border-gray-700 dark:bg-gray-900"
+            className="mt-1.5 rounded-lg border border-edge bg-panel px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
           />
         </div>
         <button
           type="submit"
-          className="rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+          className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-canvas transition-opacity hover:opacity-90"
         >
           Filter
         </button>
       </form>
 
       {matching.length === 0 ? (
-        <p className="text-sm text-gray-500">
-          No signals found for this theme
-          {from || to ? ' in the selected date range' : ''}.
+        <p className="py-8 text-center text-sm italic text-muted">
+          No signals found{from || to ? ' in this date range' : ''}
         </p>
       ) : (
         <div className="space-y-4">
-          {matching.map((signal) => (
-            <SignalCard key={signal.id} signal={signal} />
+          {matching.map((signal, i) => (
+            <div
+              key={signal.id}
+              className="animate-fade-up"
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
+              <SignalCard signal={signal} />
+            </div>
           ))}
         </div>
       )}
