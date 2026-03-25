@@ -1,8 +1,11 @@
 import crypto from 'crypto'
 import bcrypt from 'bcryptjs'
-import { eq, lt } from 'drizzle-orm'
+import { eq, lt, and, gt } from 'drizzle-orm'
 import { db } from './db'
 import { sessions } from './schema'
+
+/** 4-hour idle timeout in milliseconds */
+const IDLE_TIMEOUT_MS = 4 * 60 * 60 * 1000
 
 /** Generate a cryptographically random 32-byte hex session token */
 export function generateSessionToken(): string {
@@ -12,20 +15,40 @@ export function generateSessionToken(): string {
 /** Create a new session in the database with 7-day expiry */
 export async function createSession(): Promise<string> {
   const token = generateSessionToken()
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  await db.insert(sessions).values({ token, expiresAt })
+  const now = new Date()
+  const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+  await db.insert(sessions).values({ token, expiresAt, lastActivityAt: now })
   return token
 }
 
-/** Validate a session token — check it exists and hasn't expired */
-export async function validateSession(token: string): Promise<boolean> {
+/** Validate a session token — check existence, absolute expiry, and idle timeout */
+export async function validateSession(token: string): Promise<{ valid: boolean; expired: boolean }> {
   const result = await db
     .select()
     .from(sessions)
     .where(eq(sessions.token, token))
     .limit(1)
-  if (result.length === 0) return false
-  return new Date(result[0].expiresAt) > new Date()
+
+  if (result.length === 0) return { valid: false, expired: false }
+
+  const session = result[0]
+  const now = new Date()
+
+  // Check absolute 7-day expiry
+  if (new Date(session.expiresAt) <= now) {
+    await db.delete(sessions).where(eq(sessions.token, token))
+    return { valid: false, expired: true }
+  }
+
+  // Check 4-hour idle timeout
+  if (new Date(session.lastActivityAt).getTime() + IDLE_TIMEOUT_MS <= now.getTime()) {
+    await db.delete(sessions).where(eq(sessions.token, token))
+    return { valid: false, expired: true }
+  }
+
+  // Session is valid — update lastActivityAt
+  await db.update(sessions).set({ lastActivityAt: now }).where(eq(sessions.token, token))
+  return { valid: true, expired: false }
 }
 
 /** Delete a session (logout) */
