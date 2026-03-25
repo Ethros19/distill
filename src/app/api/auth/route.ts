@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSession, deleteSession, verifyPassword } from '@/lib/auth'
+import { createSession, deleteAllSessions, deleteSession, verifyPassword } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
@@ -10,13 +10,14 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    if (!verifyPassword(password)) {
+    if (!await verifyPassword(password)) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
     }
   } catch {
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 })
   }
 
+  await deleteAllSessions()
   const token = await createSession()
 
   const response = NextResponse.json({ success: true })
