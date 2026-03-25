@@ -8,7 +8,45 @@ function unauthorized(request: NextRequest) {
   return NextResponse.redirect(new URL('/login', request.url))
 }
 
+// CSRF protection: validate Origin/Referer on mutating requests
+export function isValidOrigin(request: NextRequest): boolean {
+  const method = request.method
+  if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {
+    return true
+  }
+
+  const origin = request.headers.get('origin')
+  if (!origin) {
+    // Check Referer as fallback
+    const referer = request.headers.get('referer')
+    if (!referer) return false
+    try {
+      const refererUrl = new URL(referer)
+      return refererUrl.host === request.nextUrl.host
+    } catch {
+      return false
+    }
+  }
+
+  try {
+    const originUrl = new URL(origin)
+    return originUrl.host === request.nextUrl.host
+  } catch {
+    return false
+  }
+}
+
 export async function middleware(request: NextRequest) {
+  // CSRF protection for mutating requests
+  if (!isValidOrigin(request)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // /api/auth handles its own authentication (password check) -- skip session validation
+  if (request.nextUrl.pathname === '/api/auth') {
+    return NextResponse.next()
+  }
+
   const sessionToken = request.cookies.get('session')?.value
 
   // Fast path: no cookie at all
@@ -31,6 +69,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/dashboard/:path*',
+    '/api/auth',
     '/api/intake/:path*',
     '/api/inputs/:path*',
     '/api/synthesis/:path*',
