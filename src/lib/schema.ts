@@ -84,9 +84,11 @@ export const sessions = pgTable(
     token: varchar('token', { length: 64 }).primaryKey(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    lastActivityAt: timestamp('last_activity_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     index('sessions_expires_at_idx').on(table.expiresAt),
+    index('sessions_last_activity_at_idx').on(table.lastActivityAt),
   ],
 )
 
