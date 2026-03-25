@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { db } from '@/lib/db'
-import { syntheses, signals, inputs } from '@/lib/schema'
+import { syntheses, signals, inputs, SIGNAL_STATUSES } from '@/lib/schema'
 import { eq, desc, gte, gt, and, count } from 'drizzle-orm'
 import Link from 'next/link'
 import { SynthesisHeader } from './components/synthesis-header'
@@ -10,14 +10,18 @@ import { Synopsis } from './components/synopsis'
 import { TriggerButton } from './components/trigger-button'
 import { InputsFeed } from './components/inputs-feed'
 import { periodLabels, startOfPeriod } from './lib/periods'
+import { signalStatusLabel } from './components/format-utils'
 
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string }>
+  searchParams: Promise<{ period?: string; status?: string }>
 }) {
-  const { period } = await searchParams
+  const { period, status } = await searchParams
   const isFiltered = period && period in periodLabels
+  const validStatus = status && (SIGNAL_STATUSES as readonly string[]).includes(status)
+    ? (status as (typeof SIGNAL_STATUSES)[number])
+    : undefined
 
   const [[latest], [{ value: unprocessedCount }]] = await Promise.all([
     db
@@ -43,6 +47,10 @@ export default async function DashboardPage({
 
   if (isFiltered) {
     const since = startOfPeriod(period)
+    const conditions = []
+    if (since) conditions.push(gte(syntheses.createdAt, since))
+    if (validStatus) conditions.push(eq(signals.status, validStatus))
+
     let query = db
       .select({
         id: signals.id,
@@ -59,20 +67,39 @@ export default async function DashboardPage({
       .innerJoin(syntheses, eq(signals.synthesisId, syntheses.id))
       .$dynamic()
 
-    if (since) {
-      query = query.where(gte(syntheses.createdAt, since))
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions))
     }
 
     signalRows = await query.orderBy(desc(signals.strength))
   } else {
-    signalRows = latest
-      ? await db
-          .select()
-          .from(signals)
-          .where(eq(signals.synthesisId, latest.id))
-          .orderBy(desc(signals.strength))
-      : []
+    if (latest) {
+      const conditions = [eq(signals.synthesisId, latest.id)]
+      if (validStatus) conditions.push(eq(signals.status, validStatus))
+
+      signalRows = await db
+        .select()
+        .from(signals)
+        .where(and(...conditions))
+        .orderBy(desc(signals.strength))
+    } else {
+      signalRows = []
+    }
   }
+
+  // Build status filter tab hrefs, preserving the period param
+  function statusFilterHref(s?: string) {
+    const params = new URLSearchParams()
+    if (isFiltered) params.set('period', period)
+    if (s) params.set('status', s)
+    const qs = params.toString()
+    return `/dashboard${qs ? `?${qs}` : ''}`
+  }
+
+  const statusTabs = [
+    { label: 'All', value: undefined },
+    ...SIGNAL_STATUSES.map((s) => ({ label: signalStatusLabel(s), value: s })),
+  ] as const
 
   return (
     <div className="space-y-8">
@@ -94,7 +121,7 @@ export default async function DashboardPage({
         </div>
       )}
 
-      {signalRows.length > 0 && (
+      {(latest || isFiltered) && (
         <div className="space-y-4">
           <div
             className="animate-fade-up flex items-center gap-3"
@@ -117,58 +144,87 @@ export default async function DashboardPage({
               </>
             )}
           </div>
-          {signalRows.map((signal, i) => (
+
+          {/* Status filter tabs */}
+          <div
+            className="animate-fade-up flex gap-1 rounded-lg bg-panel-alt p-1"
+            style={{ animationDelay: '160ms' }}
+          >
+            {statusTabs.map((tab) => {
+              const active = validStatus === tab.value
+              return (
+                <Link
+                  key={tab.label}
+                  href={statusFilterHref(tab.value)}
+                  className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    active
+                      ? 'bg-panel text-ink shadow-sm'
+                      : 'text-muted hover:text-ink'
+                  }`}
+                >
+                  {tab.label}
+                </Link>
+              )
+            })}
+          </div>
+
+          {signalRows.length > 0 ? (
+            signalRows.map((signal, i) => (
+              <div
+                key={signal.id}
+                className="animate-fade-up"
+                style={{ animationDelay: `${180 + i * 60}ms` }}
+              >
+                <SignalCard signal={signal} />
+              </div>
+            ))
+          ) : (
             <div
-              key={signal.id}
-              className="animate-fade-up"
-              style={{ animationDelay: `${120 + i * 60}ms` }}
+              className="animate-fade-up py-8 text-center"
+              style={{ animationDelay: '180ms' }}
             >
-              <SignalCard signal={signal} />
+              <p className="text-sm italic text-muted">
+                {validStatus
+                  ? 'No signals with this status.'
+                  : isFiltered
+                    ? `No signals found for ${periodLabels[period].toLowerCase()}.`
+                    : 'No signals detected in this synthesis.'}
+              </p>
             </div>
-          ))}
+          )}
         </div>
       )}
 
-      {signalRows.length === 0 && (
+      {!latest && !isFiltered && (
         <div
           className="animate-fade-up py-8 text-center"
           style={{ animationDelay: '80ms' }}
         >
-          {isFiltered ? (
-            <p className="text-sm italic text-muted">
-              No signals found for {periodLabels[period].toLowerCase()}.
+          <div className="mx-auto max-w-md space-y-4">
+            <p className="font-display text-lg italic text-ink">
+              Welcome to Distill
             </p>
-          ) : latest ? (
-            <p className="text-sm italic text-muted">
-              No signals detected in this synthesis.
+            <p className="text-sm text-dim">
+              Add feedback from your team using the{' '}
+              <span className="font-medium text-ink">+ Add Feedback</span>{' '}
+              button, then run a synthesis to surface the signals that matter.
             </p>
-          ) : (
-            <div className="mx-auto max-w-md space-y-4">
-              <p className="font-display text-lg italic text-ink">
-                Welcome to Distill
-              </p>
-              <p className="text-sm text-dim">
-                Add feedback from your team using the{' '}
-                <span className="font-medium text-ink">+ Add Feedback</span>{' '}
-                button, then run a synthesis to surface the signals that matter.
-              </p>
-              <ol className="space-y-2 text-left text-sm text-muted">
-                <li className="flex gap-2">
-                  <span className="font-medium text-accent">1.</span>
-                  Paste customer quotes, support tickets, or team observations
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-medium text-accent">2.</span>
-                  Click <span className="font-medium text-ink">Run Synthesis</span> to
-                  distill patterns
-                </li>
-                <li className="flex gap-2">
-                  <span className="font-medium text-accent">3.</span>
-                  Review signals ranked by strength and evidence
-                </li>
-              </ol>
-            </div>
-          )}
+            <ol className="space-y-2 text-left text-sm text-muted">
+              <li className="flex gap-2">
+                <span className="font-medium text-accent">1.</span>
+                Paste customer quotes, support tickets, or team observations
+              </li>
+              <li className="flex gap-2">
+                <span className="font-medium text-accent">2.</span>
+                Click <span className="font-medium text-ink">Run Synthesis</span> to
+                distill patterns
+              </li>
+              <li className="flex gap-2">
+                <span className="font-medium text-accent">3.</span>
+                Review signals ranked by strength and evidence
+              </li>
+            </ol>
+          </div>
         </div>
       )}
 
