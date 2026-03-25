@@ -56,6 +56,9 @@ export const syntheses = pgTable('syntheses', {
 // ---------------------------------------------------------------------------
 // signals — named patterns extracted from a synthesis run
 // ---------------------------------------------------------------------------
+export const SIGNAL_STATUSES = ['new', 'acknowledged', 'in_progress', 'resolved'] as const
+export type SignalStatus = (typeof SIGNAL_STATUSES)[number]
+
 export const signals = pgTable(
   'signals',
   {
@@ -69,9 +72,11 @@ export const signals = pgTable(
     suggestedAction: text('suggested_action'),
     themes: jsonb('themes').$type<string[]>(),
     strength: smallint('strength').notNull(),
+    status: varchar('status', { length: 20 }).notNull().default('new'),
   },
   (table) => [
     index('signals_synthesis_id_idx').on(table.synthesisId),
+    index('signals_status_idx').on(table.status),
   ],
 )
 
