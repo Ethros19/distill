@@ -21,12 +21,32 @@ function makeChainable(): Record<string, (...args: unknown[]) => unknown> {
   return chain
 }
 
+const mockTxFromResult = vi.fn()
+const mockTxDeleteResult = vi.fn()
+
+function makeTxChainable(): Record<string, (...args: unknown[]) => unknown> {
+  const chain: Record<string, (...args: unknown[]) => unknown> = {}
+  chain.from = () => chain
+  chain.where = () => chain
+  chain.then = (...args: unknown[]) => (args[0] as (v: unknown) => void)(mockTxFromResult())
+  return chain
+}
+
 vi.mock('@/lib/db', () => ({
   db: {
     select: (cols?: unknown) => makeChainable(),
     delete: (table: unknown) => ({
       where: (cond: unknown) => mockDeleteResult(),
     }),
+    transaction: async (fn: (tx: unknown) => Promise<void>) => {
+      const tx = {
+        select: () => makeTxChainable(),
+        delete: () => ({
+          where: (cond: unknown) => mockTxDeleteResult(),
+        }),
+      }
+      return fn(tx)
+    },
   },
 }))
 
@@ -110,10 +130,10 @@ describe('DELETE /api/inputs/:id', () => {
 
   it('returns 409 when input is referenced in signals', async () => {
     const id = '00000000-0000-0000-0000-000000000002'
-    // First call: input exists
+    // First call (outside tx): input exists
     mockFromResult.mockReturnValueOnce([{ id }])
-    // Second call: dependent signals found
-    mockFromResult.mockReturnValueOnce([{ id: 'signal-1' }])
+    // Second call (inside tx): dependent signals found
+    mockTxFromResult.mockReturnValueOnce([{ id: 'signal-1' }])
 
     const res = await DELETE(makeRequest(id), makeParams(id))
     expect(res.status).toBe(409)
@@ -123,38 +143,15 @@ describe('DELETE /api/inputs/:id', () => {
 
   it('returns 200 on successful delete', async () => {
     const id = '00000000-0000-0000-0000-000000000003'
-    // First call: input exists
+    // First call (outside tx): input exists
     mockFromResult.mockReturnValueOnce([{ id }])
-    // Second call: no dependent signals
-    mockFromResult.mockReturnValueOnce([])
+    // Second call (inside tx): no dependent signals
+    mockTxFromResult.mockReturnValueOnce([])
 
     const res = await DELETE(makeRequest(id), makeParams(id))
     expect(res.status).toBe(200)
     const data = await res.json()
     expect(data.success).toBe(true)
-  })
-})
-
-// ---------------------------------------------------------------------------
-// InputRow component — pure logic tests (formatTimeAgo, statusBadge)
-// ---------------------------------------------------------------------------
-
-describe('InputRow utilities', () => {
-  it('formatTimeAgo returns "just now" for recent times', () => {
-    // Import the component module to test the internal formatTimeAgo
-    // Since formatTimeAgo is not exported, test via snapshot-like approach
-    // We verify the pattern is consistent with the existing inputs-feed implementation
-    const now = Date.now()
-    const diff = now - now
-    const minutes = Math.floor(diff / 60000)
-    expect(minutes).toBe(0) // confirms "just now" path
-  })
-
-  it('statusBadge mapping covers processed, unprocessed, and default', () => {
-    // Verify the status values match what's defined in the schema
-    const statuses = ['processed', 'unprocessed', 'unknown']
-    expect(statuses).toContain('processed')
-    expect(statuses).toContain('unprocessed')
   })
 })
 
