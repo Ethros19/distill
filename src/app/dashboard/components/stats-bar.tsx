@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 
 export interface StatItem {
   label: string
@@ -11,6 +11,7 @@ export interface StatItem {
 }
 
 export function StatsBar({ stats }: { stats: StatItem[] }) {
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const activePeriod = searchParams.get('period')
 
@@ -18,7 +19,7 @@ export function StatsBar({ stats }: { stats: StatItem[] }) {
     <div className="flex items-center">
       {stats.map((stat, i) => {
         const isActive = activePeriod === stat.period
-        const href = isActive ? '/dashboard' : `/dashboard?period=${stat.period}`
+        const href = isActive ? pathname : `${pathname}?period=${stat.period}`
 
         return (
           <Link
