@@ -26,10 +26,12 @@ function formatRelativeTime(date: Date): string {
 export function SynthesisHeader({
   synthesis,
   unprocessedCount = 0,
+  unsynthesizedCount = 0,
   action,
 }: {
   synthesis: Synthesis | null
   unprocessedCount?: number
+  unsynthesizedCount?: number
   action?: React.ReactNode
 }) {
   if (!synthesis) {
@@ -44,11 +46,27 @@ export function SynthesisHeader({
               Send feedback via email or paste, then run a synthesis to surface
               signals.
             </p>
-            {unprocessedCount > 0 && (
-              <p className="mt-3 text-sm font-medium text-sig-mid">
-                <strong className="font-mono">{unprocessedCount}</strong>{' '}
-                unprocessed
-              </p>
+            {(unprocessedCount > 0 || unsynthesizedCount > 0) && (
+              <div className="mt-3 flex items-center gap-3 text-sm">
+                {unprocessedCount > 0 && (
+                  <span
+                    className="font-medium text-sig-mid cursor-help"
+                    title="Inputs received but not yet structured by AI. The daily cron or next synthesis will process these."
+                  >
+                    <strong className="font-mono">{unprocessedCount}</strong>{' '}
+                    unprocessed
+                  </span>
+                )}
+                {unsynthesizedCount > 0 && (
+                  <span
+                    className="font-medium text-sig-low cursor-help"
+                    title="Inputs structured by AI but not yet included in a synthesis run. Run a synthesis to surface signals from these."
+                  >
+                    <strong className="font-mono">{unsynthesizedCount}</strong>{' '}
+                    unsynthesized
+                  </span>
+                )}
+              </div>
             )}
           </div>
           {action && <div className="ml-4 shrink-0">{action}</div>}
@@ -95,9 +113,24 @@ export function SynthesisHeader({
             {unprocessedCount > 0 && (
               <>
                 <span className="text-muted">&middot;</span>
-                <span className="text-sig-mid">
+                <span
+                  className="text-sig-mid cursor-help"
+                  title="Inputs received but not yet structured by AI. The daily cron or next synthesis will process these."
+                >
                   <strong className="font-mono">{unprocessedCount}</strong>{' '}
-                  <span>unprocessed</span>
+                  unprocessed
+                </span>
+              </>
+            )}
+            {unsynthesizedCount > 0 && (
+              <>
+                <span className="text-muted">&middot;</span>
+                <span
+                  className="text-sig-low cursor-help"
+                  title="Inputs structured by AI but not yet included in a synthesis run. Run a synthesis to include these."
+                >
+                  <strong className="font-mono">{unsynthesizedCount}</strong>{' '}
+                  unsynthesized
                 </span>
               </>
             )}
