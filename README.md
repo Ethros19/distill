@@ -2,7 +2,7 @@
 
 **Open-source signal intelligence for product teams**
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 
 > **Status: Pre-alpha** — Core pipeline functional, dashboard and polish in progress.
 
@@ -113,4 +113,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing instructio
 
 ## License
 
-[Apache 2.0](LICENSE)
+[AGPL-3.0](LICENSE)
