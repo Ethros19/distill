@@ -22,7 +22,7 @@ Open-source signal intelligence system for product teams. Self-hosted web app.
 - Never commit .env or .dev.vars
 - All config via environment variables — zero hardcoded secrets
 - LLM provider must be swappable — core logic is provider-agnostic
-- Apache 2.0 license
+- AGPL-3.0 license
 
 ## Active Context
 
