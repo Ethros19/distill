@@ -19,4 +19,8 @@ if (!password) {
 }
 
 const hash = bcrypt.hashSync(password, COST_FACTOR)
-console.log(hash)
+
+// Escape $ for .env files (dotenv-expand treats $ as variable interpolation)
+const escaped = hash.replace(/\$/g, '\\$')
+console.log(`AUTH_PASSWORD_HASH=${escaped}`)
+console.log(`\n# Raw hash (for non-dotenv contexts): ${hash}`)
