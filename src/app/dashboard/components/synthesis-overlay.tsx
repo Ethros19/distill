@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 const phases = [
   'Gathering inputs\u2026',
@@ -26,8 +27,8 @@ export function SynthesisOverlay({ active }: { active: boolean }) {
 
   if (!active) return null
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-canvas/80 backdrop-blur-sm">
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-canvas/90 backdrop-blur-md">
       <div className="flex flex-col items-center gap-8">
         {/* Converging rings */}
         <div className="relative h-40 w-40">
@@ -83,6 +84,7 @@ export function SynthesisOverlay({ active }: { active: boolean }) {
           </p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
