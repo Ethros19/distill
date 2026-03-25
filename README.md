@@ -111,6 +111,10 @@ Model names are configurable per provider — see [`.env.example`](.env.example)
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing instructions, code conventions, and a guide for adding new LLM providers.
 
+## Built With
+
+This project was built with [VBW (Vibe Better With Claude Code)](https://github.com/swt-labs/vibe-better-with-claude-code-vbw) — an agentic development workflow for Claude Code.
+
 ## License
 
 [AGPL-3.0](LICENSE)
