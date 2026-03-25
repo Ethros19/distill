@@ -26,9 +26,9 @@ Open-source signal intelligence system for product teams. Self-hosted web app.
 
 ## Active Context
 
-**Work:** No active milestone
-**Last shipped:** Distill (2026-03-24) -- 5 phases, 17 plans, 34 commits
-**Next action:** Run /vbw:vibe to start a new milestone, or /vbw:status to review progress
+**Milestone:** Signal Actions & Slack Integration (Phase 01 complete, Phases 02-03 pending)
+**Last completed:** Phase 01 — Login Security Hardening (4 plans, 15 tasks, UAT 7/7 PASS)
+**Next action:** Run /vbw:vibe to plan Phase 02 (Signal Status Detail Page)
 
 ## VBW Rules
 
