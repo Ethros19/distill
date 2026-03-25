@@ -7,6 +7,8 @@ import { NextRequest } from 'next/server'
 
 const mockSelectWhere = vi.fn()
 const mockDeleteWhere = vi.fn()
+const mockTxSelectWhere = vi.fn()
+const mockTxDeleteWhere = vi.fn()
 
 vi.mock('@/lib/db', () => ({
   db: {
@@ -18,6 +20,19 @@ vi.mock('@/lib/db', () => ({
     delete: () => ({
       where: mockDeleteWhere,
     }),
+    transaction: async (fn: (tx: unknown) => Promise<void>) => {
+      const tx = {
+        select: () => ({
+          from: () => ({
+            where: mockTxSelectWhere,
+          }),
+        }),
+        delete: () => ({
+          where: mockTxDeleteWhere,
+        }),
+      }
+      return fn(tx)
+    },
   },
 }))
 
@@ -86,35 +101,35 @@ describe('DELETE /api/inputs/[id]', () => {
     const id = '00000000-0000-0000-0000-000000000002'
     const { request, params } = makeRequest(id)
 
-    // First select: input exists
+    // First select (outside tx): input exists
     mockSelectWhere.mockResolvedValueOnce([{ id }])
-    // Second select: dependent signals found
-    mockSelectWhere.mockResolvedValueOnce([{ id: 'signal-1' }])
+    // Second select (inside tx): dependent signals found
+    mockTxSelectWhere.mockResolvedValueOnce([{ id: 'signal-1' }])
 
     const response = await DELETE(request, { params })
     const data = await response.json()
 
     expect(response.status).toBe(409)
     expect(data.error).toBe('Input is referenced in synthesized signals')
-    expect(mockDeleteWhere).not.toHaveBeenCalled()
+    expect(mockTxDeleteWhere).not.toHaveBeenCalled()
   })
 
   it('returns 200 on successful deletion', async () => {
     const id = '00000000-0000-0000-0000-000000000003'
     const { request, params } = makeRequest(id)
 
-    // First select: input exists
+    // First select (outside tx): input exists
     mockSelectWhere.mockResolvedValueOnce([{ id }])
-    // Second select: no dependent signals
-    mockSelectWhere.mockResolvedValueOnce([])
-    // Delete succeeds
-    mockDeleteWhere.mockResolvedValueOnce(undefined)
+    // Second select (inside tx): no dependent signals
+    mockTxSelectWhere.mockResolvedValueOnce([])
+    // Delete (inside tx) succeeds
+    mockTxDeleteWhere.mockResolvedValueOnce(undefined)
 
     const response = await DELETE(request, { params })
     const data = await response.json()
 
     expect(response.status).toBe(200)
     expect(data.success).toBe(true)
-    expect(mockDeleteWhere).toHaveBeenCalled()
+    expect(mockTxDeleteWhere).toHaveBeenCalled()
   })
 })

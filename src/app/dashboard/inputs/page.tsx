@@ -19,32 +19,26 @@ export default async function InputsPage({
 
   const validStatus = status === 'unprocessed' || status === 'processed' ? status : undefined
 
-  // Fetch inputs with optional status filter
-  let query = db
+  // Fetch inputs and count in parallel
+  let dataQuery = db
     .select()
     .from(inputs)
     .$dynamic()
 
-  if (validStatus) {
-    query = query.where(eq(inputs.status, validStatus))
-  }
-
-  const rows = await query
-    .orderBy(desc(inputs.createdAt))
-    .limit(PAGE_SIZE)
-    .offset(offset)
-
-  // Fetch total count with same filter
   let countQuery = db
     .select({ value: count() })
     .from(inputs)
     .$dynamic()
 
   if (validStatus) {
+    dataQuery = dataQuery.where(eq(inputs.status, validStatus))
     countQuery = countQuery.where(eq(inputs.status, validStatus))
   }
 
-  const [{ value: total }] = await countQuery
+  const [rows, [{ value: total }]] = await Promise.all([
+    dataQuery.orderBy(desc(inputs.createdAt)).limit(PAGE_SIZE).offset(offset),
+    countQuery,
+  ])
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   // Build filter link helpers
