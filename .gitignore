@@ -39,3 +39,7 @@ migrations/meta/
 coverage/
 
 .vbw-planning/
+
+# Misc
+cookies.txt
+tsconfig.tsbuildinfo
