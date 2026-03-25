@@ -38,6 +38,11 @@ export async function cleanExpiredSessions(): Promise<void> {
   await db.delete(sessions).where(lt(sessions.expiresAt, new Date()))
 }
 
+/** Delete all sessions (session rotation on login) */
+export async function deleteAllSessions(): Promise<void> {
+  await db.delete(sessions)
+}
+
 /** Verify password against AUTH_PASSWORD_HASH env var using bcrypt comparison */
 export async function verifyPassword(password: string): Promise<boolean> {
   const hash = process.env.AUTH_PASSWORD_HASH
