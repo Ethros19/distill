@@ -21,3 +21,33 @@ export function statusBadge(status: string): string {
       return 'bg-panel-alt text-dim'
   }
 }
+
+export function signalStatusBadge(status: string): string {
+  switch (status) {
+    case 'new':
+      return 'bg-accent-wash text-accent'
+    case 'acknowledged':
+      return 'bg-panel-alt text-dim'
+    case 'in_progress':
+      return 'bg-sig-mid/10 text-sig-mid'
+    case 'resolved':
+      return 'bg-sig-low/10 text-sig-low'
+    default:
+      return 'bg-panel-alt text-dim'
+  }
+}
+
+export function signalStatusLabel(status: string): string {
+  switch (status) {
+    case 'new':
+      return 'New'
+    case 'acknowledged':
+      return 'Acknowledged'
+    case 'in_progress':
+      return 'In Progress'
+    case 'resolved':
+      return 'Resolved'
+    default:
+      return status
+  }
+}
