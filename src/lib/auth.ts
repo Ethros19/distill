@@ -1,4 +1,5 @@
 import crypto from 'crypto'
+import bcrypt from 'bcryptjs'
 import { eq, lt } from 'drizzle-orm'
 import { db } from './db'
 import { sessions } from './schema'
@@ -37,10 +38,9 @@ export async function cleanExpiredSessions(): Promise<void> {
   await db.delete(sessions).where(lt(sessions.expiresAt, new Date()))
 }
 
-/** Verify password against AUTH_PASSWORD env var using timing-safe comparison */
-export function verifyPassword(password: string): boolean {
-  const expected = process.env.AUTH_PASSWORD
-  if (!expected) throw new Error('AUTH_PASSWORD environment variable not set')
-  if (password.length !== expected.length) return false
-  return crypto.timingSafeEqual(Buffer.from(password), Buffer.from(expected))
+/** Verify password against AUTH_PASSWORD_HASH env var using bcrypt comparison */
+export async function verifyPassword(password: string): Promise<boolean> {
+  const hash = process.env.AUTH_PASSWORD_HASH
+  if (!hash) throw new Error('AUTH_PASSWORD_HASH environment variable not set')
+  return bcrypt.compare(password, hash)
 }
