@@ -31,9 +31,7 @@ export async function InputsFeed() {
     .select()
     .from(inputs)
     .orderBy(desc(inputs.createdAt))
-    .limit(10)
-
-  if (recentInputs.length === 0) return null
+    .limit(5)
 
   return (
     <div className="rounded-xl border border-edge bg-panel p-5">
