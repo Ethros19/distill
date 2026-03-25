@@ -139,6 +139,9 @@ export function PasteModal({
               <option value="slack">Slack</option>
               <option value="support">Support</option>
               <option value="sales">Sales</option>
+              <option value="meeting">Meeting</option>
+              <option value="email">Email</option>
+              <option value="phone_call">Phone Call</option>
               <option value="other">Other</option>
             </select>
           </div>
