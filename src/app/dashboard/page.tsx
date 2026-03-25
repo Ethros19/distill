@@ -6,37 +6,10 @@ import { eq, desc, gte } from 'drizzle-orm'
 import Link from 'next/link'
 import { SynthesisHeader } from './components/synthesis-header'
 import { SignalCard } from './components/signal-card'
+import { Synopsis } from './components/synopsis'
 import { TriggerButton } from './components/trigger-button'
 import { InputsFeed } from './components/inputs-feed'
-
-const periodLabels: Record<string, string> = {
-  today: 'Today',
-  week: 'This Week',
-  month: 'This Month',
-  year: 'This Year',
-  total: 'All Time',
-}
-
-function startOfPeriod(period: string): Date | null {
-  const now = new Date()
-  switch (period) {
-    case 'today':
-      return new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    case 'week': {
-      const day = now.getDay()
-      const diff = now.getDate() - day + (day === 0 ? -6 : 1)
-      return new Date(now.getFullYear(), now.getMonth(), diff)
-    }
-    case 'month':
-      return new Date(now.getFullYear(), now.getMonth(), 1)
-    case 'year':
-      return new Date(now.getFullYear(), 0, 1)
-    case 'total':
-      return null
-    default:
-      return null
-  }
-}
+import { periodLabels, startOfPeriod } from './lib/periods'
 
 export default async function DashboardPage({
   searchParams,
@@ -96,10 +69,19 @@ export default async function DashboardPage({
       </div>
 
       {signalRows.length > 0 && (
+        <div
+          className="animate-fade-up"
+          style={{ animationDelay: '80ms' }}
+        >
+          <Synopsis signals={signalRows} />
+        </div>
+      )}
+
+      {signalRows.length > 0 && (
         <div className="space-y-4">
           <div
             className="animate-fade-up flex items-center gap-3"
-            style={{ animationDelay: '80ms' }}
+            style={{ animationDelay: '140ms' }}
           >
             <h2 className="text-sm font-medium uppercase tracking-wider text-dim">
               Signals

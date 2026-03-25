@@ -1,19 +1,24 @@
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { signals, syntheses } from '@/lib/schema'
-import { eq, gte, lte } from 'drizzle-orm'
+import { eq, gte, desc } from 'drizzle-orm'
 import { SignalCard } from '../../components/signal-card'
+import { Synopsis } from '../../components/synopsis'
+import { periodLabels, startOfPeriod } from '../../lib/periods'
 
 export default async function ThemeDetailPage({
   params,
   searchParams,
 }: {
   params: Promise<{ theme: string }>
-  searchParams: Promise<{ from?: string; to?: string }>
+  searchParams: Promise<{ period?: string }>
 }) {
   const { theme } = await params
-  const { from, to } = await searchParams
+  const { period } = await searchParams
   const decodedTheme = decodeURIComponent(theme)
+  const isFiltered = period && period in periodLabels
 
   let query = db
     .select({
@@ -30,14 +35,14 @@ export default async function ThemeDetailPage({
     .innerJoin(syntheses, eq(signals.synthesisId, syntheses.id))
     .$dynamic()
 
-  if (from) {
-    query = query.where(gte(syntheses.periodEnd, new Date(from)))
-  }
-  if (to) {
-    query = query.where(lte(syntheses.periodEnd, new Date(to)))
+  if (isFiltered) {
+    const since = startOfPeriod(period)
+    if (since) {
+      query = query.where(gte(syntheses.createdAt, since))
+    }
   }
 
-  const rows = await query
+  const rows = await query.orderBy(desc(signals.strength))
 
   const matching = rows.filter(
     (row) => row.themes && row.themes.includes(decodedTheme),
@@ -46,7 +51,7 @@ export default async function ThemeDetailPage({
   return (
     <div className="space-y-6">
       <Link
-        href="/dashboard"
+        href={period ? `/dashboard?period=${period}` : '/dashboard'}
         className="inline-flex items-center gap-1.5 text-sm text-dim transition-colors hover:text-accent"
       >
         &larr; Back
@@ -54,53 +59,35 @@ export default async function ThemeDetailPage({
 
       <div className="flex items-baseline justify-between">
         <h2 className="font-display text-2xl text-ink">{decodedTheme}</h2>
-        <span className="font-mono text-sm text-muted">
-          {matching.length} signal{matching.length !== 1 ? 's' : ''}
-        </span>
+        <div className="flex items-center gap-3">
+          {isFiltered && (
+            <>
+              <span className="rounded-full bg-accent-wash px-2.5 py-0.5 text-xs font-medium text-accent">
+                {periodLabels[period]}
+              </span>
+              <Link
+                href={`/dashboard/themes/${encodeURIComponent(decodedTheme)}`}
+                className="text-xs text-muted transition-colors hover:text-ink"
+              >
+                Clear
+              </Link>
+            </>
+          )}
+          <span className="font-mono text-sm text-muted">
+            {matching.length} signal{matching.length !== 1 ? 's' : ''}
+          </span>
+        </div>
       </div>
 
-      <form className="flex items-end gap-3">
-        <div>
-          <label
-            htmlFor="from"
-            className="block text-xs font-medium uppercase tracking-wider text-dim"
-          >
-            From
-          </label>
-          <input
-            type="date"
-            id="from"
-            name="from"
-            defaultValue={from ?? ''}
-            className="mt-1.5 rounded-lg border border-edge bg-panel px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-          />
+      {matching.length > 0 && (
+        <div className="animate-fade-up">
+          <Synopsis signals={matching} />
         </div>
-        <div>
-          <label
-            htmlFor="to"
-            className="block text-xs font-medium uppercase tracking-wider text-dim"
-          >
-            To
-          </label>
-          <input
-            type="date"
-            id="to"
-            name="to"
-            defaultValue={to ?? ''}
-            className="mt-1.5 rounded-lg border border-edge bg-panel px-3 py-2 text-sm text-ink focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-          />
-        </div>
-        <button
-          type="submit"
-          className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-canvas transition-opacity hover:opacity-90"
-        >
-          Filter
-        </button>
-      </form>
+      )}
 
       {matching.length === 0 ? (
         <p className="py-8 text-center text-sm italic text-muted">
-          No signals found{from || to ? ' in this date range' : ''}
+          No signals found{isFiltered ? ` for ${periodLabels[period].toLowerCase()}` : ''}
         </p>
       ) : (
         <div className="space-y-4">
@@ -108,7 +95,7 @@ export default async function ThemeDetailPage({
             <div
               key={signal.id}
               className="animate-fade-up"
-              style={{ animationDelay: `${i * 60}ms` }}
+              style={{ animationDelay: `${80 + i * 60}ms` }}
             >
               <SignalCard signal={signal} />
             </div>
