@@ -14,8 +14,9 @@ vi.mock('@/lib/db', () => ({
   db: {
     select: () => ({
       from: () => ({
-        where: (condition: unknown) => ({
+        where: () => ({
           limit: () => mockSelectResult(),
+          orderBy: () => mockSelectResult(),
         }),
       }),
     }),
@@ -58,6 +59,8 @@ vi.mock('drizzle-orm', () => ({
   lt: (...args: unknown[]) => args,
   and: (...args: unknown[]) => args,
   gt: (...args: unknown[]) => args,
+  gte: (...args: unknown[]) => args,
+  desc: (col: unknown) => col,
 }))
 
 // Must mock bcryptjs to avoid it interfering
@@ -175,7 +178,6 @@ describe('rate-limit integration — login scenarios', () => {
   // - After the lockout period, requests are allowed again
 
   it('blocks login after 5+ failed attempts (simulates 429 path)', async () => {
-    // Import the rate-limit module (already mocked via db mock above)
     const { checkRateLimit } = await import('@/lib/rate-limit')
 
     // Mock DB to return 5 recent failures for the IP
@@ -186,14 +188,8 @@ describe('rate-limit integration — login scenarios', () => {
       success: false,
     }))
 
-    // The rate-limit module uses db.select().from().where().orderBy()
-    // We need to mock the full chain. Since the db mock for rate-limit
-    // returns via mockSelectResult -> but rate-limit uses a different chain
-    // (with orderBy), we re-mock the select chain for this test.
-    const mockOrderBy = vi.fn().mockResolvedValueOnce(recentFailures)
-    const mockRlWhere = vi.fn().mockReturnValue({ orderBy: mockOrderBy })
-    const mockRlFrom = vi.fn().mockReturnValue({ where: mockRlWhere })
-    mockSelect.mockReturnValueOnce({ from: mockRlFrom })
+    // checkRateLimit uses db.select().from().where().orderBy()
+    mockSelectResult.mockResolvedValueOnce(recentFailures)
 
     const result = await checkRateLimit('10.0.0.1')
 
@@ -213,10 +209,7 @@ describe('rate-limit integration — login scenarios', () => {
       success: false,
     }))
 
-    const mockOrderBy = vi.fn().mockResolvedValueOnce(oldFailures)
-    const mockRlWhere = vi.fn().mockReturnValue({ orderBy: mockOrderBy })
-    const mockRlFrom = vi.fn().mockReturnValue({ where: mockRlWhere })
-    mockSelect.mockReturnValueOnce({ from: mockRlFrom })
+    mockSelectResult.mockResolvedValueOnce(oldFailures)
 
     const result = await checkRateLimit('10.0.0.1')
 
