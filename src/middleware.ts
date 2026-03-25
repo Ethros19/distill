@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateSession } from './lib/auth'
 
-function unauthorized(request: NextRequest) {
+function unauthorized(request: NextRequest, expired = false) {
   if (request.nextUrl.pathname.startsWith('/api/')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  return NextResponse.redirect(new URL('/login', request.url))
+  const loginUrl = new URL('/login', request.url)
+  if (expired) {
+    loginUrl.searchParams.set('expired', '1')
+  }
+  return NextResponse.redirect(loginUrl)
 }
 
 // CSRF protection: validate Origin/Referer on mutating requests
@@ -54,10 +58,10 @@ export async function middleware(request: NextRequest) {
     return unauthorized(request)
   }
 
-  // Validate token against the database (checks existence + expiry)
-  const valid = await validateSession(sessionToken)
-  if (!valid) {
-    const response = unauthorized(request)
+  // Validate token against the database (checks existence, absolute expiry, and idle timeout)
+  const session = await validateSession(sessionToken)
+  if (!session.valid) {
+    const response = unauthorized(request, session.expired)
     // Clear the invalid/expired cookie
     response.cookies.delete('session')
     return response
