@@ -1,4 +1,5 @@
 import { LogoutButton } from './components/logout-button'
+import { HelpButton } from './components/help-modal'
 import { ThemeSidebar } from './components/theme-sidebar'
 import { SignalStats } from './components/signal-stats'
 
@@ -19,7 +20,10 @@ export default function DashboardLayout({
               Signal Intelligence
             </span>
           </div>
-          <LogoutButton />
+          <div className="flex items-center gap-1">
+            <HelpButton />
+            <LogoutButton />
+          </div>
         </div>
       </header>
       <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
