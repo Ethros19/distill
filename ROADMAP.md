@@ -22,19 +22,20 @@ Add a "Push to Linear" button on the signal detail page that creates a Linear is
 - Signal statement as issue title, reasoning + suggested action as description, themes as labels
 - Gracefully hidden when Linear is not configured
 
-### Phase 05: Slack Share
-Add a one-way "Share to Slack" button that posts a formatted signal summary to a configured Slack channel via incoming webhook.
+### Phase 05: Slack Integration (2-way)
+Bidirectional Slack integration — share signals outbound AND ingest messages from configured channels as raw inputs for synthesis.
 
-- Formatted Slack Block Kit message with signal title, summary, themes, evidence count, and deep link
-- `SLACK_WEBHOOK_URL` configured via env var
+- **Outbound:** "Share to Slack" button posts formatted Block Kit message with signal summary and deep link
+- **Inbound:** Watch configured Slack channels and ingest messages as inputs for synthesis
+- Channel allowlist — admin selects which channels to watch (not all channels)
 - Gracefully hidden when Slack is not configured
 
-### Phase 06: Discord Integration
-Share signals to a Discord channel via webhook — same pattern as Slack but formatted for Discord embeds.
+### Phase 06: Discord Integration (2-way)
+Bidirectional Discord integration — share signals outbound AND ingest messages from configured channels as raw inputs for synthesis.
 
-- "Share to Discord" button on signal detail page
-- Rich embed with signal title, summary, themes, evidence count, and deep link
-- `DISCORD_WEBHOOK_URL` configured via env var
+- **Outbound:** "Share to Discord" button posts rich embed with signal summary and deep link
+- **Inbound:** Watch configured Discord channels and ingest messages as inputs for synthesis
+- Channel allowlist — admin selects which channels to watch (not all channels)
 - Gracefully hidden when Discord is not configured
 
 ## Community Discussions
