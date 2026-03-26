@@ -29,6 +29,14 @@ Add a one-way "Share to Slack" button that posts a formatted signal summary to a
 - `SLACK_WEBHOOK_URL` configured via env var
 - Gracefully hidden when Slack is not configured
 
+### Phase 06: Discord Integration
+Share signals to a Discord channel via webhook — same pattern as Slack but formatted for Discord embeds.
+
+- "Share to Discord" button on signal detail page
+- Rich embed with signal title, summary, themes, evidence count, and deep link
+- `DISCORD_WEBHOOK_URL` configured via env var
+- Gracefully hidden when Discord is not configured
+
 ## Community Discussions
 
 - [Hosting Provider Portability](https://github.com/Ethros19/distill/discussions/1) — RFC for supporting non-Vercel hosting (Cloudflare, Fly.io, self-hosted)
