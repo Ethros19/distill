@@ -39,7 +39,7 @@ export default async function ThemeDetailPage({
   if (isFiltered) {
     const since = startOfPeriod(period)
     if (since) {
-      query = query.where(gte(syntheses.createdAt, since))
+      query = query.where(gte(syntheses.periodEnd, since))
     }
   }
 

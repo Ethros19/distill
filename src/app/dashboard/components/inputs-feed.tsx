@@ -1,32 +1,35 @@
 import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
-import { count, desc, eq } from 'drizzle-orm'
+import { and, count, desc, eq, gte } from 'drizzle-orm'
 import Link from 'next/link'
 import { formatTimeAgo, statusBadge } from './format-utils'
 
-export async function InputsFeed() {
+export async function InputsFeed({ since }: { since?: Date }) {
+  const dateCondition = since ? gte(inputs.createdAt, since) : undefined
+
   const [recentInputs, [{ value: totalCount }], [{ value: unprocessedCount }]] =
     await Promise.all([
       db
         .select()
         .from(inputs)
+        .where(dateCondition)
         .orderBy(desc(inputs.createdAt))
         .limit(5),
-      db.select({ value: count() }).from(inputs),
+      db.select({ value: count() }).from(inputs).where(dateCondition),
       db
         .select({ value: count() })
         .from(inputs)
-        .where(eq(inputs.status, 'unprocessed')),
+        .where(dateCondition ? and(eq(inputs.status, 'unprocessed'), dateCondition) : eq(inputs.status, 'unprocessed')),
     ])
 
   return (
     <div className="rounded-xl border border-edge bg-panel p-5">
       <div className="flex items-baseline justify-between">
         <h3 className="text-sm font-medium uppercase tracking-wider text-dim">
-          Recent Inputs
+          {since ? 'Inputs' : 'Recent Inputs'}
           {totalCount > 0 && (
             <span className="ml-2 normal-case tracking-normal text-muted">
-              ({totalCount} total{unprocessedCount > 0 && unprocessedCount !== totalCount ? `, ${unprocessedCount} unprocessed` : ''})
+              ({totalCount}{since ? '' : ' total'}{unprocessedCount > 0 && unprocessedCount !== totalCount ? `, ${unprocessedCount} unprocessed` : ''})
             </span>
           )}
         </h3>
