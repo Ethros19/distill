@@ -11,6 +11,7 @@ import { TriggerButton } from './components/trigger-button'
 import { InputsFeed } from './components/inputs-feed'
 import { periodLabels, startOfPeriod } from './lib/periods'
 import { signalStatusLabel } from './components/format-utils'
+import { StatusFilterTabs } from './components/status-filter-tabs'
 
 export default async function DashboardPage({
   searchParams,
@@ -87,19 +88,10 @@ export default async function DashboardPage({
     }
   }
 
-  // Build status filter tab hrefs, preserving the period param
-  function statusFilterHref(s?: string) {
-    const params = new URLSearchParams()
-    if (isFiltered) params.set('period', period)
-    if (s) params.set('status', s)
-    const qs = params.toString()
-    return `/dashboard${qs ? `?${qs}` : ''}`
-  }
-
   const statusTabs = [
-    { label: 'All', value: undefined },
-    ...SIGNAL_STATUSES.map((s) => ({ label: signalStatusLabel(s), value: s })),
-  ] as const
+    { label: 'All', value: null as string | null },
+    ...SIGNAL_STATUSES.map((s) => ({ label: signalStatusLabel(s), value: s as string | null })),
+  ]
 
   return (
     <div className="space-y-8">
@@ -145,27 +137,16 @@ export default async function DashboardPage({
             )}
           </div>
 
-          {/* Status filter tabs */}
+          {/* Status filter tabs (persisted via localStorage) */}
           <div
-            className="animate-fade-up flex gap-1 rounded-lg bg-panel-alt p-1"
+            className="animate-fade-up"
             style={{ animationDelay: '160ms' }}
           >
-            {statusTabs.map((tab) => {
-              const active = validStatus === tab.value
-              return (
-                <Link
-                  key={tab.label}
-                  href={statusFilterHref(tab.value)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                    active
-                      ? 'bg-panel text-ink shadow-sm'
-                      : 'text-muted hover:text-ink'
-                  }`}
-                >
-                  {tab.label}
-                </Link>
-              )
-            })}
+            <StatusFilterTabs
+              tabs={statusTabs}
+              activeStatus={validStatus}
+              period={isFiltered ? period : undefined}
+            />
           </div>
 
           {signalRows.length > 0 ? (
