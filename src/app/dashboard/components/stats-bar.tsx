@@ -19,7 +19,12 @@ export function StatsBar({ stats }: { stats: StatItem[] }) {
     <div className="flex items-center">
       {stats.map((stat, i) => {
         const isActive = activePeriod === stat.period
-        const href = isActive ? pathname : `${pathname}?period=${stat.period}`
+        const params = new URLSearchParams()
+        if (!isActive) params.set('period', stat.period)
+        const status = searchParams.get('status')
+        if (status) params.set('status', status)
+        const qs = params.toString()
+        const href = `${pathname}${qs ? `?${qs}` : ''}`
 
         return (
           <Link

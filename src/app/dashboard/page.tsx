@@ -49,7 +49,7 @@ export default async function DashboardPage({
   if (isFiltered) {
     const since = startOfPeriod(period)
     const conditions = []
-    if (since) conditions.push(gte(syntheses.createdAt, since))
+    if (since) conditions.push(gte(syntheses.periodEnd, since))
     if (validStatus) conditions.push(eq(signals.status, validStatus))
 
     let query = db
@@ -213,7 +213,7 @@ export default async function DashboardPage({
         className="animate-fade-up"
         style={{ animationDelay: `${signalRows.length > 0 ? 120 + signalRows.length * 60 + 60 : 160}ms` }}
       >
-        <InputsFeed />
+        <InputsFeed since={isFiltered ? startOfPeriod(period) ?? undefined : undefined} />
       </div>
     </div>
   )
