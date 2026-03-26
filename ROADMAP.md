@@ -41,3 +41,5 @@ Bidirectional Discord integration — share signals outbound AND ingest messages
 ## Community Discussions
 
 - [Hosting Provider Portability](https://github.com/Ethros19/distill/discussions/1) — RFC for supporting non-Vercel hosting (Cloudflare, Fly.io, self-hosted)
+- [2-Way Slack Integration](https://github.com/Ethros19/distill/discussions/2) — Channel watching, inbound architecture, and filtering questions
+- [2-Way Discord Integration](https://github.com/Ethros19/distill/discussions/3) — Bot vs. webhook, channel filtering, and dedup questions
