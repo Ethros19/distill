@@ -26,9 +26,9 @@ Open-source signal intelligence system for product teams. Self-hosted web app.
 
 ## Active Context
 
-**Milestone:** Signal Actions & Slack Integration (Phases 01-02 complete, Phase 03 pending)
-**Last completed:** Phase 02 — Signal Status Detail Page (4 plans, 15 tasks, UAT 7/7 PASS)
-**Next action:** Run /vbw:vibe to plan Phase 03 (Slack Share)
+**Milestone:** Signal Actions & Slack Integration (Phases 01-03 complete, Phase 04 pending)
+**Last completed:** Phase 03 — MCP Server (3 plans, 12 tasks, UAT 5/5 PASS)
+**Next action:** Run /vbw:vibe to plan Phase 04 (Linear Integration)
 
 ## VBW Rules
 
