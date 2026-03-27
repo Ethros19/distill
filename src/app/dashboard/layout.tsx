@@ -1,5 +1,6 @@
 import { LogoutButton } from './components/logout-button'
 import { HelpButton } from './components/help-modal'
+import { ThemeSwitcher } from './components/theme-switcher'
 import { ThemeSidebar } from './components/theme-sidebar'
 import { SignalStats } from './components/signal-stats'
 
@@ -22,6 +23,7 @@ export default function DashboardLayout({
           </div>
           <div className="flex items-center gap-1">
             <HelpButton />
+            <ThemeSwitcher />
             <LogoutButton />
           </div>
         </div>
