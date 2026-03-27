@@ -28,7 +28,7 @@ Your data stays on your infrastructure. There is no hosted service.
                                                    themes, urgency)
                                                          │
                                                          ▼
-                                                  Weekly Cron (Mon 9 AM UTC)
+                                                  Weekly Cron (Mon 4 AM UTC)
                                                          │
                                                          ▼
                                                   LLM Synthesis
@@ -94,6 +94,26 @@ npm run dev
 1. Connect your repo to [Vercel](https://vercel.com)
 2. Add your environment variables in the Vercel dashboard
 3. Deploy — Vercel auto-detects Next.js and reads `vercel.json` for cron schedules
+
+### 6. Set up Product Context
+
+Product context tells Distill what your product already has so synthesis can focus on what's genuinely missing rather than re-surfacing shipped features.
+
+1. Open your **product's codebase** in Claude Code (or any AI assistant)
+2. Run the following prompt:
+
+> Scan this codebase and generate a product context document for our feedback analysis tool. For each major feature area (pages, workflows, capabilities), list what's currently built vs what's missing or incomplete. Use this format:
+>
+> `## [Feature Area Name]`
+> `- [Capability description] ✓` (if built and working)
+> `- [Capability description] ✗` (if not yet built)
+> `- [Capability description] ⚠` (if partially built or has known gaps)
+>
+> Focus on user-facing features: pages, workflows, integrations, and key capabilities. Skip internal infrastructure, dev tooling, and deployment details. Group by product area. Output as plain markdown.
+
+3. Copy the output and paste it into **Settings > Product Context** in the Distill dashboard (`/dashboard/settings`)
+
+**Keeping it updated:** Re-run the scan prompt against your codebase after each major release or sprint and paste the updated output. The product context doesn't need a date — Distill always uses the latest saved version. A good cadence is to update it whenever you ship features that would change what synthesis should flag.
 
 ## LLM Providers
 
