@@ -1,5 +1,5 @@
 import type { LLMProvider } from '../llm/provider'
-import type { RawInput, StructuredInput, SynthesisInput, LLMSignal } from '../llm/types'
+import type { RawInput, StructuredInput, SynthesisInput, LLMSignal, PriorSignal } from '../llm/types'
 import { StructuredInputSchema, SynthesisResultSchema } from '../llm/types'
 import { LLMError } from '../llm/errors'
 
@@ -45,6 +45,12 @@ Look for:
 - Complementary requests that point to the same underlying need
 
 Only report signals supported by at least 2 inputs. Order by strength (strongest first).
+
+HANDLING PREVIOUSLY IDENTIFIED SIGNALS:
+You may receive a list of signals the team has already triaged. For each:
+- "acknowledged" or "in_progress": Do NOT re-surface this signal unless new inputs show SIGNIFICANT escalation (e.g., urgency jumped, new users affected, or a meaningfully different angle). If you do re-surface it, explain what changed.
+- "resolved": Do NOT re-surface unless new inputs indicate a regression or the fix did not address the issue.
+- If no prior signals are provided, ignore this section.
 
 You MUST respond with valid JSON only. No markdown formatting, no explanation, just the JSON object.
 IMPORTANT: Respond with ONLY a JSON object in this exact format, no markdown or explanation:
@@ -108,7 +114,7 @@ export class OllamaProvider implements LLMProvider {
     }
   }
 
-  async synthesize(inputs: SynthesisInput[]): Promise<LLMSignal[]> {
+  async synthesize(inputs: SynthesisInput[], priorSignals?: PriorSignal[]): Promise<LLMSignal[]> {
     try {
       const inputContext = inputs
         .map(
@@ -116,6 +122,15 @@ export class OllamaProvider implements LLMProvider {
             `[${i.id}] (${i.source}, ${i.type}, urgency:${i.urgency}) ${i.summary} | themes: ${i.themes.join(', ')}`,
         )
         .join('\n')
+
+      let userContent = `Analyze these ${inputs.length} feedback inputs and synthesize signals:\n\n${inputContext}`
+
+      if (priorSignals && priorSignals.length > 0) {
+        const priorContext = priorSignals
+          .map((s) => `- [${s.status}] "${s.statement}" (strength: ${s.strength}, themes: ${s.themes.join(', ')})`)
+          .join('\n')
+        userContent += `\n\nPREVIOUSLY IDENTIFIED SIGNALS (already triaged by the team):\n${priorContext}`
+      }
 
       const response = await fetch(`${this.baseUrl}/api/chat`, {
         method: 'POST',
@@ -128,7 +143,7 @@ export class OllamaProvider implements LLMProvider {
             { role: 'system', content: SYNTHESIZE_SYSTEM_PROMPT },
             {
               role: 'user',
-              content: `Analyze these ${inputs.length} feedback inputs and synthesize signals:\n\n${inputContext}`,
+              content: userContent,
             },
           ],
         }),
