@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
-import { gte, count } from 'drizzle-orm'
+import { and, gte, lt, count } from 'drizzle-orm'
 import { StatsBar } from './stats-bar'
 
 function startOf(period: 'day' | 'week' | 'month' | 'year'): Date {
@@ -28,14 +28,26 @@ async function countInputsSince(since: Date): Promise<number> {
   return result?.count ?? 0
 }
 
+async function countInputsBetween(since: Date, until: Date): Promise<number> {
+  const [result] = await db
+    .select({ count: count() })
+    .from(inputs)
+    .where(and(gte(inputs.createdAt, since), lt(inputs.createdAt, until)))
+  return result?.count ?? 0
+}
+
 async function countInputsTotal(): Promise<number> {
   const [result] = await db.select({ count: count() }).from(inputs)
   return result?.count ?? 0
 }
 
 export async function SignalStats() {
-  const [today, week, month, year, total] = await Promise.all([
-    countInputsSince(startOf('day')),
+  const todayStart = startOf('day')
+  const yesterdayStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), todayStart.getDate() - 1)
+
+  const [yesterday, today, week, month, year, total] = await Promise.all([
+    countInputsBetween(yesterdayStart, todayStart),
+    countInputsSince(todayStart),
     countInputsSince(startOf('week')),
     countInputsSince(startOf('month')),
     countInputsSince(startOf('year')),
@@ -43,6 +55,7 @@ export async function SignalStats() {
   ])
 
   const stats = [
+    { label: 'Yesterday', value: yesterday, period: 'yesterday' },
     { label: 'Today', value: today, period: 'today' },
     { label: 'Week', value: week, period: 'week' },
     { label: 'Month', value: month, period: 'month' },

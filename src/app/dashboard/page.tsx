@@ -2,14 +2,14 @@ export const dynamic = 'force-dynamic'
 
 import { db } from '@/lib/db'
 import { syntheses, signals, inputs, SIGNAL_STATUSES } from '@/lib/schema'
-import { eq, desc, gte, gt, and, count } from 'drizzle-orm'
+import { eq, desc, gte, lt, gt, and, count } from 'drizzle-orm'
 import Link from 'next/link'
 import { SynthesisHeader } from './components/synthesis-header'
 import { SignalCard } from './components/signal-card'
 import { Synopsis } from './components/synopsis'
 import { TriggerButton } from './components/trigger-button'
 import { InputsFeed } from './components/inputs-feed'
-import { periodLabels, startOfPeriod } from './lib/periods'
+import { periodLabels, startOfPeriod, endOfPeriod } from './lib/periods'
 import { signalStatusLabel } from './components/format-utils'
 import { StatusFilterTabs } from './components/status-filter-tabs'
 
@@ -48,8 +48,10 @@ export default async function DashboardPage({
 
   if (isFiltered) {
     const since = startOfPeriod(period)
+    const until = endOfPeriod(period)
     const conditions = []
     if (since) conditions.push(gte(syntheses.periodEnd, since))
+    if (until) conditions.push(lt(syntheses.periodEnd, until))
     if (validStatus) conditions.push(eq(signals.status, validStatus))
 
     let query = db
@@ -213,7 +215,7 @@ export default async function DashboardPage({
         className="animate-fade-up"
         style={{ animationDelay: `${signalRows.length > 0 ? 120 + signalRows.length * 60 + 60 : 160}ms` }}
       >
-        <InputsFeed since={isFiltered ? startOfPeriod(period) ?? undefined : undefined} />
+        <InputsFeed since={isFiltered ? startOfPeriod(period) ?? undefined : undefined} until={isFiltered ? endOfPeriod(period) ?? undefined : undefined} />
       </div>
     </div>
   )
