@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Signal } from '@/lib/schema'
-import { signalStatusBadge, signalStatusLabel } from './format-utils'
+import { SignalStatusDropdown } from './signal-status-dropdown'
 
 export function strengthColor(strength: number): string {
   if (strength >= 5) return 'border-l-sig-high'
@@ -29,11 +29,7 @@ export function SignalCard({ signal }: { signal: Signal }) {
           </Link>
         </h3>
         <div className="flex shrink-0 items-center gap-2">
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs font-medium ${signalStatusBadge(signal.status)}`}
-          >
-            {signalStatusLabel(signal.status)}
-          </span>
+          <SignalStatusDropdown signalId={signal.id} status={signal.status} />
           <span
             className={`flex h-7 w-7 items-center justify-center rounded-full font-mono text-xs font-semibold ${strengthBadge(signal.strength)}`}
           >
