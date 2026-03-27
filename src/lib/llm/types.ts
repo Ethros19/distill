@@ -34,6 +34,14 @@ export interface SynthesisInput {
   source: string
 }
 
+// Prior signal context for cross-synthesis dedup
+export interface PriorSignal {
+  statement: string
+  status: string
+  themes: string[]
+  strength: number
+}
+
 // Output from the synthesizer — a detected signal
 export const LLMSignalSchema = z.object({
   statement: z.string().describe('One-line signal statement describing the pattern'),

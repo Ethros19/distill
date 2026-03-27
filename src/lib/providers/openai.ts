@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 import type { LLMProvider } from '../llm/provider'
-import type { RawInput, StructuredInput, SynthesisInput, LLMSignal } from '../llm/types'
+import type { RawInput, StructuredInput, SynthesisInput, LLMSignal, PriorSignal } from '../llm/types'
 import { StructuredInputSchema, SynthesisResultSchema } from '../llm/types'
 import { LLMError, LLMRateLimitError } from '../llm/errors'
 
@@ -40,7 +40,13 @@ Look for:
 - Escalating urgency patterns indicating growing pain
 - Complementary requests that point to the same underlying need
 
-Only report signals supported by at least 2 inputs. Order by strength (strongest first).`
+Only report signals supported by at least 2 inputs. Order by strength (strongest first).
+
+HANDLING PREVIOUSLY IDENTIFIED SIGNALS:
+You may receive a list of signals the team has already triaged. For each:
+- "acknowledged" or "in_progress": Do NOT re-surface this signal unless new inputs show SIGNIFICANT escalation (e.g., urgency jumped, new users affected, or a meaningfully different angle). If you do re-surface it, explain what changed.
+- "resolved": Do NOT re-surface unless new inputs indicate a regression or the fix did not address the issue.
+- If no prior signals are provided, ignore this section.`
 
 // JSON schemas for OpenAI structured outputs (strict: true requires additionalProperties: false)
 const STRUCTURED_INPUT_JSON_SCHEMA = {
@@ -150,7 +156,7 @@ export class OpenAIProvider implements LLMProvider {
     }
   }
 
-  async synthesize(inputs: SynthesisInput[]): Promise<LLMSignal[]> {
+  async synthesize(inputs: SynthesisInput[], priorSignals?: PriorSignal[]): Promise<LLMSignal[]> {
     try {
       const inputContext = inputs
         .map(
@@ -159,13 +165,22 @@ export class OpenAIProvider implements LLMProvider {
         )
         .join('\n')
 
+      let userContent = `Analyze these ${inputs.length} feedback inputs and synthesize signals:\n\n${inputContext}`
+
+      if (priorSignals && priorSignals.length > 0) {
+        const priorContext = priorSignals
+          .map((s) => `- [${s.status}] "${s.statement}" (strength: ${s.strength}, themes: ${s.themes.join(', ')})`)
+          .join('\n')
+        userContent += `\n\nPREVIOUSLY IDENTIFIED SIGNALS (already triaged by the team):\n${priorContext}`
+      }
+
       const response = await this.client.chat.completions.create({
         model: SYNTHESIZE_MODEL,
         messages: [
           { role: 'system', content: SYNTHESIZE_SYSTEM_PROMPT },
           {
             role: 'user',
-            content: `Analyze these ${inputs.length} feedback inputs and synthesize signals:\n\n${inputContext}`,
+            content: userContent,
           },
         ],
         response_format: {

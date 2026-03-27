@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { LLMProvider } from '../llm/provider'
-import type { RawInput, StructuredInput, SynthesisInput, LLMSignal } from '../llm/types'
+import type { RawInput, StructuredInput, SynthesisInput, LLMSignal, PriorSignal } from '../llm/types'
 import { StructuredInputSchema, SynthesisResultSchema } from '../llm/types'
 import { LLMError, LLMRateLimitError } from '../llm/errors'
 
@@ -44,6 +44,12 @@ Look for:
 - Complementary requests that point to the same underlying need
 
 Only report signals supported by at least 2 inputs. Order by strength (strongest first).
+
+HANDLING PREVIOUSLY IDENTIFIED SIGNALS:
+You may receive a list of signals the team has already triaged. For each:
+- "acknowledged" or "in_progress": Do NOT re-surface this signal unless new inputs show SIGNIFICANT escalation (e.g., urgency jumped, new users affected, or a meaningfully different angle). If you do re-surface it, explain what changed.
+- "resolved": Do NOT re-surface unless new inputs indicate a regression or the fix did not address the issue.
+- If no prior signals are provided, ignore this section.
 
 IMPORTANT: Respond with ONLY a JSON object in this exact format, no markdown or explanation:
 {"signals": [{"statement": "...", "reasoning": "...", "evidence": ["id1", "id2"], "suggested_action": "...", "themes": ["theme1"], "strength": 2}]}`
@@ -95,7 +101,7 @@ export class AnthropicProvider implements LLMProvider {
     }
   }
 
-  async synthesize(inputs: SynthesisInput[]): Promise<LLMSignal[]> {
+  async synthesize(inputs: SynthesisInput[], priorSignals?: PriorSignal[]): Promise<LLMSignal[]> {
     try {
       const inputContext = inputs
         .map(
@@ -104,6 +110,15 @@ export class AnthropicProvider implements LLMProvider {
         )
         .join('\n')
 
+      let userContent = `Analyze these ${inputs.length} feedback inputs and synthesize signals:\n\n${inputContext}`
+
+      if (priorSignals && priorSignals.length > 0) {
+        const priorContext = priorSignals
+          .map((s) => `- [${s.status}] "${s.statement}" (strength: ${s.strength}, themes: ${s.themes.join(', ')})`)
+          .join('\n')
+        userContent += `\n\nPREVIOUSLY IDENTIFIED SIGNALS (already triaged by the team):\n${priorContext}`
+      }
+
       const response = await this.client.messages.create({
         model: SYNTHESIZE_MODEL,
         max_tokens: 4096,
@@ -111,7 +126,7 @@ export class AnthropicProvider implements LLMProvider {
         messages: [
           {
             role: 'user',
-            content: `Analyze these ${inputs.length} feedback inputs and synthesize signals:\n\n${inputContext}`,
+            content: userContent,
           },
         ],
       })

@@ -1,8 +1,8 @@
 import { db } from '@/lib/db'
 import { inputs, syntheses, signals } from '@/lib/schema'
 import { getLLMProvider } from '@/lib/llm/provider-factory'
-import type { SynthesisInput, LLMSignal } from '@/lib/llm/types'
-import { and, eq, gte, lt } from 'drizzle-orm'
+import type { SynthesisInput, LLMSignal, PriorSignal } from '@/lib/llm/types'
+import { and, eq, gte, lt, ne } from 'drizzle-orm'
 
 // ---------------------------------------------------------------------------
 // Period calculation
@@ -59,8 +59,26 @@ export async function runSynthesis(options?: {
     source: row.source,
   }))
 
+  // Query prior signals that have been triaged (not 'new') for cross-synthesis dedup
+  const priorSignalRows = await db
+    .select({
+      statement: signals.statement,
+      status: signals.status,
+      themes: signals.themes,
+      strength: signals.strength,
+    })
+    .from(signals)
+    .where(ne(signals.status, 'new'))
+
+  const priorSignals: PriorSignal[] = priorSignalRows.map((row) => ({
+    statement: row.statement,
+    status: row.status,
+    themes: row.themes ?? [],
+    strength: row.strength,
+  }))
+
   // Call LLM provider
-  const llmSignals: LLMSignal[] = await getLLMProvider().synthesize(synthesisInputs)
+  const llmSignals: LLMSignal[] = await getLLMProvider().synthesize(synthesisInputs, priorSignals)
 
   // Insert synthesis record
   const [synthesisRecord] = await db
