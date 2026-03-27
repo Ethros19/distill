@@ -5,10 +5,11 @@ export async function synthesizeSignals(
   inputs: SynthesisInput[],
   provider: LLMProvider,
   priorSignals?: PriorSignal[],
+  productContext?: string,
 ): Promise<LLMSignal[]> {
   if (inputs.length === 0) {
     return []
   }
 
-  return provider.synthesize(inputs, priorSignals)
+  return provider.synthesize(inputs, priorSignals, productContext)
 }

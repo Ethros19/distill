@@ -5,5 +5,5 @@ export interface LLMProvider {
   structure(input: RawInput): Promise<StructuredInput>
 
   /** Cluster structured inputs into actionable signals */
-  synthesize(inputs: SynthesisInput[], priorSignals?: PriorSignal[]): Promise<LLMSignal[]>
+  synthesize(inputs: SynthesisInput[], priorSignals?: PriorSignal[], productContext?: string): Promise<LLMSignal[]>
 }

@@ -46,6 +46,12 @@ Look for:
 
 Only report signals supported by at least 2 inputs. Order by strength (strongest first).
 
+HANDLING PRODUCT CONTEXT:
+You may receive a "CURRENT PRODUCT STATE" section listing features already shipped. Use it to:
+- NEVER signal a feature gap that is already listed as shipped/built.
+- Focus on what is specifically MISSING or BROKEN relative to what exists.
+- If feedback mentions a feature that exists, check whether the request is about a missing sub-feature or enhancement rather than the feature itself.
+
 HANDLING PREVIOUSLY IDENTIFIED SIGNALS:
 You may receive a list of signals the team has already triaged. For each:
 - "acknowledged" or "in_progress": Do NOT re-surface this signal unless new inputs show SIGNIFICANT escalation (e.g., urgency jumped, new users affected, or a meaningfully different angle). If you do re-surface it, explain what changed.
@@ -114,7 +120,7 @@ export class OllamaProvider implements LLMProvider {
     }
   }
 
-  async synthesize(inputs: SynthesisInput[], priorSignals?: PriorSignal[]): Promise<LLMSignal[]> {
+  async synthesize(inputs: SynthesisInput[], priorSignals?: PriorSignal[], productContext?: string): Promise<LLMSignal[]> {
     try {
       const inputContext = inputs
         .map(
@@ -125,9 +131,13 @@ export class OllamaProvider implements LLMProvider {
 
       let userContent = `Analyze these ${inputs.length} feedback inputs and synthesize signals:\n\n${inputContext}`
 
+      if (productContext) {
+        userContent += `\n\nCURRENT PRODUCT STATE (features already shipped):\n${productContext}`
+      }
+
       if (priorSignals && priorSignals.length > 0) {
         const priorContext = priorSignals
-          .map((s) => `- [${s.status}] "${s.statement}" (strength: ${s.strength}, themes: ${s.themes.join(', ')})`)
+          .map((s) => `- [${s.status}] "${s.statement}" (strength: ${s.themes.join(', ')})`)
           .join('\n')
         userContent += `\n\nPREVIOUSLY IDENTIFIED SIGNALS (already triaged by the team):\n${priorContext}`
       }
