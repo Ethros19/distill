@@ -1,11 +1,14 @@
 import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
-import { and, count, desc, eq, gte } from 'drizzle-orm'
+import { and, count, desc, eq, gte, lt } from 'drizzle-orm'
 import Link from 'next/link'
 import { formatTimeAgo, statusBadge } from './format-utils'
 
-export async function InputsFeed({ since }: { since?: Date }) {
-  const dateCondition = since ? gte(inputs.createdAt, since) : undefined
+export async function InputsFeed({ since, until }: { since?: Date; until?: Date }) {
+  const conditions = []
+  if (since) conditions.push(gte(inputs.createdAt, since))
+  if (until) conditions.push(lt(inputs.createdAt, until))
+  const dateCondition = conditions.length > 0 ? and(...conditions) : undefined
 
   const [recentInputs, [{ value: totalCount }], [{ value: unprocessedCount }]] =
     await Promise.all([
