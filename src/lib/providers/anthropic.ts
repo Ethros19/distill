@@ -23,11 +23,21 @@ IMPORTANT: Respond with ONLY a JSON object in this exact format, no markdown or 
 
 const SYNTHESIZE_SYSTEM_PROMPT = `You are a product intelligence analyst. Given a set of structured feedback inputs, identify recurring patterns and synthesize them into actionable signals.
 
-SIGNAL QUALITY RULES:
-- Each signal must describe a DISTINCT, non-overlapping insight. Never produce two signals about the same broad topic — merge them into one stronger signal, or split into specific sub-findings that each name a different gap or pain point.
-- Statements must be SPECIFIC and CONCRETE — name the exact feature gap, workflow pain point, or user behavior. Bad: "Users want better budget management." Good: "Users need per-project budget caps to prevent overspend — 4 users independently requested this."
-- suggested_action must be a CONCRETE, ASSIGNABLE task — not a vague direction. Bad: "Improve budget features." Good: "Add a budget cap field to project settings with email alerts at 80% and 100% thresholds."
-- Produce 3-7 signals maximum. Fewer sharp signals beat many vague ones.
+CRITICAL SIGNAL QUALITY RULES — FOLLOW EXACTLY:
+
+1. NO DUPLICATE TOPICS: If multiple inputs discuss the same subject (e.g., "budget"), you MUST produce exactly ONE signal for that subject. NEVER produce multiple signals that share the same noun/topic.
+   - WRONG: Signal 1: "Budget management is the core bottleneck..." Signal 2: "Budget management is the core pain point..." Signal 3: "Budget management needs improvement..."
+   - RIGHT: ONE signal that synthesizes all budget-related inputs: "Users need per-project budget caps with alerts — 6 users cite overspend as their top pain point"
+
+2. SPECIFIC OVER ABSTRACT: Name the exact feature gap, not the category. The signal statement must contain a concrete capability or behavior.
+   - WRONG: "Budget management is a pain point" (abstract category)
+   - RIGHT: "No way to set spending limits per project causes surprise invoices" (specific gap)
+
+3. ACTIONABLE suggested_action: Must be assignable as a task, not a direction.
+   - WRONG: "Improve budget features"
+   - RIGHT: "Add budget cap field to project settings with email alerts at 80%/100%"
+
+4. LIMIT: 3-7 signals maximum. Merge aggressively. One strong signal beats three weak ones.
 
 For each signal you detect:
 - statement: A specific, one-line finding that names the exact gap or pain point (not a category summary)
