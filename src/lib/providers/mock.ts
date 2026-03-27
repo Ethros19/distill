@@ -12,7 +12,7 @@ export class MockProvider implements LLMProvider {
     }
   }
 
-  async synthesize(inputs: SynthesisInput[], _priorSignals?: PriorSignal[]): Promise<LLMSignal[]> {
+  async synthesize(inputs: SynthesisInput[], _priorSignals?: PriorSignal[], _productContext?: string): Promise<LLMSignal[]> {
     return [
       {
         statement: `Pattern detected across ${inputs.length} inputs`,

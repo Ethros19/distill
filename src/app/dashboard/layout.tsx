@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { LogoutButton } from './components/logout-button'
 import { HelpButton } from './components/help-modal'
 import { ThemeSwitcher } from './components/theme-switcher'
@@ -24,6 +25,16 @@ export default function DashboardLayout({
           <div className="flex items-center gap-1">
             <HelpButton />
             <ThemeSwitcher />
+            <Link
+              href="/dashboard/settings"
+              className="rounded-lg px-2 py-1.5 text-sm text-dim transition-colors hover:bg-panel-alt hover:text-ink"
+              aria-label="Settings"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="inline-block" aria-hidden="true">
+                <path d="M6.5 1.5h3l.5 2 1.5.9 2-.5 1.5 2.6-1.5 1.5v1.5l1.5 1.5-1.5 2.6-2-.5-1.5.9-.5 2h-3l-.5-2-1.5-.9-2 .5L1 11l1.5-1.5V8L1 6.5l1.5-2.6 2 .5L6 3.5l.5-2z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+                <circle cx="8" cy="8.25" r="2" stroke="currentColor" strokeWidth="1.2" />
+              </svg>
+            </Link>
             <LogoutButton />
           </div>
         </div>

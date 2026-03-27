@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { inputs, syntheses, signals } from '@/lib/schema'
+import { inputs, syntheses, signals, settings } from '@/lib/schema'
 import { getLLMProvider } from '@/lib/llm/provider-factory'
 import type { SynthesisInput, LLMSignal, PriorSignal } from '@/lib/llm/types'
 import { and, eq, gte, lt, ne } from 'drizzle-orm'
@@ -77,8 +77,15 @@ export async function runSynthesis(options?: {
     strength: row.strength,
   }))
 
+  // Load product context for feature-aware synthesis
+  const [ctxRow] = await db
+    .select({ value: settings.value })
+    .from(settings)
+    .where(eq(settings.key, 'product_context'))
+  const productContext = ctxRow?.value || undefined
+
   // Call LLM provider
-  const llmSignals: LLMSignal[] = await getLLMProvider().synthesize(synthesisInputs, priorSignals)
+  const llmSignals: LLMSignal[] = await getLLMProvider().synthesize(synthesisInputs, priorSignals, productContext)
 
   // Insert synthesis record
   const [synthesisRecord] = await db

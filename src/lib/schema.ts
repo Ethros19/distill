@@ -115,6 +115,15 @@ export const loginAttempts = pgTable(
 )
 
 // ---------------------------------------------------------------------------
+// settings — key-value configuration (product context, preferences, etc.)
+// ---------------------------------------------------------------------------
+export const settings = pgTable('settings', {
+  key: varchar('key', { length: 50 }).primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// ---------------------------------------------------------------------------
 // Inferred types for use across the codebase
 // ---------------------------------------------------------------------------
 export type Input = typeof inputs.$inferSelect
