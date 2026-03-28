@@ -8,6 +8,8 @@ import { eq, inArray } from 'drizzle-orm'
 import { signalStatusBadge, signalStatusLabel } from '../../components/format-utils'
 import { strengthColor } from '../../components/signal-card'
 import { StatusControls } from './components/status-controls'
+import { LinearPushButton } from './components/linear-push-button'
+import { isLinearConfigured } from '@/lib/linear'
 import type { Metadata } from 'next'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -48,6 +50,8 @@ export default async function SignalDetailPage({
   const { id } = await params
   const signal = await getSignal(id)
   if (!signal) notFound()
+
+  const linearConfigured = isLinearConfigured()
 
   // Resolve evidence inputs
   const evidenceIds = signal.evidence ?? []
@@ -99,6 +103,16 @@ export default async function SignalDetailPage({
               currentStatus={signal.status}
             />
           </div>
+
+          {/* Linear integration */}
+          {linearConfigured && (
+            <div className="mt-3 border-t border-edge pt-3">
+              <LinearPushButton
+                signalId={signal.id}
+                existingUrl={signal.linearIssueUrl}
+              />
+            </div>
+          )}
         </div>
       </div>
 
