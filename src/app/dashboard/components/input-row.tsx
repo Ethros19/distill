@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Input } from '@/lib/schema'
-import { formatTimeAgo, statusBadge } from './format-utils'
+import { formatTimeAgo, statusBadge, typeBadge, typeLabel } from './format-utils'
 
 export function InputRow({ input }: { input: Input }) {
   const [showConfirm, setShowConfirm] = useState(false)
@@ -67,6 +67,13 @@ export function InputRow({ input }: { input: Input }) {
           >
             {input.status}
           </span>
+          {input.type && (
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${typeBadge(input.type)}`}
+            >
+              {typeLabel(input.type)}
+            </span>
+          )}
           {!showConfirm ? (
             <button
               onClick={() => setShowConfirm(true)}
