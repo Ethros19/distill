@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
 import { and, count, desc, eq, gte, lt } from 'drizzle-orm'
 import Link from 'next/link'
-import { formatTimeAgo, statusBadge } from './format-utils'
+import { formatTimeAgo, statusBadge, typeBadge, typeLabel } from './format-utils'
 
 export async function InputsFeed({ since, until }: { since?: Date; until?: Date }) {
   const conditions = []
@@ -66,11 +66,20 @@ export async function InputsFeed({ since, until }: { since?: Date; until?: Date 
                     </div>
                   )}
                 </div>
-                <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${statusBadge(input.status)}`}
-                >
-                  {input.status}
-                </span>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusBadge(input.status)}`}
+                  >
+                    {input.status}
+                  </span>
+                  {input.type && (
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${typeBadge(input.type)}`}
+                    >
+                      {typeLabel(input.type)}
+                    </span>
+                  )}
+                </div>
               </div>
             </li>
           ))}
