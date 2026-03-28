@@ -15,11 +15,12 @@ Analyze the content carefully and return:
 - themes: An array of 1-5 theme keywords that capture the main topics
 - urgency: An integer from 1 (low) to 5 (critical) based on the tone and content
 - confidence: A float from 0.0 to 1.0 indicating how confident you are in your analysis
+- is_feedback: Boolean — true if the content is genuine product feedback (feature requests, bug reports, complaints, praise, observations). false if the content is noise: login verification codes, password resets, transactional receipts, automated notifications, CVs/resumes, spam, or non-product content
 
 Consider the source channel and contributor context when assessing urgency and type.
 
 IMPORTANT: Respond with ONLY a JSON object in this exact format, no markdown or explanation:
-{"summary": "...", "type": "...", "themes": ["..."], "urgency": 1, "confidence": 0.9}`
+{"summary": "...", "type": "...", "themes": ["..."], "urgency": 1, "confidence": 0.9, "is_feedback": true}`
 
 const SYNTHESIZE_SYSTEM_PROMPT = `You are a product intelligence analyst. Given a set of structured feedback inputs, identify recurring patterns and synthesize them into actionable signals.
 
