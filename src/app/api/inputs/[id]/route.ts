@@ -28,8 +28,8 @@ export async function PATCH(
     }
 
     // Validate types
-    if (notes !== undefined && typeof notes !== 'string') {
-      return NextResponse.json({ error: 'notes must be a string' }, { status: 400 })
+    if (notes !== undefined && notes !== null && typeof notes !== 'string') {
+      return NextResponse.json({ error: 'notes must be a string or null' }, { status: 400 })
     }
     if (is_feedback !== undefined && typeof is_feedback !== 'boolean') {
       return NextResponse.json({ error: 'is_feedback must be a boolean' }, { status: 400 })
@@ -99,8 +99,13 @@ export async function DELETE(
         }
 
         // Strip the input UUID from all dependent signal evidence arrays
+        // Note: JSONB `-` operator only removes keys from objects, not values from arrays.
+        // Use jsonb_array_elements + jsonb_agg to filter the UUID from the array.
         await tx.execute(
-          sql`UPDATE signals SET evidence = evidence - ${id} WHERE evidence::jsonb @> ${JSON.stringify([id])}::jsonb`
+          sql`UPDATE signals SET evidence = COALESCE(
+            (SELECT jsonb_agg(elem) FROM jsonb_array_elements(evidence) AS elem WHERE elem != to_jsonb(${id}::text)),
+            '[]'::jsonb
+          ) WHERE evidence::jsonb @> ${JSON.stringify([id])}::jsonb`
         )
         strippedSignals = dependentSignals.length
       }
