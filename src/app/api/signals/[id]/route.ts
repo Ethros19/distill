@@ -57,13 +57,24 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { status } = body
+    const { status, notes } = body as { status?: string; notes?: string | null }
 
-    if (!SIGNAL_STATUSES.includes(status)) {
+    if (status === undefined && notes === undefined) {
+      return NextResponse.json(
+        { error: 'At least one of status or notes must be provided' },
+        { status: 400 }
+      )
+    }
+
+    if (status !== undefined && !SIGNAL_STATUSES.includes(status as typeof SIGNAL_STATUSES[number])) {
       return NextResponse.json(
         { error: 'Invalid status', valid: SIGNAL_STATUSES },
         { status: 422 }
       )
+    }
+
+    if (notes !== undefined && notes !== null && typeof notes !== 'string') {
+      return NextResponse.json({ error: 'notes must be a string or null' }, { status: 400 })
     }
 
     const [existing] = await db
@@ -75,9 +86,13 @@ export async function PATCH(
       return NextResponse.json({ error: 'Signal not found' }, { status: 404 })
     }
 
+    const updateObj: Record<string, unknown> = {}
+    if (status !== undefined) updateObj.status = status
+    if (notes !== undefined) updateObj.notes = notes
+
     const [updated] = await db
       .update(signals)
-      .set({ status })
+      .set(updateObj)
       .where(eq(signals.id, id))
       .returning()
 

@@ -9,6 +9,7 @@ import { signalStatusBadge, signalStatusLabel } from '../../components/format-ut
 import { strengthColor } from '../../components/signal-card'
 import { StatusControls } from './components/status-controls'
 import { LinearPushButton } from './components/linear-push-button'
+import { SignalNotes } from './components/signal-notes'
 import { isLinearConfigured } from '@/lib/linear'
 import type { Metadata } from 'next'
 
@@ -143,11 +144,22 @@ export default async function SignalDetailPage({
         </div>
       )}
 
+      {/* Notes */}
+      <div
+        className="animate-fade-up space-y-2"
+        style={{ animationDelay: '200ms' }}
+      >
+        <h2 className="text-sm font-medium uppercase tracking-wider text-dim">
+          Notes
+        </h2>
+        <SignalNotes signalId={signal.id} initialNotes={signal.notes} />
+      </div>
+
       {/* Themes */}
       {signal.themes && signal.themes.length > 0 && (
         <div
           className="animate-fade-up space-y-2"
-          style={{ animationDelay: '200ms' }}
+          style={{ animationDelay: '260ms' }}
         >
           <h2 className="text-sm font-medium uppercase tracking-wider text-dim">
             Themes
@@ -169,7 +181,7 @@ export default async function SignalDetailPage({
       {/* Evidence */}
       <div
         className="animate-fade-up space-y-3"
-        style={{ animationDelay: '260ms' }}
+        style={{ animationDelay: '320ms' }}
       >
         <h2 className="text-sm font-medium uppercase tracking-wider text-dim">
           Supporting Inputs
@@ -187,7 +199,7 @@ export default async function SignalDetailPage({
               <div
                 key={input.id}
                 className="animate-fade-up rounded-xl border border-edge bg-panel p-4"
-                style={{ animationDelay: `${320 + i * 60}ms` }}
+                style={{ animationDelay: `${380 + i * 60}ms` }}
               >
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-sm leading-relaxed text-ink">

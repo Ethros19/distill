@@ -68,6 +68,7 @@ export async function runSynthesis(options?: {
       status: signals.status,
       themes: signals.themes,
       strength: signals.strength,
+      notes: signals.notes,
     })
     .from(signals)
     .where(ne(signals.status, 'new'))
@@ -77,6 +78,7 @@ export async function runSynthesis(options?: {
     status: row.status,
     themes: row.themes ?? [],
     strength: row.strength,
+    notes: row.notes ?? undefined,
   }))
 
   // Load product context for feature-aware synthesis

@@ -46,6 +46,7 @@ export interface PriorSignal {
   status: string
   themes: string[]
   strength: number
+  notes?: string
 }
 
 // Output from the synthesizer — a detected signal
