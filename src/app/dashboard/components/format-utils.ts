@@ -37,6 +37,40 @@ export function signalStatusBadge(status: string): string {
   }
 }
 
+export function typeLabel(type: string | null): string {
+  switch (type) {
+    case 'feature_request':
+      return 'Feature Request'
+    case 'bug_report':
+      return 'Bug Report'
+    case 'praise':
+      return 'Praise'
+    case 'complaint':
+      return 'Complaint'
+    case 'observation':
+      return 'Observation'
+    default:
+      return 'Unknown'
+  }
+}
+
+export function typeBadge(type: string | null): string {
+  switch (type) {
+    case 'feature_request':
+      return 'bg-sig-low/10 text-sig-low'
+    case 'bug_report':
+      return 'bg-sig-high/10 text-sig-high'
+    case 'praise':
+      return 'bg-amber-500/10 text-amber-600'
+    case 'complaint':
+      return 'bg-sig-mid/10 text-sig-mid'
+    case 'observation':
+      return 'bg-panel-alt text-dim'
+    default:
+      return 'bg-panel-alt text-dim'
+  }
+}
+
 export function signalStatusLabel(status: string): string {
   switch (status) {
     case 'new':
