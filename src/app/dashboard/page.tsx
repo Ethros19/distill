@@ -66,6 +66,7 @@ export default async function DashboardPage({
         strength: signals.strength,
         status: signals.status,
         linearIssueUrl: signals.linearIssueUrl,
+        notes: signals.notes,
       })
       .from(signals)
       .innerJoin(syntheses, eq(signals.synthesisId, syntheses.id))

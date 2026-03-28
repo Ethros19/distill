@@ -138,7 +138,7 @@ export class OllamaProvider implements LLMProvider {
 
       if (priorSignals && priorSignals.length > 0) {
         const priorContext = priorSignals
-          .map((s) => `- [${s.status}] "${s.statement}" (strength: ${s.themes.join(', ')})`)
+          .map((s) => `- [${s.status}] "${s.statement}" (strength: ${s.strength}, themes: ${s.themes.join(', ')})${s.notes ? ` | note: ${s.notes}` : ''}`)
           .join('\n')
         userContent += `\n\nPREVIOUSLY IDENTIFIED SIGNALS (already triaged by the team):\n${priorContext}`
       }

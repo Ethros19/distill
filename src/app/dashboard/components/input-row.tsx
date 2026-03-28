@@ -17,6 +17,7 @@ export function InputRow({ input }: { input: Input }) {
   const [savedNotes, setSavedNotes] = useState(input.notes ?? '')
   const [savingNotes, setSavingNotes] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const notesRef = useRef<HTMLTextAreaElement>(null)
   const router = useRouter()
 
@@ -122,9 +123,17 @@ export function InputRow({ input }: { input: Input }) {
     <li className={`py-3 first:pt-0 last:pb-0 ${!isFeedback ? 'border-l-2 border-sig-mid/30 pl-3' : ''}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className={`truncate text-sm ${isFeedback ? 'text-ink' : 'text-muted'}`}>
-            {input.summary || input.rawContent.slice(0, 120)}
-          </p>
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className={`text-left text-sm ${isFeedback ? 'text-ink' : 'text-muted'} ${expanded ? '' : 'truncate'} w-full`}
+          >
+            {expanded ? (input.rawContent || input.summary) : (input.summary || input.rawContent.slice(0, 120))}
+          </button>
+          {expanded && input.summary && input.rawContent && input.summary !== input.rawContent && (
+            <p className="mt-2 text-xs text-dim italic">
+              Summary: {input.summary}
+            </p>
+          )}
           <div className="mt-1.5 flex items-center gap-3 text-xs text-muted">
             <span>{input.source}</span>
             <span>&middot;</span>

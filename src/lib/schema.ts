@@ -76,6 +76,7 @@ export const signals = pgTable(
     strength: smallint('strength').notNull(),
     status: varchar('status', { length: 20 }).notNull().default('new'),
     linearIssueUrl: text('linear_issue_url'),
+    notes: text('notes'),
   },
   (table) => [
     index('signals_synthesis_id_idx').on(table.synthesisId),
