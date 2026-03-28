@@ -9,7 +9,36 @@ export function InputRow({ input }: { input: Input }) {
   const [showConfirm, setShowConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
+  const [isFeedback, setIsFeedback] = useState(input.isFeedback)
+  const [toggling, setToggling] = useState(false)
   const router = useRouter()
+
+  async function handleToggleFeedback() {
+    if (toggling) return
+    const prev = isFeedback
+    setIsFeedback(!prev)
+    setToggling(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/inputs/${input.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_feedback: !prev }),
+      })
+      if (!res.ok) {
+        setIsFeedback(prev)
+        const data = await res.json()
+        setError(data.error || 'Toggle failed')
+      } else {
+        router.refresh()
+      }
+    } catch {
+      setIsFeedback(prev)
+      setError('An error occurred')
+    } finally {
+      setToggling(false)
+    }
+  }
 
   async function handleDelete() {
     setDeleting(true)
@@ -62,6 +91,20 @@ export function InputRow({ input }: { input: Input }) {
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          {input.status === 'processed' && (
+            <button
+              onClick={handleToggleFeedback}
+              disabled={toggling}
+              className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors disabled:opacity-50 ${
+                isFeedback
+                  ? 'bg-sig-low/10 text-sig-low hover:bg-sig-low/20'
+                  : 'bg-panel-alt text-muted hover:bg-edge'
+              }`}
+              title={isFeedback ? 'Mark as noise' : 'Mark as feedback'}
+            >
+              {isFeedback ? 'Feedback' : 'Noise'}
+            </button>
+          )}
           <span
             className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusBadge(input.status)}`}
           >
