@@ -74,6 +74,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid UUID format' }, { status: 400 })
     }
 
+    const force = new URL(request.url).searchParams.get('force') === 'true'
+
     const [existing] = await db
       .select({ id: inputs.id })
       .from(inputs)
@@ -83,7 +85,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Input not found' }, { status: 404 })
     }
 
-    // Check dependency and delete atomically to prevent race conditions
+    let strippedSignals = 0
+
     await db.transaction(async (tx) => {
       const dependentSignals = await tx
         .select({ id: signals.id })
@@ -91,13 +94,21 @@ export async function DELETE(
         .where(sql`${signals.evidence}::jsonb @> ${JSON.stringify([id])}::jsonb`)
 
       if (dependentSignals.length > 0) {
-        throw new Error('CONFLICT: Input is referenced in synthesized signals')
+        if (!force) {
+          throw new Error('CONFLICT: Input is referenced in synthesized signals')
+        }
+
+        // Strip the input UUID from all dependent signal evidence arrays
+        await tx.execute(
+          sql`UPDATE signals SET evidence = evidence - ${id} WHERE evidence::jsonb @> ${JSON.stringify([id])}::jsonb`
+        )
+        strippedSignals = dependentSignals.length
       }
 
       await tx.delete(inputs).where(eq(inputs.id, id))
     })
 
-    return NextResponse.json({ success: true }, { status: 200 })
+    return NextResponse.json({ success: true, strippedSignals }, { status: 200 })
   } catch (error) {
     if (error instanceof Error && error.message.startsWith('CONFLICT:')) {
       return NextResponse.json(
