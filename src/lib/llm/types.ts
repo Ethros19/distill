@@ -37,6 +37,7 @@ export interface SynthesisInput {
   themes: string[]
   urgency: number
   source: string
+  notes?: string
 }
 
 // Prior signal context for cross-synthesis dedup

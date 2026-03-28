@@ -126,7 +126,7 @@ export class OllamaProvider implements LLMProvider {
       const inputContext = inputs
         .map(
           (i) =>
-            `[${i.id}] (${i.source}, ${i.type}, urgency:${i.urgency}) ${i.summary} | themes: ${i.themes.join(', ')}`,
+            `[${i.id}] (${i.source}, ${i.type}, urgency:${i.urgency}) ${i.summary} | themes: ${i.themes.join(', ')}${i.notes ? ` | note: ${i.notes}` : ''}`,
         )
         .join('\n')
 
