@@ -35,9 +35,11 @@ export default async function InputsPage({
     countQuery = countQuery.where(eq(inputs.status, validStatus))
   }
 
-  const [rows, [{ value: total }]] = await Promise.all([
+  const [rows, [{ value: total }], [{ value: unprocessedCount }], [{ value: processedCount }]] = await Promise.all([
     dataQuery.orderBy(desc(inputs.createdAt)).limit(PAGE_SIZE).offset(offset),
     countQuery,
+    db.select({ value: count() }).from(inputs).where(eq(inputs.status, 'unprocessed')),
+    db.select({ value: count() }).from(inputs).where(eq(inputs.status, 'processed')),
   ])
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
@@ -57,11 +59,12 @@ export default async function InputsPage({
     return `/dashboard/inputs${qs ? `?${qs}` : ''}`
   }
 
+  const allCount = unprocessedCount + processedCount
   const tabs = [
-    { label: 'All', value: undefined },
-    { label: 'Unprocessed', value: 'unprocessed' },
-    { label: 'Processed', value: 'processed' },
-  ] as const
+    { label: 'All', value: undefined, count: allCount },
+    { label: 'Unprocessed', value: 'unprocessed' as const, count: unprocessedCount },
+    { label: 'Processed', value: 'processed' as const, count: processedCount },
+  ]
 
   return (
     <div className="space-y-6">
@@ -98,6 +101,7 @@ export default async function InputsPage({
               }`}
             >
               {tab.label}
+              <span className="ml-1 text-muted">({tab.count})</span>
             </Link>
           )
         })}
