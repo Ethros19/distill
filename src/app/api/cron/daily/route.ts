@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
             urgency: structured.urgency,
             confidence: structured.confidence,
             contentHash: structured.content_hash,
+            isFeedback: structured.is_feedback,
             status: 'processed',
           })
           .where(eq(inputs.id, input.id))

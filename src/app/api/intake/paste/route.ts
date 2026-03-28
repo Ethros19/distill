@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
             themes: structured.themes,
             urgency: structured.urgency,
             confidence: structured.confidence,
+            isFeedback: structured.is_feedback,
             status: 'processed',
           })
           .where(eq(inputs.id, inputId))
