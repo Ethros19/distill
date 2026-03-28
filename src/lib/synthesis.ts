@@ -41,6 +41,7 @@ export async function runSynthesis(options?: {
         gte(inputs.createdAt, periodStart),
         lt(inputs.createdAt, periodEnd),
         eq(inputs.status, 'processed'),
+        eq(inputs.isFeedback, true),
       ),
     )
 
@@ -57,6 +58,7 @@ export async function runSynthesis(options?: {
     themes: row.themes ?? [],
     urgency: row.urgency ?? 1,
     source: row.source,
+    notes: row.notes ?? undefined,
   }))
 
   // Query prior signals that have been triaged (not 'new') for cross-synthesis dedup
