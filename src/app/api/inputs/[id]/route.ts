@@ -85,43 +85,39 @@ export async function DELETE(
       return NextResponse.json({ error: 'Input not found' }, { status: 404 })
     }
 
-    let strippedSignals = 0
+    // Check for dependent signals
+    const dependentSignals = await db
+      .select({ id: signals.id })
+      .from(signals)
+      .where(sql`${signals.evidence}::jsonb @> ${JSON.stringify([id])}::jsonb`)
 
-    await db.transaction(async (tx) => {
-      const dependentSignals = await tx
-        .select({ id: signals.id })
-        .from(signals)
-        .where(sql`${signals.evidence}::jsonb @> ${JSON.stringify([id])}::jsonb`)
+    if (dependentSignals.length > 0 && !force) {
+      return NextResponse.json(
+        { error: 'Input is referenced in synthesized signals' },
+        { status: 409 }
+      )
+    }
 
-      if (dependentSignals.length > 0) {
-        if (!force) {
-          throw new Error('CONFLICT: Input is referenced in synthesized signals')
-        }
-
-        // Strip the input UUID from all dependent signal evidence arrays
-        // Note: JSONB `-` operator only removes keys from objects, not values from arrays.
-        // Use jsonb_array_elements + jsonb_agg to filter the UUID from the array.
+    if (dependentSignals.length > 0 && force) {
+      // Strip the input UUID from evidence arrays, then delete — use transaction for atomicity
+      await db.transaction(async (tx) => {
         await tx.execute(
           sql`UPDATE signals SET evidence = COALESCE(
             (SELECT jsonb_agg(elem) FROM jsonb_array_elements(evidence) AS elem WHERE elem != to_jsonb(${id}::text)),
             '[]'::jsonb
           ) WHERE evidence::jsonb @> ${JSON.stringify([id])}::jsonb`
         )
-        strippedSignals = dependentSignals.length
-      }
-
-      await tx.delete(inputs).where(eq(inputs.id, id))
-    })
-
-    return NextResponse.json({ success: true, strippedSignals }, { status: 200 })
-  } catch (error) {
-    if (error instanceof Error && error.message.startsWith('CONFLICT:')) {
-      return NextResponse.json(
-        { error: 'Input is referenced in synthesized signals' },
-        { status: 409 }
-      )
+        await tx.delete(inputs).where(eq(inputs.id, id))
+      })
+      return NextResponse.json({ success: true, strippedSignals: dependentSignals.length }, { status: 200 })
     }
-    console.error('Delete input error:', error)
+
+    // No dependent signals — simple delete, no transaction needed
+    await db.delete(inputs).where(eq(inputs.id, id))
+    return NextResponse.json({ success: true, strippedSignals: 0 }, { status: 200 })
+  } catch (error) {
+    console.error('Delete input error:', error instanceof Error ? error.message : error)
+    console.error('Stack:', error instanceof Error ? error.stack : 'N/A')
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
