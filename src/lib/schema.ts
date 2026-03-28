@@ -31,6 +31,8 @@ export const inputs = pgTable(
     confidence: real('confidence'),
     contentHash: varchar('content_hash', { length: 64 }),
     status: varchar('status', { length: 20 }).notNull().default('unprocessed'),
+    isFeedback: boolean('is_feedback').notNull().default(true),
+    notes: text('notes'),
   },
   (table) => [
     uniqueIndex('inputs_content_hash_idx').on(table.contentHash),
