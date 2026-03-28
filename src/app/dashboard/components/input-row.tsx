@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Input } from '@/lib/schema'
 import { formatTimeAgo, statusBadge, typeBadge, typeLabel } from './format-utils'
@@ -11,6 +11,12 @@ export function InputRow({ input }: { input: Input }) {
   const [error, setError] = useState('')
   const [isFeedback, setIsFeedback] = useState(input.isFeedback)
   const [toggling, setToggling] = useState(false)
+  const [editingNotes, setEditingNotes] = useState(false)
+  const [notes, setNotes] = useState(input.notes ?? '')
+  const [savedNotes, setSavedNotes] = useState(input.notes ?? '')
+  const [savingNotes, setSavingNotes] = useState(false)
+  const [showSaved, setShowSaved] = useState(false)
+  const notesRef = useRef<HTMLTextAreaElement>(null)
   const router = useRouter()
 
   async function handleToggleFeedback() {
@@ -37,6 +43,49 @@ export function InputRow({ input }: { input: Input }) {
       setError('An error occurred')
     } finally {
       setToggling(false)
+    }
+  }
+
+  async function handleSaveNotes() {
+    if (savingNotes) return
+    const value = notes.trim()
+    if (value === savedNotes) {
+      setEditingNotes(false)
+      return
+    }
+    setSavingNotes(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/inputs/${input.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: value || null }),
+      })
+      if (res.ok) {
+        setSavedNotes(value)
+        setNotes(value)
+        setEditingNotes(false)
+        setShowSaved(true)
+        setTimeout(() => setShowSaved(false), 1500)
+        router.refresh()
+      } else {
+        const data = await res.json()
+        setError(data.error || 'Save failed')
+      }
+    } catch {
+      setError('An error occurred')
+    } finally {
+      setSavingNotes(false)
+    }
+  }
+
+  function handleNotesKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Escape') {
+      setNotes(savedNotes)
+      setEditingNotes(false)
+    } else if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSaveNotes()
     }
   }
 
@@ -84,6 +133,46 @@ export function InputRow({ input }: { input: Input }) {
                   {theme}
                 </span>
               ))}
+            </div>
+          )}
+          {editingNotes ? (
+            <div className="mt-1.5">
+              <textarea
+                ref={notesRef}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                onBlur={handleSaveNotes}
+                onKeyDown={handleNotesKeyDown}
+                rows={2}
+                className="w-full resize-none rounded-md border border-edge bg-panel px-2 py-1.5 text-xs text-ink placeholder:text-muted focus:border-accent focus:outline-none"
+                placeholder="Add a note..."
+                autoFocus
+                disabled={savingNotes}
+              />
+            </div>
+          ) : (
+            <div className="mt-1.5">
+              {savedNotes ? (
+                <button
+                  onClick={() => setEditingNotes(true)}
+                  className="group flex items-center gap-1 text-xs text-dim hover:text-ink"
+                >
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className="shrink-0 text-muted group-hover:text-ink">
+                    <path d="M11.5 1.5l3 3-9 9H2.5v-3l9-9z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="truncate max-w-[240px]">{savedNotes.length > 60 ? savedNotes.slice(0, 60) + '\u2026' : savedNotes}</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setEditingNotes(true)}
+                  className="text-xs text-muted hover:text-dim"
+                >
+                  Add note...
+                </button>
+              )}
+              {showSaved && (
+                <span className="ml-2 text-[10px] text-sig-low animate-pulse">Saved</span>
+              )}
             </div>
           )}
           {error && (
