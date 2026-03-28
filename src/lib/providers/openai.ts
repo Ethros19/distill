@@ -15,6 +15,7 @@ Analyze the content carefully and return:
 - themes: An array of 1-5 theme keywords that capture the main topics
 - urgency: An integer from 1 (low) to 5 (critical) based on the tone and content
 - confidence: A float from 0.0 to 1.0 indicating how confident you are in your analysis
+- is_feedback: Boolean — true if the content is genuine product feedback (feature requests, bug reports, complaints, praise, observations). false if the content is noise: login verification codes, password resets, transactional receipts, automated notifications, CVs/resumes, spam, or non-product content
 
 Consider the source channel and contributor context when assessing urgency and type.`
 
@@ -77,8 +78,13 @@ const STRUCTURED_INPUT_JSON_SCHEMA = {
       type: 'number',
       description: 'Confidence in the structuring accuracy from 0.0 to 1.0',
     },
+    is_feedback: {
+      type: 'boolean',
+      description:
+        'true if genuine product feedback (feature requests, bug reports, complaints, praise, observations). false if noise: login codes, password resets, transactional receipts, automated notifications, CVs/resumes, spam',
+    },
   },
-  required: ['summary', 'type', 'themes', 'urgency', 'confidence'],
+  required: ['summary', 'type', 'themes', 'urgency', 'confidence', 'is_feedback'],
   additionalProperties: false,
 } as const
 

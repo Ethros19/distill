@@ -9,6 +9,7 @@ export class MockProvider implements LLMProvider {
       themes: ['general-feedback'],
       urgency: 3,
       confidence: 0.8,
+      is_feedback: true,
     }
   }
 
