@@ -20,6 +20,11 @@ export const StructuredInputSchema = z.object({
     .min(0)
     .max(1)
     .describe('Confidence in the structuring accuracy from 0.0 to 1.0'),
+  is_feedback: z
+    .boolean()
+    .describe(
+      'Whether the content is genuine product feedback (true) vs noise like login codes, transactional emails, auto-replies, CVs, spam (false)',
+    ),
 })
 
 export type StructuredInput = z.infer<typeof StructuredInputSchema>
