@@ -119,10 +119,10 @@ export function InputRow({ input }: { input: Input }) {
   }
 
   return (
-    <li className="py-3 first:pt-0 last:pb-0">
+    <li className={`py-3 first:pt-0 last:pb-0 ${!isFeedback ? 'border-l-2 border-sig-mid/30 pl-3' : ''}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm text-ink">
+          <p className={`truncate text-sm ${isFeedback ? 'text-ink' : 'text-muted'}`}>
             {input.summary || input.rawContent.slice(0, 120)}
           </p>
           <div className="mt-1.5 flex items-center gap-3 text-xs text-muted">
@@ -143,6 +143,9 @@ export function InputRow({ input }: { input: Input }) {
                 </span>
               ))}
             </div>
+          )}
+          {input.status === 'processed' && !isFeedback && (
+            <p className="mt-1 text-[10px] text-sig-mid">Excluded from synthesis</p>
           )}
           {editingNotes ? (
             <div className="mt-1.5">
