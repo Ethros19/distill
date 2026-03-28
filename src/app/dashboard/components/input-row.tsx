@@ -7,6 +7,7 @@ import { formatTimeAgo, statusBadge, typeBadge, typeLabel } from './format-utils
 
 export function InputRow({ input }: { input: Input }) {
   const [showConfirm, setShowConfirm] = useState(false)
+  const [showForceDelete, setShowForceDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const [isFeedback, setIsFeedback] = useState(input.isFeedback)
@@ -89,21 +90,29 @@ export function InputRow({ input }: { input: Input }) {
     }
   }
 
-  async function handleDelete() {
+  async function handleDelete(force = false) {
     setDeleting(true)
     setError('')
     try {
-      const res = await fetch(`/api/inputs/${input.id}`, { method: 'DELETE' })
+      const url = force
+        ? `/api/inputs/${input.id}?force=true`
+        : `/api/inputs/${input.id}`
+      const res = await fetch(url, { method: 'DELETE' })
       if (res.ok) {
         router.refresh()
+      } else if (res.status === 409 && !force) {
+        setShowConfirm(false)
+        setShowForceDelete(true)
       } else {
         const data = await res.json()
         setError(data.error || 'Delete failed')
         setShowConfirm(false)
+        setShowForceDelete(false)
       }
     } catch {
       setError('An error occurred')
       setShowConfirm(false)
+      setShowForceDelete(false)
     } finally {
       setDeleting(false)
     }
@@ -206,7 +215,24 @@ export function InputRow({ input }: { input: Input }) {
               {typeLabel(input.type)}
             </span>
           )}
-          {!showConfirm ? (
+          {showForceDelete ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-sig-mid">Referenced by signals</span>
+              <button
+                onClick={() => handleDelete(true)}
+                disabled={deleting}
+                className="rounded-lg bg-sig-high px-2.5 py-1 text-xs font-medium text-white transition-opacity hover:opacity-80 disabled:opacity-50"
+              >
+                {deleting ? 'Deleting\u2026' : 'Force Delete'}
+              </button>
+              <button
+                onClick={() => setShowForceDelete(false)}
+                className="rounded-lg border border-edge px-2.5 py-1 text-xs font-medium text-dim transition-colors hover:bg-panel-alt"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : !showConfirm ? (
             <button
               onClick={() => setShowConfirm(true)}
               className="rounded-lg p-1.5 text-muted transition-colors hover:bg-panel-alt hover:text-sig-high"
@@ -224,7 +250,7 @@ export function InputRow({ input }: { input: Input }) {
           ) : (
             <div className="flex items-center gap-1.5">
               <button
-                onClick={handleDelete}
+                onClick={() => handleDelete(false)}
                 disabled={deleting}
                 className="rounded-lg bg-sig-high/10 px-2.5 py-1 text-xs font-medium text-sig-high transition-opacity hover:opacity-80 disabled:opacity-50"
               >
