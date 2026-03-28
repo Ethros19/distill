@@ -22,6 +22,20 @@ export default function DashboardLayout({
               Signal Intelligence
             </span>
           </div>
+          <nav className="flex items-center gap-1">
+            <Link
+              href="/dashboard"
+              className="rounded-lg px-2 py-1.5 text-sm text-dim transition-colors hover:bg-panel-alt hover:text-ink"
+            >
+              Signals
+            </Link>
+            <Link
+              href="/dashboard/inputs"
+              className="rounded-lg px-2 py-1.5 text-sm text-dim transition-colors hover:bg-panel-alt hover:text-ink"
+            >
+              Inputs
+            </Link>
+          </nav>
           <div className="flex items-center gap-1">
             <HelpButton />
             <ThemeSwitcher />
