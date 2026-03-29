@@ -45,6 +45,9 @@ export function SourcesClient({ feeds, activeStreamCount }: { feeds: FeedWithCou
           <h2 className="font-display text-xl tracking-tight text-ink">
             Sources
           </h2>
+          <span className="rounded bg-edge px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted">
+            Data
+          </span>
           <span className="text-sm text-muted">
             {feeds.length} {feeds.length === 1 ? 'source' : 'sources'}
           </span>
