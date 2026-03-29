@@ -1,4 +1,7 @@
 import { Suspense } from 'react'
+import type { Synthesis } from '@/lib/schema'
+import { SynthesisHeader } from './synthesis-header'
+import { TriggerButton } from './trigger-button'
 import { MetricCardsSection } from './metric-cards-section'
 import { SignalTrendSection } from './signal-trend-section'
 import { StreamDistributionSection } from './stream-distribution-section'
@@ -32,9 +35,24 @@ function PanelSkeleton() {
   )
 }
 
-export function DashboardIntelligence() {
+export function DashboardIntelligence({
+  synthesis,
+  unprocessedCount,
+  unsynthesizedCount,
+}: {
+  synthesis: Synthesis | null
+  unprocessedCount: number
+  unsynthesizedCount: number
+}) {
   return (
     <section className="space-y-5">
+      <SynthesisHeader
+        synthesis={synthesis}
+        unprocessedCount={unprocessedCount}
+        unsynthesizedCount={unsynthesizedCount}
+        action={<TriggerButton />}
+      />
+
       <h2 className="font-display text-xl italic text-dim">Intelligence</h2>
 
       {/* Row 1: KPI Metric Cards */}
