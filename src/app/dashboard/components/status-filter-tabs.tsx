@@ -17,7 +17,7 @@ function buildHref(status: string | null, period: string | undefined) {
   if (period) params.set('period', period)
   if (status) params.set('status', status)
   const qs = params.toString()
-  return `/dashboard${qs ? `?${qs}` : ''}`
+  return `/dashboard/signals${qs ? `?${qs}` : ''}`
 }
 
 export function StatusFilterTabs({ tabs, activeStatus, period }: StatusFilterTabsProps) {
