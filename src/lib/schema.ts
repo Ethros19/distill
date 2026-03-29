@@ -59,6 +59,7 @@ export const syntheses = pgTable('syntheses', {
   signalCount: integer('signal_count').notNull(),
   digestMarkdown: text('digest_markdown'),
   trigger: varchar('trigger', { length: 20 }).notNull(),
+  industryInputIds: jsonb('industry_input_ids').$type<string[]>(),
 })
 
 // ---------------------------------------------------------------------------
