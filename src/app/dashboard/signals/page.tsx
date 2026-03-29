@@ -2,23 +2,25 @@ export const dynamic = 'force-dynamic'
 
 import { db } from '@/lib/db'
 import { syntheses, signals, SIGNAL_STATUSES } from '@/lib/schema'
-import { eq, desc, gte, lt, and } from 'drizzle-orm'
+import { eq, desc, gte, lt, and, or, ilike } from 'drizzle-orm'
 import Link from 'next/link'
 import { SignalCard } from '../components/signal-card'
 import { periodLabels, startOfPeriod, endOfPeriod } from '../lib/periods'
 import { signalStatusLabel } from '../components/format-utils'
 import { StatusFilterTabs } from '../components/status-filter-tabs'
+import { SignalSearch } from '../components/signal-search'
 
 export default async function SignalsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ period?: string; status?: string }>
+  searchParams: Promise<{ period?: string; status?: string; q?: string }>
 }) {
-  const { period, status } = await searchParams
+  const { period, status, q } = await searchParams
   const isFiltered = period && period in periodLabels
   const validStatus = status && (SIGNAL_STATUSES as readonly string[]).includes(status)
     ? (status as (typeof SIGNAL_STATUSES)[number])
     : undefined
+  const searchPattern = q ? `%${q}%` : null
 
   const [latest] = await db
     .select()
@@ -35,6 +37,7 @@ export default async function SignalsPage({
     if (since) conditions.push(gte(syntheses.periodEnd, since))
     if (until) conditions.push(lt(syntheses.periodEnd, until))
     if (validStatus) conditions.push(eq(signals.status, validStatus))
+    if (searchPattern) conditions.push(or(ilike(signals.statement, searchPattern), ilike(signals.reasoning, searchPattern))!)
 
     let query = db
       .select({
@@ -63,6 +66,7 @@ export default async function SignalsPage({
     if (latest) {
       const conditions = [eq(signals.synthesisId, latest.id)]
       if (validStatus) conditions.push(eq(signals.status, validStatus))
+      if (searchPattern) conditions.push(or(ilike(signals.statement, searchPattern), ilike(signals.reasoning, searchPattern))!)
 
       signalRows = await db
         .select()
@@ -90,6 +94,10 @@ export default async function SignalsPage({
             ? 'No signals yet.'
             : `${signalRows.length} signal${signalRows.length === 1 ? '' : 's'} detected.`}
         </p>
+      </div>
+
+      <div className="animate-fade-up" style={{ animationDelay: '80ms' }}>
+        <SignalSearch />
       </div>
 
       {(latest || isFiltered) && (
