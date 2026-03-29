@@ -2,7 +2,7 @@
 // Stream utilities — canonical stream values and category-to-stream mapping
 // ---------------------------------------------------------------------------
 
-export const STREAM_VALUES = ['ai', 'events', 'market', 'product'] as const
+export const STREAM_VALUES = ['general-ai', 'business-dev', 'event-tech', 'event-general', 'vc-investment', 'product'] as const
 
 export type Stream = (typeof STREAM_VALUES)[number]
 
@@ -11,28 +11,32 @@ export type Stream = (typeof STREAM_VALUES)[number]
  * When new categories are added, extend this mapping.
  */
 export const CATEGORY_TO_STREAM: Record<string, Stream> = {
-  'AI News': 'ai',
-  'AI Research': 'ai',
-  'AI Digest': 'ai',
-  'LLM/Product': 'ai',
-  Events: 'events',
-  Meetings: 'events',
-  'Event Tech': 'events',
-  Hospitality: 'events',
-  Funding: 'market',
-  Startups: 'market',
-  'SaaS/Business': 'market',
-  'Tech Business': 'market',
-  'Competitor Intel': 'market',
+  'AI News': 'general-ai',
+  'AI Research': 'general-ai',
+  'AI Digest': 'general-ai',
+  'LLM/Product': 'general-ai',
+  Events: 'event-general',
+  Meetings: 'event-general',
+  Hospitality: 'event-general',
+  'Event Tech': 'event-tech',
+  'Competitor Intel': 'event-tech',
+  Funding: 'vc-investment',
+  Startups: 'vc-investment',
+  'SaaS/Business': 'business-dev',
+  'Tech Business': 'general-ai',
+  'Business Dev': 'business-dev',
+  'VC/AI Investment': 'vc-investment',
 }
 
 /**
  * Human-readable labels for each stream, used in UI badges and filters.
  */
 export const STREAM_LABELS: Record<Stream, string> = {
-  ai: 'AI & LLM',
-  events: 'Events & Hospitality',
-  market: 'Market & Business',
+  'general-ai': 'AI & LLM',
+  'business-dev': 'Business Intelligence',
+  'event-tech': 'Event Technology',
+  'event-general': 'Events & Hospitality',
+  'vc-investment': 'VC & Investment',
   product: 'Product Feedback',
 }
 
