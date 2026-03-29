@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { STREAM_VALUES, STREAM_LABELS, type Stream } from '@/lib/stream-utils'
 import { getStreamDetail } from './lib/stream-detail'
 import { StreamDetailPanel } from './components/stream-detail-panel'
+import { StreamSwitcherTabs } from '../components/stream-switcher-tabs'
 import type { Metadata } from 'next'
 
 function isValidStream(value: string): value is Stream {
@@ -54,12 +55,18 @@ export default async function StreamDetailPage({
 
   return (
     <div className="space-y-6">
-      <Link
-        href="/dashboard/streams"
-        className="inline-flex items-center gap-1.5 text-sm text-dim transition-colors hover:text-accent"
-      >
-        &larr; Streams
-      </Link>
+      <div className="flex items-center gap-1.5 text-sm">
+        <Link
+          href="/dashboard/streams"
+          className="text-dim transition-colors hover:text-accent"
+        >
+          &larr; Streams
+        </Link>
+        <span className="text-muted">/</span>
+        <span className="font-medium text-ink">{STREAM_LABELS[stream]}</span>
+      </div>
+
+      <StreamSwitcherTabs current={stream} />
 
       <Suspense fallback={<StreamDetailSkeleton />}>
         <StreamDetailContent stream={stream} />
