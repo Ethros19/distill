@@ -1,11 +1,13 @@
 export const dynamic = 'force-dynamic'
 
+import { Suspense } from 'react'
 import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
 import { eq, desc, count, and } from 'drizzle-orm'
 import Link from 'next/link'
 import { InputRow } from '../components/input-row'
 import { STREAM_VALUES, STREAM_LABELS } from '@/lib/stream-utils'
+import { SourceHealthPanel } from './components/source-health-panel'
 
 const PAGE_SIZE = 20
 
@@ -98,6 +100,15 @@ export default async function InputsPage({
           &larr; Dashboard
         </Link>
       </div>
+
+      {/* Source health panel */}
+      <Suspense
+        fallback={
+          <div className="h-[168px] animate-pulse rounded-lg border border-edge bg-panel" />
+        }
+      >
+        <SourceHealthPanel />
+      </Suspense>
 
       {/* Status filter tabs */}
       <div className="flex gap-1 rounded-lg bg-panel-alt p-1">
