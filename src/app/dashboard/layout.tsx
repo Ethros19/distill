@@ -26,16 +26,19 @@ export default function DashboardLayout({
           </div>
           <nav className="flex items-center gap-1">
             <NavLink href="/dashboard" exact>
-              Signals
+              Dashboard
             </NavLink>
-            <NavLink href="/dashboard/inputs">
-              Inputs
+            <NavLink href="/dashboard/signals">
+              Signals
             </NavLink>
             <NavLink href="/dashboard/radar">
               Radar
             </NavLink>
             <NavLink href="/dashboard/streams">
               Streams
+            </NavLink>
+            <NavLink href="/dashboard/inputs">
+              Inputs
             </NavLink>
             <NavLink href="/dashboard/sources">
               Sources

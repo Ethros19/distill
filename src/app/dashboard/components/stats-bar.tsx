@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 
 export interface StatItem {
   label: string
@@ -11,7 +11,6 @@ export interface StatItem {
 }
 
 export function StatsBar({ stats }: { stats: StatItem[] }) {
-  const pathname = usePathname()
   const searchParams = useSearchParams()
   const activePeriod = searchParams.get('period')
 
@@ -24,7 +23,7 @@ export function StatsBar({ stats }: { stats: StatItem[] }) {
         const status = searchParams.get('status')
         if (status) params.set('status', status)
         const qs = params.toString()
-        const href = `${pathname}${qs ? `?${qs}` : ''}`
+        const href = `/dashboard/signals${qs ? `?${qs}` : ''}`
 
         return (
           <Link

@@ -68,7 +68,7 @@ export default async function SignalDetailPage({
     <div className="space-y-6">
       {/* Back link */}
       <Link
-        href="/dashboard"
+        href="/dashboard/signals"
         className="inline-flex items-center gap-1.5 text-sm text-dim transition-colors hover:text-accent"
       >
         &larr; Back
