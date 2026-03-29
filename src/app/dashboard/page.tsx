@@ -12,6 +12,7 @@ import { InputsFeed } from './components/inputs-feed'
 import { periodLabels, startOfPeriod, endOfPeriod } from './lib/periods'
 import { signalStatusLabel } from './components/format-utils'
 import { StatusFilterTabs } from './components/status-filter-tabs'
+import { DashboardIntelligence } from './components/dashboard-intelligence'
 
 export default async function DashboardPage({
   searchParams,
@@ -116,6 +117,13 @@ export default async function DashboardPage({
           <Synopsis signals={signalRows} />
         </div>
       )}
+
+      <div
+        className="animate-fade-up"
+        style={{ animationDelay: '120ms' }}
+      >
+        <DashboardIntelligence />
+      </div>
 
       {(latest || isFiltered) && (
         <div className="space-y-4">
