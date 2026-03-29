@@ -30,6 +30,9 @@ export default function DashboardLayout({
             <NavLink href="/dashboard/inputs">
               Inputs
             </NavLink>
+            <NavLink href="/dashboard/streams">
+              Streams
+            </NavLink>
             <NavLink href="/dashboard/sources">
               Sources
             </NavLink>
