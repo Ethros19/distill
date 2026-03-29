@@ -4,6 +4,7 @@ import { signals as signalsTable, syntheses } from '@/lib/schema'
 import { runSynthesis } from '@/lib/synthesis'
 import { renderDigest, digestToHtml } from '@/lib/digest'
 import { sendDigestEmail } from '@/lib/email'
+import { pollAllDueFeeds } from '@/lib/feed-poller'
 import { eq } from 'drizzle-orm'
 
 export async function GET(request: NextRequest) {
@@ -13,6 +14,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Poll all enabled feeds before synthesis so we have the latest articles
+    const feedResult = await pollAllDueFeeds()
+    console.log(`Feed poll: ${feedResult.newItems} new items from ${feedResult.feedsPolled} feeds`)
+
     const result = await runSynthesis({ trigger: 'cron' })
 
     if (result.status === 'skipped') {
