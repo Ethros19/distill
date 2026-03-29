@@ -37,7 +37,7 @@ export function StreamArticleCard({ article }: { article: StreamArticle }) {
         </span>
       </div>
       <div className="mt-2 flex items-center gap-3 text-xs text-dim">
-        <span>{relativeDate(article.createdAt)}</span>
+        <span suppressHydrationWarning>{relativeDate(article.createdAt)}</span>
         {article.feedUrl && (
           <a
             href={article.feedUrl}

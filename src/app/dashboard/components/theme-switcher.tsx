@@ -61,7 +61,7 @@ export function ThemeSwitcher() {
   ]
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative" suppressHydrationWarning>
       <button
         onClick={() => setOpen(!open)}
         className="rounded-lg px-2 py-1.5 text-sm text-dim transition-colors hover:bg-panel-alt hover:text-ink"
