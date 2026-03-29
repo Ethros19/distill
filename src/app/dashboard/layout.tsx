@@ -4,6 +4,7 @@ import { HelpButton } from './components/help-modal'
 import { ThemeSwitcher } from './components/theme-switcher'
 import { ThemeSidebar } from './components/theme-sidebar'
 import { SignalStats } from './components/signal-stats'
+import NavLink from './components/NavLink'
 
 export default function DashboardLayout({
   children,
@@ -23,18 +24,15 @@ export default function DashboardLayout({
             </span>
           </div>
           <nav className="flex items-center gap-1">
-            <Link
-              href="/dashboard"
-              className="rounded-lg px-2 py-1.5 text-sm text-dim transition-colors hover:bg-panel-alt hover:text-ink"
-            >
+            <NavLink href="/dashboard" exact>
               Signals
-            </Link>
-            <Link
-              href="/dashboard/inputs"
-              className="rounded-lg px-2 py-1.5 text-sm text-dim transition-colors hover:bg-panel-alt hover:text-ink"
-            >
+            </NavLink>
+            <NavLink href="/dashboard/inputs">
               Inputs
-            </Link>
+            </NavLink>
+            <NavLink href="/dashboard/sources">
+              Sources
+            </NavLink>
           </nav>
           <div className="flex items-center gap-1">
             <HelpButton />
