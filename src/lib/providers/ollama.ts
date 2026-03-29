@@ -6,6 +6,7 @@ import { LLMError } from '../llm/errors'
 const BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434'
 const STRUCTURE_MODEL = process.env.OLLAMA_STRUCTURE_MODEL || 'llama3.2'
 const SYNTHESIZE_MODEL = process.env.OLLAMA_SYNTHESIZE_MODEL || 'llama3.2'
+const NARRATIVE_MODEL = process.env.OLLAMA_NARRATIVE_MODEL || 'llama3.2'
 
 const STRUCTURE_SYSTEM_PROMPT = `You are a product feedback analyst. Given raw feedback content, its source channel, and contributor, extract structured fields.
 
@@ -183,6 +184,74 @@ export class OllamaProvider implements LLMProvider {
         error instanceof Error ? error.message : 'Unknown error during synthesis',
         'ollama',
         'synthesize',
+        error,
+      )
+    }
+  }
+
+  async generateNarrative(signals: LLMSignal[], industryContext: SynthesisInput[], productContext?: string): Promise<string> {
+    try {
+      const signalSummary = signals
+        .map((s) => `- **${s.statement}** (strength: ${s.strength}, themes: ${s.themes.join(', ')})\n  Reasoning: ${s.reasoning}`)
+        .join('\n')
+
+      const industrySummary = industryContext
+        .map((i) => `- [${i.stream}] (urgency: ${i.urgency}) ${i.summary} | themes: ${i.themes.join(', ')}`)
+        .join('\n')
+
+      let userContent = `Generate a synthesis narrative based on these signals and industry context.\n\nSIGNALS GENERATED:\n${signalSummary}\n\nINDUSTRY CONTEXT:\n${industrySummary}`
+
+      if (productContext) {
+        userContent += `\n\nPRODUCT CONTEXT:\n${productContext}`
+      }
+
+      const response = await fetch(`${this.baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: NARRATIVE_MODEL,
+          stream: false,
+          messages: [
+            {
+              role: 'system',
+              content: `You are a product intelligence narrator. Given a set of synthesized signals and the industry context that shaped them, write a 2-4 paragraph markdown narrative that:
+
+1. Summarizes what the signals collectively mean for the product team — what is the overall story?
+2. Identifies which industry trends validate or challenge the strongest signals
+3. Highlights cross-cutting themes appearing in both signals and industry intelligence
+4. Ends with a forward-looking "watch for" statement about emerging patterns
+
+Write in clear, direct prose. Use markdown formatting (bold for emphasis, not headers). Do not use bullet points — write flowing paragraphs. Do not include a title or heading. The narrative should feel like an executive brief, not a list.`,
+            },
+            {
+              role: 'user',
+              content: userContent,
+            },
+          ],
+        }),
+      })
+
+      if (!response.ok) {
+        throw new LLMError(
+          `Ollama returned ${response.status}: ${response.statusText}`,
+          'ollama',
+          'generateNarrative',
+        )
+      }
+
+      const data = await response.json()
+      const content = data?.message?.content
+      if (!content) {
+        throw new LLMError('No content in Ollama response', 'ollama', 'generateNarrative')
+      }
+
+      return content.trim()
+    } catch (error) {
+      if (error instanceof LLMError) throw error
+      throw new LLMError(
+        error instanceof Error ? error.message : 'Unknown error during narrative generation',
+        'ollama',
+        'generateNarrative',
         error,
       )
     }

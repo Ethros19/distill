@@ -25,4 +25,8 @@ export class MockProvider implements LLMProvider {
       },
     ]
   }
+
+  async generateNarrative(_signals: LLMSignal[], _industryContext: SynthesisInput[], _productContext?: string): Promise<string> {
+    return '## Synthesis Narrative\n\nMock narrative for testing.'
+  }
 }

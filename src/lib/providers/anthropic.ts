@@ -6,6 +6,7 @@ import { LLMError, LLMRateLimitError } from '../llm/errors'
 
 const STRUCTURE_MODEL = process.env.ANTHROPIC_STRUCTURE_MODEL || 'claude-haiku-4-5-20251001'
 const SYNTHESIZE_MODEL = process.env.ANTHROPIC_SYNTHESIZE_MODEL || 'claude-sonnet-4-6'
+const NARRATIVE_MODEL = process.env.ANTHROPIC_NARRATIVE_MODEL || 'claude-sonnet-4-6'
 
 const STRUCTURE_SYSTEM_PROMPT = `You are a product feedback analyst. Given raw feedback content, its source channel, and contributor, extract structured fields.
 
@@ -186,6 +187,61 @@ export class AnthropicProvider implements LLMProvider {
         error instanceof Error ? error.message : 'Unknown error during synthesis',
         'anthropic',
         'synthesize',
+        error,
+      )
+    }
+  }
+
+  async generateNarrative(signals: LLMSignal[], industryContext: SynthesisInput[], productContext?: string): Promise<string> {
+    try {
+      const signalSummary = signals
+        .map((s) => `- **${s.statement}** (strength: ${s.strength}, themes: ${s.themes.join(', ')})\n  Reasoning: ${s.reasoning}`)
+        .join('\n')
+
+      const industrySummary = industryContext
+        .map((i) => `- [${i.stream}] (urgency: ${i.urgency}) ${i.summary} | themes: ${i.themes.join(', ')}`)
+        .join('\n')
+
+      let userContent = `Generate a synthesis narrative based on these signals and industry context.\n\nSIGNALS GENERATED:\n${signalSummary}\n\nINDUSTRY CONTEXT:\n${industrySummary}`
+
+      if (productContext) {
+        userContent += `\n\nPRODUCT CONTEXT:\n${productContext}`
+      }
+
+      const response = await this.client.messages.create({
+        model: NARRATIVE_MODEL,
+        max_tokens: 2048,
+        system: `You are a product intelligence narrator. Given a set of synthesized signals and the industry context that shaped them, write a 2-4 paragraph markdown narrative that:
+
+1. Summarizes what the signals collectively mean for the product team — what is the overall story?
+2. Identifies which industry trends validate or challenge the strongest signals
+3. Highlights cross-cutting themes appearing in both signals and industry intelligence
+4. Ends with a forward-looking "watch for" statement about emerging patterns
+
+Write in clear, direct prose. Use markdown formatting (bold for emphasis, not headers). Do not use bullet points — write flowing paragraphs. Do not include a title or heading. The narrative should feel like an executive brief, not a list.`,
+        messages: [
+          {
+            role: 'user',
+            content: userContent,
+          },
+        ],
+      })
+
+      const textBlock = response.content.find((block) => block.type === 'text')
+      if (!textBlock || textBlock.type !== 'text') {
+        throw new LLMError('No text response from Anthropic', 'anthropic', 'generateNarrative')
+      }
+
+      return textBlock.text.trim()
+    } catch (error) {
+      if (error instanceof LLMError) throw error
+      if (error instanceof Anthropic.RateLimitError) {
+        throw new LLMRateLimitError('anthropic', 'generateNarrative')
+      }
+      throw new LLMError(
+        error instanceof Error ? error.message : 'Unknown error during narrative generation',
+        'anthropic',
+        'generateNarrative',
         error,
       )
     }
