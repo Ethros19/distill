@@ -5,6 +5,7 @@ import { db } from '@/lib/db'
 import { feedSources, inputs, type FeedSource } from '@/lib/schema'
 import { structureInput } from '@/lib/structurer'
 import { getLLMProvider } from '@/lib/llm/provider-factory'
+import { categoryToStream } from '@/lib/stream-utils'
 
 const parser = new Parser()
 
@@ -50,6 +51,7 @@ export async function pollFeed(feedSource: FeedSource): Promise<number> {
         rawContent,
         contentHash,
         status: 'unprocessed',
+        stream: categoryToStream(feedSource.category),
         feedSourceId: feedSource.id,
         feedUrl: item.link,
         publishedAt: item.isoDate ? new Date(item.isoDate) : null,
