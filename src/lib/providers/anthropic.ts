@@ -128,7 +128,7 @@ export class AnthropicProvider implements LLMProvider {
     }
   }
 
-  async synthesize(inputs: SynthesisInput[], priorSignals?: PriorSignal[], productContext?: string): Promise<LLMSignal[]> {
+  async synthesize(inputs: SynthesisInput[], priorSignals?: PriorSignal[], productContext?: string, industryInputs?: SynthesisInput[]): Promise<LLMSignal[]> {
     try {
       const inputContext = inputs
         .map(
@@ -148,6 +148,13 @@ export class AnthropicProvider implements LLMProvider {
           .map((s) => `- [${s.status}] "${s.statement}" (strength: ${s.strength}, themes: ${s.themes.join(', ')})${s.notes ? ` | note: ${s.notes}` : ''}`)
           .join('\n')
         userContent += `\n\nPREVIOUSLY IDENTIFIED SIGNALS (already triaged by the team):\n${priorContext}`
+      }
+
+      if (industryInputs && industryInputs.length > 0) {
+        const industryContext = industryInputs
+          .map((i) => `[${i.id}] (${i.stream}, urgency:${i.urgency}) ${i.summary} | themes: ${i.themes.join(', ')}`)
+          .join('\n')
+        userContent += `\n\nINDUSTRY CONTEXT (background trends from RSS/industry feeds -- use for market awareness, not as direct evidence for signals):\n${industryContext}`
       }
 
       const response = await this.client.messages.create({
