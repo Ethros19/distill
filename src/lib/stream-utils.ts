@@ -44,6 +44,34 @@ export const STREAM_LABELS: Record<Stream, string> = {
  * Look up the canonical stream for a feed source category.
  * Returns null if the category is null, undefined, or not in the mapping.
  */
+/**
+ * Background color classes per stream — for bars, pills, and distribution charts.
+ */
+export const STREAM_BG_COLORS: Record<string, string> = {
+  'general-ai': 'bg-purple-500',
+  'piper-dev': 'bg-emerald-500',
+  'event-tech': 'bg-orange-500',
+  'event-general': 'bg-amber-500',
+  'vc-investment': 'bg-blue-500',
+  product: 'bg-sig-low',
+}
+
+/**
+ * Text color classes per stream — for labels and indicators.
+ */
+export const STREAM_TEXT_COLORS: Record<string, string> = {
+  'general-ai': 'text-purple-500',
+  'piper-dev': 'text-emerald-500',
+  'event-tech': 'text-orange-500',
+  'event-general': 'text-amber-500',
+  'vc-investment': 'text-blue-500',
+  product: 'text-sig-low',
+}
+
+/**
+ * Look up the canonical stream for a feed source category.
+ * Returns null if the category is null, undefined, or not in the mapping.
+ */
 export function categoryToStream(category: string | null | undefined): Stream | null {
   if (!category) return null
   return CATEGORY_TO_STREAM[category] ?? null
