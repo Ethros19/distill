@@ -71,6 +71,13 @@ CROSS-STREAM ANALYSIS:
 Each input has a domain stream (general-ai, piper-dev, event-tech, event-general, vc-investment, product) indicating its source domain.
 When evidence for a signal spans multiple streams, highlight this as a cross-stream pattern in the signal's reasoning. Cross-stream signals often indicate broader trends. Pay special attention to themes that bridge related sub-verticals (e.g., general-ai + vc-investment for AI funding trends, event-tech + event-general for industry-wide technology shifts, piper-dev + event-general for event business intelligence).
 
+HANDLING INDUSTRY CONTEXT:
+You may receive an "INDUSTRY CONTEXT" section with recent industry and market intelligence from RSS feeds. Use it to:
+- Enrich signal reasoning with relevant market trends (e.g., "This aligns with the broader industry shift toward X").
+- Identify if a user pain point is being validated by market movements or competitor activity.
+- Do NOT cite industry inputs as evidence[] for signals -- evidence must only contain feedback input IDs.
+- Do NOT generate signals based solely on industry context with no feedback support.
+
 IMPORTANT: Respond with ONLY a JSON object in this exact format, no markdown or explanation:
 {"signals": [{"statement": "...", "reasoning": "...", "evidence": ["id1", "id2"], "suggested_action": "...", "themes": ["theme1"], "strength": 2}]}`
 
