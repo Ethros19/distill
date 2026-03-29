@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { getRadarData } from './lib/radar-data'
-import { StreamBriefing } from './components/stream-briefing'
+import { RadarGrid } from './components/radar-grid'
+import type { SerializedStreamBrief } from './components/stream-briefing'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 }
 
 /** Pin business-dev first, then sort remaining by activity */
-function sortBriefs(briefs: Awaited<ReturnType<typeof getRadarData>>) {
+function defaultOrder(briefs: SerializedStreamBrief[]): SerializedStreamBrief[] {
   const businessDev = briefs.find((b) => b.stream === 'business-dev')
   const rest = briefs
     .filter((b) => b.stream !== 'business-dev')
@@ -23,15 +24,19 @@ function sortBriefs(briefs: Awaited<ReturnType<typeof getRadarData>>) {
 
 async function RadarContent() {
   const briefs = await getRadarData()
-  const sorted = sortBriefs(briefs)
 
-  return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {sorted.map((brief, i) => (
-        <StreamBriefing key={brief.stream} brief={brief} index={i} />
-      ))}
-    </div>
-  )
+  // Serialize for the client component (Date → ISO string)
+  const serialized: SerializedStreamBrief[] = briefs.map((b) => ({
+    ...b,
+    articles: b.articles.map((a) => ({
+      ...a,
+      createdAt: a.createdAt.toISOString(),
+    })),
+  }))
+
+  const ordered = defaultOrder(serialized)
+
+  return <RadarGrid briefs={ordered} />
 }
 
 function RadarSkeleton() {
@@ -55,7 +60,7 @@ export default function RadarPage() {
           Intelligence Radar
         </h2>
         <p className="mt-1 text-sm text-muted">
-          AI-synthesized briefs across your six intelligence streams
+          AI-synthesized briefs across your six intelligence streams &mdash; drag to reorder
         </p>
       </div>
       <Suspense fallback={<RadarSkeleton />}>
