@@ -185,7 +185,7 @@ export function InputRow({ input }: { input: Input }) {
             </div>
           )}
           {input.status === 'processed' && !isFeedback && (
-            <p className="mt-1 text-[10px] text-sig-mid">Excluded from synthesis</p>
+            <p className="mt-1 text-[10px] text-muted">Industry context for synthesis</p>
           )}
           {editingNotes ? (
             <div className="mt-1.5">
@@ -241,9 +241,9 @@ export function InputRow({ input }: { input: Input }) {
                   ? 'bg-sig-low/10 text-sig-low hover:bg-sig-low/20'
                   : 'bg-panel-alt text-muted hover:bg-edge'
               }`}
-              title={isFeedback ? 'Mark as noise' : 'Mark as feedback'}
+              title={isFeedback ? 'Mark as intel' : 'Mark as feedback'}
             >
-              {isFeedback ? 'Feedback' : 'Noise'}
+              {isFeedback ? 'Feedback' : 'Intel'}
             </button>
           )}
           <span
