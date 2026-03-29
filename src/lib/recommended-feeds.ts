@@ -26,14 +26,19 @@ export const recommendedFeeds: Array<{ name: string; url: string; category: stri
   { name: 'Event Tech Live', url: 'https://eventtechlive.com/feed/', category: 'Event Tech' },
   { name: 'Skift Meetings', url: 'https://meetings.skift.com/feed/', category: 'Event Tech' },
 
-  // Venue & Hospitality Industry
-  { name: 'Hospitality Net', url: 'https://www.hospitalitynet.org/rss', category: 'Hospitality' },
+  // Removed: Hospitality Net - malformed XML attributes, never successfully parsed
+  // Removed: The Information - returns 403, paywalled site, will never work
+  // Removed: Bizzabo Blog - malformed XML feed, never successfully parsed
 
   // SaaS / Startup Business News
   { name: 'SaaStr', url: 'https://www.saastr.com/feed/', category: 'SaaS/Business' },
   { name: 'TechCrunch Startups', url: 'https://techcrunch.com/category/startups/feed/', category: 'Startups' },
-  { name: 'The Information', url: 'https://www.theinformation.com/feed', category: 'Tech Business' },
 
-  // Competitor & Market Intelligence
-  { name: 'Bizzabo Blog', url: 'https://www.bizzabo.com/blog/feed', category: 'Competitor Intel' },
+  // VC & AI Investment
+  { name: 'Strictly VC', url: 'https://strictlyvc.com/feed/', category: 'VC/AI Investment' },
+  { name: 'Axios Pro Rata', url: 'https://www.axios.com/feeds/feed/pro-rata', category: 'VC/AI Investment' },
+
+  // Business Dev — Event Industry Business Intelligence
+  { name: 'MeetingsNet', url: 'https://www.meetingsnet.com/rss.xml', category: 'Business Dev' },
+  { name: 'Eventbrite Blog', url: 'https://www.eventbrite.com/blog/feed/', category: 'Business Dev' },
 ]
