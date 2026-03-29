@@ -1,13 +1,10 @@
 export const dynamic = 'force-dynamic'
 
 import { db } from '@/lib/db'
-import { syntheses, signals, inputs, SIGNAL_STATUSES } from '@/lib/schema'
-import { eq, desc, gte, lt, gt, and, count } from 'drizzle-orm'
+import { syntheses, signals, SIGNAL_STATUSES } from '@/lib/schema'
+import { eq, desc, gte, lt, and } from 'drizzle-orm'
 import Link from 'next/link'
-import { SynthesisHeader } from '../components/synthesis-header'
 import { SignalCard } from '../components/signal-card'
-import { Synopsis } from '../components/synopsis'
-import { TriggerButton } from '../components/trigger-button'
 import { periodLabels, startOfPeriod, endOfPeriod } from '../lib/periods'
 import { signalStatusLabel } from '../components/format-utils'
 import { StatusFilterTabs } from '../components/status-filter-tabs'
@@ -23,25 +20,11 @@ export default async function SignalsPage({
     ? (status as (typeof SIGNAL_STATUSES)[number])
     : undefined
 
-  const [[latest], [{ value: unprocessedCount }]] = await Promise.all([
-    db
-      .select()
-      .from(syntheses)
-      .orderBy(desc(syntheses.createdAt))
-      .limit(1),
-    db
-      .select({ value: count() })
-      .from(inputs)
-      .where(eq(inputs.status, 'unprocessed')),
-  ])
-
-  // Count processed inputs that arrived after the latest synthesis (ready for next run)
-  const [{ value: unsynthesizedCount }] = latest
-    ? await db
-        .select({ value: count() })
-        .from(inputs)
-        .where(and(eq(inputs.status, 'processed'), gt(inputs.createdAt, latest.createdAt)))
-    : [{ value: 0 }]
+  const [latest] = await db
+    .select()
+    .from(syntheses)
+    .orderBy(desc(syntheses.createdAt))
+    .limit(1)
 
   let signalRows: (typeof signals.$inferSelect)[]
 
@@ -99,22 +82,15 @@ export default async function SignalsPage({
   return (
     <div className="space-y-8">
       <div className="animate-fade-up">
-        <SynthesisHeader
-          synthesis={latest ?? null}
-          unprocessedCount={unprocessedCount}
-          unsynthesizedCount={unsynthesizedCount}
-          action={<TriggerButton />}
-        />
+        <h1 className="font-display text-lg font-semibold text-ink">
+          Signals
+        </h1>
+        <p className="mt-1 text-sm text-muted">
+          {signalRows.length === 0
+            ? 'No signals yet.'
+            : `${signalRows.length} signal${signalRows.length === 1 ? '' : 's'} detected.`}
+        </p>
       </div>
-
-      {signalRows.length > 0 && (
-        <div
-          className="animate-fade-up"
-          style={{ animationDelay: '80ms' }}
-        >
-          <Synopsis signals={signalRows} />
-        </div>
-      )}
 
       {(latest || isFiltered) && (
         <div className="space-y-4">
@@ -122,9 +98,6 @@ export default async function SignalsPage({
             className="animate-fade-up flex items-center gap-3"
             style={{ animationDelay: '100ms' }}
           >
-            <h2 className="text-sm font-medium uppercase tracking-wider text-dim">
-              Signals
-            </h2>
             {isFiltered && (
               <>
                 <span className="rounded-full bg-accent-wash px-2.5 py-0.5 text-xs font-medium text-accent">
