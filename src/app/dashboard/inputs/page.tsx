@@ -85,6 +85,9 @@ export default async function InputsPage({
             <h2 className="font-display text-xl tracking-tight text-ink">
               Inputs
             </h2>
+            <span className="rounded bg-edge px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted">
+              Data
+            </span>
             <span className="text-sm text-muted">
               {total} {total === 1 ? 'input' : 'inputs'}
             </span>
