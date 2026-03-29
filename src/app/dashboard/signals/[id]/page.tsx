@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import { signals, inputs } from '@/lib/schema'
 import { eq, inArray } from 'drizzle-orm'
-import { signalStatusBadge, signalStatusLabel } from '../../components/format-utils'
+import { signalStatusBadge, signalStatusLabel, streamBadge, streamLabel } from '../../components/format-utils'
 import { strengthColor } from '../../components/signal-card'
 import { StatusControls } from './components/status-controls'
 import { LinearPushButton } from './components/linear-push-button'
@@ -189,6 +189,35 @@ export default async function SignalDetailPage({
             {evidenceInputs.length}
           </span>
         </h2>
+        {(() => {
+          const streamCounts = evidenceInputs.reduce((acc, input) => {
+            const s = input.stream ?? 'untagged'
+            acc[s] = (acc[s] || 0) + 1
+            return acc
+          }, {} as Record<string, number>)
+          const taggedCount = evidenceInputs.filter((i) => i.stream).length
+          if (taggedCount < 2) return null
+          return (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium text-dim">Streams:</span>
+              {Object.entries(streamCounts)
+                .filter(([key]) => key !== 'untagged')
+                .map(([key, ct]) => (
+                  <span
+                    key={key}
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${streamBadge(key)}`}
+                  >
+                    {streamLabel(key)} ({ct})
+                  </span>
+                ))}
+              {streamCounts['untagged'] && (
+                <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium bg-panel-alt text-dim">
+                  Untagged ({streamCounts['untagged']})
+                </span>
+              )}
+            </div>
+          )
+        })()}
         {evidenceInputs.length === 0 ? (
           <p className="py-4 text-center text-sm italic text-muted">
             No supporting inputs found
@@ -205,11 +234,18 @@ export default async function SignalDetailPage({
                   <p className="text-sm leading-relaxed text-ink">
                     {input.summary ?? input.rawContent}
                   </p>
-                  {input.type && (
-                    <span className="shrink-0 rounded-full bg-panel-alt px-2 py-0.5 text-[11px] font-medium text-dim">
-                      {input.type}
-                    </span>
-                  )}
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {input.stream && (
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${streamBadge(input.stream)}`}>
+                        {streamLabel(input.stream)}
+                      </span>
+                    )}
+                    {input.type && (
+                      <span className="rounded-full bg-panel-alt px-2 py-0.5 text-[11px] font-medium text-dim">
+                        {input.type}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="mt-2 flex items-center gap-3 text-xs text-muted">
                   <span>{input.source}</span>

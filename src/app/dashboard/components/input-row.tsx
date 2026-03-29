@@ -3,7 +3,8 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Input } from '@/lib/schema'
-import { formatTimeAgo, statusBadge, typeBadge, typeLabel } from './format-utils'
+import { formatTimeAgo, statusBadge, typeBadge, typeLabel, streamBadge, streamLabel } from './format-utils'
+import { STREAM_VALUES, STREAM_LABELS } from '@/lib/stream-utils'
 
 export function InputRow({ input }: { input: Input }) {
   const [showConfirm, setShowConfirm] = useState(false)
@@ -18,8 +19,38 @@ export function InputRow({ input }: { input: Input }) {
   const [savingNotes, setSavingNotes] = useState(false)
   const [showSaved, setShowSaved] = useState(false)
   const [expanded, setExpanded] = useState(false)
+  const [currentStream, setCurrentStream] = useState(input.stream ?? '')
+  const [updatingStream, setUpdatingStream] = useState(false)
   const notesRef = useRef<HTMLTextAreaElement>(null)
   const router = useRouter()
+
+  async function handleStreamChange(newStream: string) {
+    if (updatingStream) return
+    const value = newStream || null
+    const prev = currentStream
+    setCurrentStream(newStream)
+    setUpdatingStream(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/inputs/${input.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stream: value }),
+      })
+      if (!res.ok) {
+        setCurrentStream(prev)
+        const data = await res.json()
+        setError(data.error || 'Stream update failed')
+      } else {
+        router.refresh()
+      }
+    } catch {
+      setCurrentStream(prev)
+      setError('An error occurred')
+    } finally {
+      setUpdatingStream(false)
+    }
+  }
 
   async function handleToggleFeedback() {
     if (toggling) return
@@ -227,6 +258,21 @@ export function InputRow({ input }: { input: Input }) {
               {typeLabel(input.type)}
             </span>
           )}
+          <select
+            value={currentStream}
+            onChange={(e) => handleStreamChange(e.target.value)}
+            disabled={updatingStream}
+            className={`rounded-full px-2 py-0.5 text-[10px] font-medium border-0 cursor-pointer disabled:opacity-50 ${
+              currentStream ? streamBadge(currentStream) : 'bg-panel-alt text-muted'
+            }`}
+          >
+            <option value="">Set stream...</option>
+            {STREAM_VALUES.map((s) => (
+              <option key={s} value={s}>
+                {STREAM_LABELS[s]}
+              </option>
+            ))}
+          </select>
           {showForceDelete ? (
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] text-sig-mid">Referenced by signals</span>

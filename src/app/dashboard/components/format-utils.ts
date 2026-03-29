@@ -1,3 +1,25 @@
+import { STREAM_LABELS, type Stream } from '@/lib/stream-utils'
+
+export function streamBadge(stream: string | null): string {
+  switch (stream) {
+    case 'ai':
+      return 'bg-purple-500/10 text-purple-600'
+    case 'events':
+      return 'bg-amber-500/10 text-amber-600'
+    case 'market':
+      return 'bg-blue-500/10 text-blue-600'
+    case 'product':
+      return 'bg-sig-low/10 text-sig-low'
+    default:
+      return 'bg-panel-alt text-dim'
+  }
+}
+
+export function streamLabel(stream: string | null): string {
+  if (stream && stream in STREAM_LABELS) return STREAM_LABELS[stream as Stream]
+  return stream ?? 'Untagged'
+}
+
 export function formatTimeAgo(date: Date): string {
   const now = Date.now()
   const diff = now - new Date(date).getTime()
