@@ -34,6 +34,7 @@ export const inputs = pgTable(
     status: varchar('status', { length: 20 }).notNull().default('unprocessed'),
     isFeedback: boolean('is_feedback').notNull().default(true),
     notes: text('notes'),
+    stream: varchar('stream', { length: 50 }),
     // RSS feed metadata (nullable — only populated for source='rss')
     feedSourceId: uuid('feed_source_id').references(() => feedSources.id),
     feedUrl: text('feed_url'),
