@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import Link from 'next/link'
 import type { FeedSource } from '@/lib/schema'
 import { SourceRow } from './SourceRow'
 import { SourcesToolbar } from './SourcesToolbar'
@@ -12,6 +13,16 @@ export function SourcesClient({ feeds }: { feeds: FeedWithCount[] }) {
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add')
   const [editFeed, setEditFeed] = useState<FeedSource | undefined>(undefined)
+
+  const healthCounts = useMemo(() => {
+    let healthy = 0, errored = 0, disabled = 0
+    for (const f of feeds) {
+      if (f.lastError) errored++
+      else if (!f.enabled) disabled++
+      else if (f.lastPolledAt) healthy++
+    }
+    return { healthy, errored, disabled }
+  }, [feeds])
 
   function handleAdd() {
     setModalMode('add')
@@ -36,8 +47,36 @@ export function SourcesClient({ feeds }: { feeds: FeedWithCount[] }) {
           <span className="text-sm text-muted">
             {feeds.length} {feeds.length === 1 ? 'source' : 'sources'}
           </span>
+          <div className="flex items-center gap-2 text-xs">
+            {healthCounts.healthy > 0 && (
+              <span className="flex items-center gap-1 text-sig-low">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-sig-low" />
+                {healthCounts.healthy} healthy
+              </span>
+            )}
+            {healthCounts.errored > 0 && (
+              <span className="flex items-center gap-1 text-sig-high">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-sig-high" />
+                {healthCounts.errored} errored
+              </span>
+            )}
+            {healthCounts.disabled > 0 && (
+              <span className="flex items-center gap-1 text-muted">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-muted" />
+                {healthCounts.disabled} disabled
+              </span>
+            )}
+          </div>
         </div>
-        <SourcesToolbar feedCount={feeds.length} onAddClick={handleAdd} />
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard/inputs"
+            className="text-sm text-accent transition-colors hover:text-ink"
+          >
+            View Inputs &rarr;
+          </Link>
+          <SourcesToolbar feedCount={feeds.length} onAddClick={handleAdd} />
+        </div>
       </div>
 
       {/* Feed list */}
