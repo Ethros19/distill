@@ -118,8 +118,8 @@ export async function runSynthesis(options?: {
     .where(eq(settings.key, 'product_context'))
   const productContext = ctxRow?.value || undefined
 
-  // Call LLM provider
-  const llmSignals: LLMSignal[] = await getLLMProvider().synthesize(synthesisInputs, priorSignals, productContext)
+  // Call LLM provider — pass industry inputs as 4th arg (empty array is fine, not a skip condition)
+  const llmSignals: LLMSignal[] = await getLLMProvider().synthesize(synthesisInputs, priorSignals, productContext, industryInputs)
 
   // Insert synthesis record
   const [synthesisRecord] = await db
