@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { inputs, syntheses, signals, settings } from '@/lib/schema'
 import { getLLMProvider } from '@/lib/llm/provider-factory'
 import type { SynthesisInput, LLMSignal, PriorSignal } from '@/lib/llm/types'
-import { and, eq, gte, lt, ne } from 'drizzle-orm'
+import { and, eq, gte, lt, ne, inArray, desc } from 'drizzle-orm'
 
 // ---------------------------------------------------------------------------
 // Period calculation
@@ -52,6 +52,35 @@ export async function runSynthesis(options?: {
 
   // Map DB rows to SynthesisInput format for LLM provider
   const synthesisInputs: SynthesisInput[] = inputRows.map((row) => ({
+    id: row.id,
+    summary: row.summary ?? '',
+    type: row.type ?? 'observation',
+    themes: row.themes ?? [],
+    urgency: row.urgency ?? 1,
+    source: row.source,
+    notes: row.notes ?? undefined,
+    stream: row.stream ?? undefined,
+  }))
+
+  // Query non-feedback industry inputs from business-relevant streams
+  // Excludes general-ai (1,000+ items/week) to keep within context window budget
+  const industryStreams = ['piper-dev', 'event-tech', 'event-general', 'vc-investment'] as const
+  const industryRows = await db
+    .select()
+    .from(inputs)
+    .where(
+      and(
+        gte(inputs.createdAt, periodStart),
+        lt(inputs.createdAt, periodEnd),
+        eq(inputs.status, 'processed'),
+        eq(inputs.isFeedback, false),
+        inArray(inputs.stream, [...industryStreams]),
+      ),
+    )
+    .orderBy(desc(inputs.urgency), desc(inputs.createdAt))
+    .limit(50)
+
+  const industryInputs: SynthesisInput[] = industryRows.map((row) => ({
     id: row.id,
     summary: row.summary ?? '',
     type: row.type ?? 'observation',
