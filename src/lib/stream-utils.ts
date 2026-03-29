@@ -69,6 +69,42 @@ export const STREAM_TEXT_COLORS: Record<string, string> = {
 }
 
 /**
+ * Border-top color classes per stream — for card accents.
+ */
+export const STREAM_BORDER_COLORS: Record<string, string> = {
+  'general-ai': 'border-t-purple-500',
+  'business-dev': 'border-t-emerald-500',
+  'event-tech': 'border-t-orange-500',
+  'event-general': 'border-t-amber-500',
+  'vc-investment': 'border-t-blue-500',
+  product: 'border-t-sig-low',
+}
+
+/**
+ * Hex color values per stream — for inline styles and gradients.
+ */
+export const STREAM_HEX_COLORS: Record<string, string> = {
+  'general-ai': '#a855f7',
+  'business-dev': '#10b981',
+  'event-tech': '#f97316',
+  'event-general': '#f59e0b',
+  'vc-investment': '#3b82f6',
+  product: '#3D8A4A',
+}
+
+/**
+ * Short stream descriptions for radar page context.
+ */
+export const STREAM_DESCRIPTIONS: Record<Stream, string> = {
+  'general-ai': 'AI model releases, API changes, research breakthroughs, regulation',
+  'business-dev': 'AI applications in event planning, vertical SaaS intelligence',
+  'event-tech': 'Event platforms, competitor moves, tooling trends',
+  'event-general': 'Industry trends, trade shows, hospitality, seasonal demand',
+  'vc-investment': 'Funding rounds, M&A activity, startup investments',
+  product: 'Direct product feedback, feature requests, user insights',
+}
+
+/**
  * Look up the canonical stream for a feed source category.
  * Returns null if the category is null, undefined, or not in the mapping.
  */
