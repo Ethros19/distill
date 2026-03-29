@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { LogoutButton } from './components/logout-button'
 import { HelpButton } from './components/help-modal'
 import { ThemeSwitcher } from './components/theme-switcher'
-import { ThemeSidebar } from './components/theme-sidebar'
+// ThemeSidebar removed — Theme Landscape serves this purpose
 import { SignalStats } from './components/signal-stats'
 import NavLink from './components/NavLink'
 
@@ -59,10 +59,7 @@ export default function DashboardLayout({
         </div>
       </header>
       <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
-        <div className="flex flex-col gap-8 lg:flex-row">
-          <div className="min-w-0 flex-1">{children}</div>
-          <ThemeSidebar />
-        </div>
+        {children}
       </main>
       <footer className="sticky bottom-0 border-t border-edge-dim bg-panel/80 backdrop-blur-sm">
         <div className="mx-auto max-w-7xl">

@@ -3,16 +3,12 @@ import { db } from '@/lib/db'
 import { signals } from '@/lib/schema'
 import { aggregateThemes } from './theme-sidebar'
 
-/**
- * Theme Landscape — a readable, clickable tag cloud visualization.
- * Themes scale in size by frequency, all link to their detail page.
- */
 export async function ThemeHeatmapSection() {
   const allSignals = await db
     .select({ themes: signals.themes })
     .from(signals)
 
-  const themes = aggregateThemes(allSignals).slice(0, 30)
+  const themes = aggregateThemes(allSignals).slice(0, 40)
   const maxCount = themes.length > 0 ? themes[0].count : 0
 
   function tier(count: number): 'lg' | 'md' | 'sm' {
@@ -30,41 +26,54 @@ export async function ThemeHeatmapSection() {
   }
 
   return (
-    <div className="rounded-xl border border-edge bg-panel p-5">
-      <h3 className="text-sm font-semibold text-dim">Theme Landscape</h3>
+    <div className="flex flex-col rounded-xl border border-edge bg-panel">
+      {/* Fixed header */}
+      <div className="flex items-center justify-between border-b border-edge-dim px-5 py-3">
+        <h3 className="text-sm font-semibold text-dim">Theme Landscape</h3>
+        {themes.length > 0 && (
+          <span className="rounded-full bg-panel-alt px-2 py-0.5 text-[10px] font-medium tabular-nums text-muted">
+            {themes.length}
+          </span>
+        )}
+      </div>
 
+      {/* Scrollable content */}
       {themes.length === 0 ? (
-        <p className="mt-4 text-xs italic text-muted">
-          No themes detected yet.
-        </p>
+        <div className="px-5 py-8">
+          <p className="text-center text-xs italic text-muted">
+            No themes detected yet.
+          </p>
+        </div>
       ) : (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {themes.map((theme, i) => {
-            const t = tier(theme.count)
-            const intensity =
-              maxCount > 0
-                ? Math.round((theme.count / maxCount) * 45) + 12
-                : 12
+        <div className="intel-scroll max-h-[420px] overflow-y-auto px-5 py-4">
+          <div className="flex flex-wrap gap-2">
+            {themes.map((theme, i) => {
+              const t = tier(theme.count)
+              const intensity =
+                maxCount > 0
+                  ? Math.round((theme.count / maxCount) * 45) + 12
+                  : 12
 
-            return (
-              <Link
-                key={theme.name}
-                href={`/dashboard/themes/${encodeURIComponent(theme.name)}`}
-                className={`animate-fade-up group relative inline-flex items-center gap-2 rounded-lg text-ink transition-all hover:shadow-sm hover:ring-1 hover:ring-accent/30 ${tierStyles[t]}`}
-                style={{
-                  animationDelay: `${i * 30}ms`,
-                  background: `color-mix(in srgb, var(--accent) ${intensity}%, var(--surface-raised))`,
-                }}
-              >
-                <span className="transition-colors group-hover:text-accent">
-                  {theme.name}
-                </span>
-                <span className="font-mono text-[11px] tabular-nums text-muted transition-colors group-hover:text-accent/70">
-                  {theme.count}
-                </span>
-              </Link>
-            )
-          })}
+              return (
+                <Link
+                  key={theme.name}
+                  href={`/dashboard/themes/${encodeURIComponent(theme.name)}`}
+                  className={`animate-fade-up group inline-flex items-center gap-2 rounded-lg text-ink transition-all hover:shadow-sm hover:ring-1 hover:ring-accent/30 ${tierStyles[t]}`}
+                  style={{
+                    animationDelay: `${i * 25}ms`,
+                    background: `color-mix(in srgb, var(--accent) ${intensity}%, var(--surface-raised))`,
+                  }}
+                >
+                  <span className="transition-colors group-hover:text-accent">
+                    {theme.name}
+                  </span>
+                  <span className="font-mono text-[11px] tabular-nums text-muted transition-colors group-hover:text-accent/70">
+                    {theme.count}
+                  </span>
+                </Link>
+              )
+            })}
+          </div>
         </div>
       )}
     </div>
