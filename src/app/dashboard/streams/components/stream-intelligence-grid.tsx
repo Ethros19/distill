@@ -1,9 +1,20 @@
 import Link from 'next/link'
 import { STREAM_VALUES, STREAM_LABELS } from '@/lib/stream-utils'
-import type { StreamIntelligenceData } from '../lib/types'
+import type { StreamIntelligenceData, TrendDirection } from '../lib/types'
 import { StreamVolumeChart } from './stream-volume-chart'
 import { StreamThemeList } from './stream-theme-list'
 import { StreamArticleCard } from './stream-article-card'
+import { CrossStreamHighlights } from './cross-stream-highlights'
+
+function TrendIndicator({ trend }: { trend?: TrendDirection }) {
+  if (!trend || trend === 'stable') {
+    return <span className="text-muted">&rarr;</span>
+  }
+  if (trend === 'rising') {
+    return <span className="text-sig-low">&uarr;</span>
+  }
+  return <span className="text-sig-high">&darr;</span>
+}
 
 export function StreamIntelligenceGrid({
   data,
@@ -19,6 +30,9 @@ export function StreamIntelligenceGrid({
 
   return (
     <div className="space-y-8">
+      {/* Cross-stream highlights */}
+      <CrossStreamHighlights themes={data.crossStreamThemes} />
+
       {/* Volume bar chart across all streams */}
       <div className="rounded-xl border border-edge bg-panel p-5">
         <h3 className="mb-4 text-sm font-medium text-dim">
@@ -52,7 +66,8 @@ export function StreamIntelligenceGrid({
                 <h3 className="text-sm font-medium text-ink group-hover:text-accent">
                   {label}
                 </h3>
-                <span className="font-mono text-xs text-dim">
+                <span className="inline-flex items-center gap-1 font-mono text-xs text-dim">
+                  <TrendIndicator trend={volume?.trend} />
                   {volume?.count ?? 0} inputs
                 </span>
               </div>
