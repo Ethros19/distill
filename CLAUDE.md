@@ -26,8 +26,9 @@ Open-source signal intelligence system for product teams. Self-hosted web app.
 
 ## Active Context
 
-**Last shipped:** Signal Actions & Intelligence Feeds (9 phases, 31 plans, 99 tasks)
-**Next action:** Run /vbw:vibe to start a new milestone
+**Last shipped:** Vertical Intelligence & Context-Enriched Synthesis (4 phases, 12 plans, 36 commits)
+**Current milestone:** Dashboard IA & Synthesis Visibility (4 phases)
+**Next action:** Run /vbw:vibe to plan Phase 01
 
 ## VBW Rules
 
