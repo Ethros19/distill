@@ -3,14 +3,16 @@ import type { CrossStreamTheme } from '../lib/types'
 
 export function CrossStreamHighlights({
   themes,
+  signalCounts,
 }: {
   themes: CrossStreamTheme[]
+  signalCounts?: Record<string, number>
 }) {
   if (themes.length === 0) {
     return (
       <div className="rounded-xl border border-edge bg-panel p-5">
         <h3 className="font-display text-xl italic text-dim">
-          Cross-Stream Signals
+          Cross-Stream Patterns
         </h3>
         <p className="py-6 text-center text-sm italic text-muted">
           No themes appearing across multiple streams yet.
@@ -25,7 +27,7 @@ export function CrossStreamHighlights({
     <div className="rounded-xl border border-edge bg-panel p-5">
       <div className="mb-4 flex items-center gap-2">
         <h3 className="font-display text-xl italic text-dim">
-          Cross-Stream Signals
+          Cross-Stream Patterns
         </h3>
         <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent">
           {themes.length}
@@ -40,6 +42,11 @@ export function CrossStreamHighlights({
               <span className="rounded-full bg-panel-alt px-2.5 py-0.5 text-xs font-medium text-dim">
                 {t.streamCount} streams
               </span>
+              {signalCounts && signalCounts[t.theme] > 0 && (
+                <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-[11px] font-medium text-accent">
+                  {signalCounts[t.theme]} signal{signalCounts[t.theme] !== 1 ? 's' : ''}
+                </span>
+              )}
             </div>
 
             {/* Frequency bar */}
