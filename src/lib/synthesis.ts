@@ -62,23 +62,40 @@ export async function runSynthesis(options?: {
     stream: row.stream ?? undefined,
   }))
 
-  // Query non-feedback industry inputs from business-relevant streams
-  // Excludes general-ai (1,000+ items/week) to keep within context window budget
-  const industryStreams = ['business-dev', 'event-tech', 'event-general', 'vc-investment'] as const
-  const industryRows = await db
-    .select()
-    .from(inputs)
-    .where(
-      and(
-        gte(inputs.createdAt, periodStart),
-        lt(inputs.createdAt, periodEnd),
-        eq(inputs.status, 'processed'),
-        eq(inputs.isFeedback, false),
-        inArray(inputs.stream, [...industryStreams]),
-      ),
-    )
-    .orderBy(desc(inputs.urgency), desc(inputs.createdAt))
-    .limit(50)
+  // Query non-feedback industry inputs from all business-relevant streams
+  // general-ai has high volume (~1000+/week) so we query it separately with a tighter limit
+  const coreStreams = ['business-dev', 'event-tech', 'event-general', 'vc-investment'] as const
+  const [coreRows, aiRows] = await Promise.all([
+    db
+      .select()
+      .from(inputs)
+      .where(
+        and(
+          gte(inputs.createdAt, periodStart),
+          lt(inputs.createdAt, periodEnd),
+          eq(inputs.status, 'processed'),
+          eq(inputs.isFeedback, false),
+          inArray(inputs.stream, [...coreStreams]),
+        ),
+      )
+      .orderBy(desc(inputs.urgency), desc(inputs.createdAt))
+      .limit(50),
+    db
+      .select()
+      .from(inputs)
+      .where(
+        and(
+          gte(inputs.createdAt, periodStart),
+          lt(inputs.createdAt, periodEnd),
+          eq(inputs.status, 'processed'),
+          eq(inputs.isFeedback, false),
+          eq(inputs.stream, 'general-ai'),
+        ),
+      )
+      .orderBy(desc(inputs.urgency), desc(inputs.createdAt))
+      .limit(20),
+  ])
+  const industryRows = [...coreRows, ...aiRows]
 
   const industryInputs: SynthesisInput[] = industryRows.map((row) => ({
     id: row.id,
