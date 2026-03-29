@@ -21,11 +21,7 @@ export async function generateMetadata({
   return { title: `${STREAM_LABELS[stream]} | Distill` }
 }
 
-export const dynamicParams = true
-
-export function generateStaticParams() {
-  return STREAM_VALUES.map((stream) => ({ stream }))
-}
+export const dynamic = 'force-dynamic'
 
 async function StreamDetailContent({ stream }: { stream: Stream }) {
   const data = await getStreamDetail(stream)

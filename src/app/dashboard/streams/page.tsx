@@ -4,6 +4,8 @@ import { StreamIntelligenceGrid } from './components/stream-intelligence-grid'
 import { StreamPanelSkeleton } from './components/stream-panel-skeleton'
 import type { Metadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Streams | Distill',
 }
