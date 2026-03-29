@@ -11,11 +11,16 @@ import { formatTimeAgo } from '@/app/dashboard/components/format-utils'
 
 function extractDomain(url: string): string {
   try {
-    const hostname = new URL(url).hostname
-    return hostname.replace(/^www\./, '')
+    return new URL(url).hostname.replace(/^www\./, '')
   } catch {
     return ''
   }
+}
+
+function trendLabel(trend: string, count: number): string {
+  if (trend === 'rising') return `Rising activity — ${count} items tracked`
+  if (trend === 'falling') return `Declining activity — ${count} items tracked`
+  return `Steady activity — ${count} items tracked`
 }
 
 function TrendBadge({ trend, count }: { trend: string; count: number }) {
@@ -58,39 +63,53 @@ export function StreamBriefing({
   const bgClass = STREAM_BG_COLORS[brief.stream] ?? 'bg-muted'
   const description = STREAM_DESCRIPTIONS[brief.stream as Stream] ?? ''
 
+  // Build a brief synopsis from available data
+  const themeSummary =
+    brief.topThemes.length > 0
+      ? `Key themes: ${brief.topThemes.slice(0, 3).join(', ')}.`
+      : ''
+  const leadArticle = brief.articles[0]
+  const synopsis = leadArticle?.summary
+    ? leadArticle.summary
+    : `${trendLabel(brief.trend, brief.inputCount)}${themeSummary ? ` ${themeSummary}` : ''}`
+
   return (
     <div
-      className={`animate-fade-up rounded-xl border border-edge border-t-[3px] ${borderClass} bg-panel transition-shadow hover:shadow-md`}
+      className={`animate-fade-up flex flex-col rounded-xl border border-edge border-t-[3px] ${borderClass} bg-panel transition-shadow hover:shadow-md`}
       style={{ animationDelay: `${index * 80}ms` }}
     >
-      {/* Header with gradient accent */}
+      {/* Header */}
       <div
-        className="rounded-t-[9px] px-5 pb-4 pt-5"
+        className="px-5 pb-3 pt-4"
         style={{
           background: `linear-gradient(180deg, ${hex}08 0%, transparent 100%)`,
         }}
       >
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2.5">
-              <span className={`inline-block h-2.5 w-2.5 rounded-full ${bgClass}`} />
-              <Link
-                href={`/dashboard/streams/${brief.stream}`}
-                className="text-base font-semibold text-ink transition-colors hover:text-accent"
-              >
-                {brief.label}
-              </Link>
-            </div>
-            <p className="mt-1.5 text-xs leading-relaxed text-muted">
-              {description}
-            </p>
+          <div className="flex items-center gap-2.5">
+            <span className={`inline-block h-2.5 w-2.5 rounded-full ${bgClass}`} />
+            <Link
+              href={`/dashboard/streams/${brief.stream}`}
+              className="text-base font-semibold text-ink transition-colors hover:text-accent"
+            >
+              {brief.label}
+            </Link>
           </div>
           <TrendBadge trend={brief.trend} count={brief.inputCount} />
         </div>
+        <p className="mt-1 text-[11px] text-muted">{description}</p>
+      </div>
 
-        {/* Theme pills */}
+      {/* Synopsis brief — the "WORLD BRIEF" equivalent */}
+      <div className="border-t border-edge-dim px-5 py-3">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted">
+          Brief
+        </p>
+        <p className="mt-1.5 text-sm leading-relaxed text-ink">
+          {synopsis}
+        </p>
         {brief.topThemes.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
             {brief.topThemes.map((theme) => (
               <Link
                 key={theme}
@@ -104,19 +123,35 @@ export function StreamBriefing({
         )}
       </div>
 
-      {/* Articles */}
-      <div className="border-t border-edge-dim px-5 py-4">
-        {brief.articles.length === 0 ? (
-          <p className="py-3 text-center text-xs italic text-muted">
-            No articles in this window
+      {/* Scrollable articles feed */}
+      <div className="border-t border-edge-dim">
+        <div className="flex items-center justify-between px-5 py-2.5">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted">
+            Top Articles
           </p>
+          {brief.articles.length > 0 && (
+            <span className="text-[10px] tabular-nums text-muted">
+              {brief.articles.length}
+            </span>
+          )}
+        </div>
+
+        {brief.articles.length === 0 ? (
+          <div className="px-5 pb-4">
+            <p className="text-xs italic text-muted">No articles in this window</p>
+          </div>
         ) : (
-          <ol className="space-y-3">
+          <div className="intel-scroll max-h-[260px] overflow-y-auto pb-2">
             {brief.articles.map((article, i) => {
               const domain = article.feedUrl ? extractDomain(article.feedUrl) : null
 
               return (
-                <li key={article.id} className="flex gap-3">
+                <div
+                  key={article.id}
+                  className={`flex gap-3 px-5 py-2.5 transition-colors hover:bg-panel-alt/50 ${
+                    i < brief.articles.length - 1 ? 'border-b border-edge-dim' : ''
+                  }`}
+                >
                   <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-panel-alt text-[10px] font-semibold tabular-nums text-muted">
                     {i + 1}
                   </span>
@@ -161,10 +196,10 @@ export function StreamBriefing({
                       )}
                     </div>
                   </div>
-                </li>
+                </div>
               )
             })}
-          </ol>
+          </div>
         )}
       </div>
     </div>

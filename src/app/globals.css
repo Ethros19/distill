@@ -110,3 +110,22 @@ body {
     transform: rotate(360deg);
   }
 }
+
+/* Scrollable intelligence panels */
+.intel-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-main) transparent;
+}
+.intel-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.intel-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.intel-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-main);
+  border-radius: 4px;
+}
+.intel-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

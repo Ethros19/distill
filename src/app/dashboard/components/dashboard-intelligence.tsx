@@ -26,15 +26,15 @@ function ChartSkeleton() {
   )
 }
 
-function GridSkeleton() {
+function PanelSkeleton() {
   return (
-    <div className="h-56 animate-pulse rounded-xl border border-edge bg-panel p-5" />
+    <div className="h-80 animate-pulse rounded-xl border border-edge bg-panel" />
   )
 }
 
 export function DashboardIntelligence() {
   return (
-    <section className="space-y-6">
+    <section className="space-y-5">
       <h2 className="font-display text-xl italic text-dim">Intelligence</h2>
 
       {/* Row 1: KPI Metric Cards */}
@@ -56,18 +56,14 @@ export function DashboardIntelligence() {
         </div>
       </div>
 
-      {/* Row 3: Theme Heatmap + Signal Timeline */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <Suspense fallback={<GridSkeleton />}>
-            <ThemeHeatmapSection />
-          </Suspense>
-        </div>
-        <div>
-          <Suspense fallback={<GridSkeleton />}>
-            <SignalTimelineSection />
-          </Suspense>
-        </div>
+      {/* Row 3: Theme Landscape + Signal Timeline — scrollable panels */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Suspense fallback={<PanelSkeleton />}>
+          <ThemeHeatmapSection />
+        </Suspense>
+        <Suspense fallback={<PanelSkeleton />}>
+          <SignalTimelineSection />
+        </Suspense>
       </div>
     </section>
   )
