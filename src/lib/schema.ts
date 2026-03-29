@@ -128,6 +128,28 @@ export const settings = pgTable('settings', {
 })
 
 // ---------------------------------------------------------------------------
+// feed_sources — RSS/Atom feed configurations for automated ingestion
+// ---------------------------------------------------------------------------
+export const feedSources = pgTable(
+  'feed_sources',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    name: varchar('name', { length: 100 }).notNull(),
+    url: text('url').notNull(),
+    category: varchar('category', { length: 50 }),
+    pollingInterval: integer('polling_interval').notNull().default(60), // minutes
+    enabled: boolean('enabled').notNull().default(true),
+    lastPolledAt: timestamp('last_polled_at', { withTimezone: true }),
+    lastError: text('last_error'),
+  },
+  (table) => [
+    uniqueIndex('feed_sources_url_idx').on(table.url),
+    index('feed_sources_enabled_idx').on(table.enabled),
+  ],
+)
+
+// ---------------------------------------------------------------------------
 // Inferred types for use across the codebase
 // ---------------------------------------------------------------------------
 export type Input = typeof inputs.$inferSelect
@@ -140,3 +162,5 @@ export type Session = typeof sessions.$inferSelect
 export type NewSession = typeof sessions.$inferInsert
 export type LoginAttempt = typeof loginAttempts.$inferSelect
 export type NewLoginAttempt = typeof loginAttempts.$inferInsert
+export type FeedSource = typeof feedSources.$inferSelect
+export type NewFeedSource = typeof feedSources.$inferInsert
