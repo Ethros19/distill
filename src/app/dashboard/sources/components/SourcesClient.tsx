@@ -9,7 +9,7 @@ import { FeedFormModal } from './FeedFormModal'
 
 type FeedWithCount = FeedSource & { inputCount: number }
 
-export function SourcesClient({ feeds }: { feeds: FeedWithCount[] }) {
+export function SourcesClient({ feeds, activeStreamCount }: { feeds: FeedWithCount[]; activeStreamCount: number }) {
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add')
   const [editFeed, setEditFeed] = useState<FeedSource | undefined>(undefined)
@@ -39,6 +39,7 @@ export function SourcesClient({ feeds }: { feeds: FeedWithCount[] }) {
   return (
     <>
       {/* Header */}
+      <div className="space-y-1">
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-3">
           <h2 className="font-display text-xl tracking-tight text-ink">
@@ -77,6 +78,10 @@ export function SourcesClient({ feeds }: { feeds: FeedWithCount[] }) {
           </Link>
           <SourcesToolbar feedCount={feeds.length} onAddClick={handleAdd} />
         </div>
+      </div>
+      <p className="text-sm text-dim">
+        Feed source management &mdash; {activeStreamCount} {activeStreamCount === 1 ? 'stream' : 'streams'} with active coverage
+      </p>
       </div>
 
       {/* Feed list */}
