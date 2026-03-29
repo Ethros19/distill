@@ -1,5 +1,4 @@
-import { desc } from 'drizzle-orm'
-import { eq } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { signals, syntheses } from '@/lib/schema'
 import { formatTimeAgo, signalStatusBadge, signalStatusLabel } from './format-utils'
