@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
 import { sql, desc, gte, eq, and } from 'drizzle-orm'
 import { STREAM_VALUES } from '@/lib/stream-utils'
-import type { StreamVolume, StreamTheme, StreamArticle } from './types'
+import type { StreamVolume, StreamTheme, StreamArticle, StreamIntelligenceData } from './types'
 
 // ---------------------------------------------------------------------------
 // Per-stream volume aggregation
@@ -96,4 +96,26 @@ export async function queryTopArticles(since: Date): Promise<StreamArticle[]> {
     .limit(30)
 
   return rows
+}
+
+// ---------------------------------------------------------------------------
+// Composite: all stream intelligence in parallel
+// ---------------------------------------------------------------------------
+
+/**
+ * Execute volume, themes, and articles queries in parallel.
+ * Returns a single StreamIntelligenceData object for the streams dashboard.
+ */
+export async function getStreamIntelligence(
+  windowDays = 30,
+): Promise<StreamIntelligenceData> {
+  const since = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000)
+
+  const [volume, themes, articles] = await Promise.all([
+    queryStreamVolume(since),
+    queryStreamThemes(since),
+    queryTopArticles(since),
+  ])
+
+  return { volume, themes, articles }
 }
