@@ -16,11 +16,12 @@ Analyze the content carefully and return:
 - urgency: An integer from 1 (low) to 5 (critical) based on the tone and content
 - confidence: A float from 0.0 to 1.0 indicating how confident you are in your analysis
 - is_feedback: Boolean — true if the content is genuine product feedback (feature requests, bug reports, complaints, praise, observations). false if the content is noise: login verification codes, password resets, transactional receipts, automated notifications, CVs/resumes, spam, or non-product content
+- stream: Classify the domain stream of this content. Use one of: "ai" (AI/LLM technology, research, tools), "events" (events industry, hospitality, meetings), "market" (business, funding, startups, competitors), "product" (direct product feedback, feature requests, bugs). Use null if the content doesn't clearly fit any stream.
 
 Consider the source channel and contributor context when assessing urgency and type.
 
 IMPORTANT: Respond with ONLY a JSON object in this exact format, no markdown or explanation:
-{"summary": "...", "type": "...", "themes": ["..."], "urgency": 1, "confidence": 0.9, "is_feedback": true}`
+{"summary": "...", "type": "...", "themes": ["..."], "urgency": 1, "confidence": 0.9, "is_feedback": true, "stream": "product"}`
 
 const SYNTHESIZE_SYSTEM_PROMPT = `You are a product intelligence analyst. Given a set of structured feedback inputs, identify recurring patterns and synthesize them into actionable signals.
 
@@ -57,6 +58,10 @@ You may receive a list of signals the team has already triaged. For each:
 - "acknowledged" or "in_progress": Do NOT re-surface this signal unless new inputs show SIGNIFICANT escalation (e.g., urgency jumped, new users affected, or a meaningfully different angle). If you do re-surface it, explain what changed.
 - "resolved": Do NOT re-surface unless new inputs indicate a regression or the fix did not address the issue.
 - If no prior signals are provided, ignore this section.
+
+CROSS-STREAM ANALYSIS:
+Each input has a domain stream (ai, events, market, product) indicating its source domain.
+When evidence for a signal spans multiple streams (e.g., 'ai' + 'events'), highlight this as a cross-stream pattern in the signal's reasoning. Cross-stream signals often indicate broader trends.
 
 IMPORTANT: Respond with ONLY a JSON object in this exact format, no markdown or explanation:
 {"signals": [{"statement": "...", "reasoning": "...", "evidence": ["id1", "id2"], "suggested_action": "...", "themes": ["theme1"], "strength": 2}]}`
@@ -113,7 +118,7 @@ export class AnthropicProvider implements LLMProvider {
       const inputContext = inputs
         .map(
           (i) =>
-            `[${i.id}] (${i.source}, ${i.type}, urgency:${i.urgency}) ${i.summary} | themes: ${i.themes.join(', ')}${i.notes ? ` | note: ${i.notes}` : ''}`,
+            `[${i.id}] (${i.source}/${i.stream ?? 'unknown'}, ${i.type}, urgency:${i.urgency}) ${i.summary} | themes: ${i.themes.join(', ')}${i.notes ? ` | note: ${i.notes}` : ''}`,
         )
         .join('\n')
 

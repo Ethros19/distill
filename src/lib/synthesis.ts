@@ -59,6 +59,7 @@ export async function runSynthesis(options?: {
     urgency: row.urgency ?? 1,
     source: row.source,
     notes: row.notes ?? undefined,
+    stream: row.stream ?? undefined,
   }))
 
   // Query prior signals that have been triaged (not 'new') for cross-synthesis dedup
