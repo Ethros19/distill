@@ -25,58 +25,80 @@ export interface StreamBrief {
   topThemes: string[]
   articles: RadarArticle[]
   synopsis: string
+  piperImplication: string
 }
 
+interface StreamInsight {
+  synopsis: string
+  piperImplication: string
+}
+
+const PIPER_CONTEXT = 'Piper (withpiper.ai) is an AI-powered budgeting platform for the events industry. It helps event planners create, manage, and optimize event budgets using AI.'
+
 /**
- * Generate an AI synopsis for a stream from its article summaries.
- * Uses Haiku for speed. Falls back to a theme-based summary on error.
+ * Generate an AI synopsis and Piper implication for a stream.
+ * Single LLM call returns both. Falls back gracefully on error.
  */
-async function generateSynopsis(
+async function generateStreamInsight(
   label: string,
   articles: RadarArticle[],
   themes: string[],
   trend: TrendDirection,
   count: number,
-): Promise<string> {
+): Promise<StreamInsight> {
   const summaries = articles
     .filter((a) => a.summary)
     .slice(0, 10)
     .map((a, i) => `${i + 1}. ${a.summary}`)
 
   if (summaries.length === 0) {
-    if (themes.length > 0) {
-      return `No articles yet. Tracked themes include ${themes.join(', ')}.`
-    }
-    return 'No intelligence data available for this stream yet.'
+    const fallbackSynopsis = themes.length > 0
+      ? `No articles yet. Tracked themes include ${themes.join(', ')}.`
+      : 'No intelligence data available for this stream yet.'
+    return { synopsis: fallbackSynopsis, piperImplication: '' }
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    return buildFallbackSynopsis(summaries, themes, trend, count)
+    return { synopsis: buildFallbackSynopsis(summaries, themes, trend, count), piperImplication: '' }
   }
 
   try {
     const client = new Anthropic({ apiKey })
     const response = await client.messages.create({
       model: SYNOPSIS_MODEL,
-      max_tokens: 256,
+      max_tokens: 400,
       messages: [
         {
           role: 'user',
-          content: `You are a business intelligence analyst. Given these article summaries from the "${label}" intelligence stream, write a 2-3 sentence brief synthesizing the overall state of this vertical. Be specific about key developments. No heading or preamble — just the brief.\n\nArticles:\n${summaries.join('\n')}`,
+          content: `You are a business intelligence analyst. Given these article summaries from the "${label}" intelligence stream, produce two outputs.
+
+${PIPER_CONTEXT}
+
+Articles:
+${summaries.join('\n')}
+
+Respond with ONLY a JSON object in this exact format, no markdown:
+{"synopsis": "2-3 sentence brief synthesizing the overall state of this vertical. Be specific about key developments.", "piper_implication": "1-2 sentences on what this means for Piper — how these developments affect Piper's product strategy, competitive position, or market opportunity."}`,
         },
       ],
     })
 
     const textBlock = response.content.find((b) => b.type === 'text')
-    if (textBlock && textBlock.type === 'text' && textBlock.text.trim()) {
-      return textBlock.text.trim()
+    if (textBlock && textBlock.type === 'text') {
+      const text = textBlock.text.trim()
+      const cleaned = text.replace(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/, '$1').trim()
+      const parsed = JSON.parse(cleaned)
+      return {
+        synopsis: parsed.synopsis || buildFallbackSynopsis(summaries, themes, trend, count),
+        piperImplication: parsed.piper_implication || '',
+      }
     }
   } catch {
     // Fall through to fallback
   }
 
-  return buildFallbackSynopsis(summaries, themes, trend, count)
+  return { synopsis: buildFallbackSynopsis(summaries, themes, trend, count), piperImplication: '' }
 }
 
 function buildFallbackSynopsis(
@@ -200,12 +222,16 @@ export async function getRadarData(windowDays = 14): Promise<StreamBrief[]> {
     }
   })
 
-  // Generate all synopses in parallel
-  const synopses = await Promise.all(
+  // Generate all insights (synopsis + Piper implication) in parallel
+  const insights = await Promise.all(
     baseBriefs.map((b) =>
-      generateSynopsis(b.label, b.articles, b.topThemes, b.trend, b.inputCount),
+      generateStreamInsight(b.label, b.articles, b.topThemes, b.trend, b.inputCount),
     ),
   )
 
-  return baseBriefs.map((b, i) => ({ ...b, synopsis: synopses[i] }))
+  return baseBriefs.map((b, i) => ({
+    ...b,
+    synopsis: insights[i].synopsis,
+    piperImplication: insights[i].piperImplication,
+  }))
 }

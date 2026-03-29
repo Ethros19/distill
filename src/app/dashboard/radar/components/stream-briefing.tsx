@@ -109,6 +109,18 @@ export function StreamBriefing({
         )}
       </div>
 
+      {/* Piper implication */}
+      {brief.piperImplication && (
+        <div className="mx-3 mb-3 rounded-lg bg-panel-alt px-4 py-3">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-accent">
+            What this means for Piper
+          </p>
+          <p className="mt-1 text-[13px] leading-relaxed text-dim">
+            {brief.piperImplication}
+          </p>
+        </div>
+      )}
+
       {/* Articles feed — compact list */}
       <div className="border-t border-edge-dim">
         <div className="flex items-center justify-between px-4 py-2">
