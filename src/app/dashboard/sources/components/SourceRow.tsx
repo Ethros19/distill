@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { FeedSource } from '@/lib/schema'
-import { formatTimeAgo, healthBadge } from '../../components/format-utils'
+import { formatTimeAgo, healthBadge, streamBadge, streamLabel } from '../../components/format-utils'
+import { CATEGORY_TO_STREAM } from '@/lib/stream-utils'
 
 type SourceRowFeed = FeedSource & { inputCount: number }
 
@@ -25,6 +26,7 @@ export function SourceRow({
   const [showErrorDetail, setShowErrorDetail] = useState(false)
 
   const health = healthBadge(feed)
+  const stream = feed.category ? CATEGORY_TO_STREAM[feed.category] ?? null : null
 
   async function handleToggle() {
     if (toggling) return
@@ -112,6 +114,11 @@ export function SourceRow({
             {feed.category && (
               <span className="rounded-full bg-panel-alt px-2 py-0.5 text-[10px] font-medium text-dim">
                 {feed.category}
+              </span>
+            )}
+            {stream && (
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${streamBadge(stream)}`}>
+                {streamLabel(stream)}
               </span>
             )}
           </div>
