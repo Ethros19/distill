@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
 import { sql, desc, gte, eq, and } from 'drizzle-orm'
 import { STREAM_VALUES } from '@/lib/stream-utils'
-import type { StreamVolume, StreamTheme } from './types'
+import type { StreamVolume, StreamTheme, StreamArticle } from './types'
 
 // ---------------------------------------------------------------------------
 // Per-stream volume aggregation
@@ -64,4 +64,36 @@ export async function queryStreamThemes(since: Date): Promise<StreamTheme[]> {
   `)
 
   return (rows as unknown as StreamTheme[]).filter((r) => r.stream !== null)
+}
+
+// ---------------------------------------------------------------------------
+// Top articles per stream (high urgency, recent)
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch the most notable recent articles across all streams:
+ * non-feedback, urgency >= 4, ordered by urgency then recency.
+ */
+export async function queryTopArticles(since: Date): Promise<StreamArticle[]> {
+  const rows = await db
+    .select({
+      id: inputs.id,
+      stream: inputs.stream,
+      summary: inputs.summary,
+      urgency: inputs.urgency,
+      createdAt: inputs.createdAt,
+      feedUrl: inputs.feedUrl,
+    })
+    .from(inputs)
+    .where(
+      and(
+        eq(inputs.isFeedback, false),
+        gte(inputs.urgency, 4),
+        gte(inputs.createdAt, since),
+      ),
+    )
+    .orderBy(desc(inputs.urgency), desc(inputs.createdAt))
+    .limit(30)
+
+  return rows
 }
