@@ -78,13 +78,18 @@ export default async function InputsPage({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-baseline gap-3">
-          <h2 className="font-display text-xl tracking-tight text-ink">
-            Inputs
-          </h2>
-          <span className="text-sm text-muted">
-            {total} {total === 1 ? 'input' : 'inputs'}
-          </span>
+        <div>
+          <div className="flex items-baseline gap-3">
+            <h2 className="font-display text-xl tracking-tight text-ink">
+              Inputs
+            </h2>
+            <span className="text-sm text-muted">
+              {total} {total === 1 ? 'input' : 'inputs'}
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-dim">
+            Raw data reference layer
+          </p>
         </div>
         <Link
           href="/dashboard"
