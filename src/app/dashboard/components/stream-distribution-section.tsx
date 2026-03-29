@@ -1,25 +1,15 @@
 import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
 import { count } from 'drizzle-orm'
-import { STREAM_LABELS, type Stream } from '@/lib/stream-utils'
+import { STREAM_LABELS, STREAM_BG_COLORS, type Stream } from '@/lib/stream-utils'
 
 const STREAM_COLORS: Record<string, string> = {
-  'general-ai': 'bg-purple-500',
-  'business-dev': 'bg-emerald-500',
-  'event-tech': 'bg-orange-500',
-  'event-general': 'bg-amber-500',
-  'vc-investment': 'bg-blue-500',
-  product: 'bg-sig-low',
+  ...STREAM_BG_COLORS,
   Untagged: 'bg-dim',
 }
 
 const STREAM_DOT_COLORS: Record<string, string> = {
-  'general-ai': 'bg-purple-500',
-  'business-dev': 'bg-emerald-500',
-  'event-tech': 'bg-orange-500',
-  'event-general': 'bg-amber-500',
-  'vc-investment': 'bg-blue-500',
-  product: 'bg-sig-low',
+  ...STREAM_BG_COLORS,
   Untagged: 'bg-muted',
 }
 
