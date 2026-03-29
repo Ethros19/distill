@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { LogoutButton } from './components/logout-button'
 import { HelpButton } from './components/help-modal'
@@ -62,7 +63,9 @@ export default function DashboardLayout({
       </main>
       <footer className="sticky bottom-0 border-t border-edge-dim bg-panel/80 backdrop-blur-sm">
         <div className="mx-auto max-w-7xl">
-          <SignalStats />
+          <Suspense>
+            <SignalStats />
+          </Suspense>
         </div>
       </footer>
     </div>
