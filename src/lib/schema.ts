@@ -1,3 +1,4 @@
+import { relations } from 'drizzle-orm'
 import {
   pgTable,
   uuid,
@@ -33,6 +34,10 @@ export const inputs = pgTable(
     status: varchar('status', { length: 20 }).notNull().default('unprocessed'),
     isFeedback: boolean('is_feedback').notNull().default(true),
     notes: text('notes'),
+    // RSS feed metadata (nullable — only populated for source='rss')
+    feedSourceId: uuid('feed_source_id').references(() => feedSources.id),
+    feedUrl: text('feed_url'),
+    publishedAt: timestamp('published_at', { withTimezone: true }),
   },
   (table) => [
     uniqueIndex('inputs_content_hash_idx').on(table.contentHash),
@@ -148,6 +153,20 @@ export const feedSources = pgTable(
     index('feed_sources_enabled_idx').on(table.enabled),
   ],
 )
+
+// ---------------------------------------------------------------------------
+// Relations — Drizzle relational query support
+// ---------------------------------------------------------------------------
+export const feedSourcesRelations = relations(feedSources, ({ many }) => ({
+  inputs: many(inputs),
+}))
+
+export const inputsRelations = relations(inputs, ({ one }) => ({
+  feedSource: one(feedSources, {
+    fields: [inputs.feedSourceId],
+    references: [feedSources.id],
+  }),
+}))
 
 // ---------------------------------------------------------------------------
 // Inferred types for use across the codebase
