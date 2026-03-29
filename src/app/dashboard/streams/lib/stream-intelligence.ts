@@ -76,7 +76,7 @@ export async function queryStreamTrend(windowDays: number): Promise<StreamVolume
   `)
 
   const countMap = new Map<string, { current: number; prior: number }>()
-  for (const row of rows as unknown as Array<{ stream: string; current_count: number; prior_count: number }>) {
+  for (const row of (rows as unknown as { rows: Array<{ stream: string; current_count: number; prior_count: number }> }).rows) {
     if (row.stream) {
       countMap.set(row.stream, { current: row.current_count, prior: row.prior_count })
     }
@@ -123,7 +123,7 @@ export async function queryCrossStreamThemes(since: Date): Promise<CrossStreamTh
     LIMIT 10
   `)
 
-  return (rows as unknown as Array<{ theme: string; stream_count: number; total_freq: number; streams: string[] }>).map(
+  return ((rows as unknown as { rows: Array<{ theme: string; stream_count: number; total_freq: number; streams: string[] }> }).rows).map(
     (row) => ({
       theme: row.theme,
       streamCount: row.stream_count,
@@ -161,7 +161,7 @@ export async function queryStreamThemes(since: Date): Promise<StreamTheme[]> {
     ORDER BY stream, freq DESC
   `)
 
-  return (rows as unknown as StreamTheme[]).filter((r) => r.stream !== null)
+  return ((rows as unknown as { rows: StreamTheme[] }).rows).filter((r) => r.stream !== null)
 }
 
 // ---------------------------------------------------------------------------
