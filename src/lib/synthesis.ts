@@ -167,6 +167,18 @@ export async function runSynthesis(options?: {
     })
   }
 
+  // Generate synthesis narrative (supplementary — failures do not break the run)
+  try {
+    const narrative = await getLLMProvider().generateNarrative(llmSignals, industryInputs, productContext)
+    await db
+      .update(syntheses)
+      .set({ digestMarkdown: narrative })
+      .where(eq(syntheses.id, synthesisRecord.id))
+    console.log(`[synthesis] narrative generated: ${narrative.length} chars`)
+  } catch (err) {
+    console.error('[synthesis] narrative generation failed:', err instanceof Error ? err.message : err)
+  }
+
   return {
     status: 'completed',
     synthesisId: synthesisRecord.id,
