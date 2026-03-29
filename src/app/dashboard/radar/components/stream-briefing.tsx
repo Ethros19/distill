@@ -6,8 +6,26 @@ import {
   STREAM_DESCRIPTIONS,
   type Stream,
 } from '@/lib/stream-utils'
-import type { StreamBrief } from '../lib/radar-data'
 import { formatTimeAgo } from '@/app/dashboard/components/format-utils'
+
+/** Serializable version of StreamBrief (dates as ISO strings) */
+export interface SerializedStreamBrief {
+  stream: string
+  label: string
+  trend: string
+  inputCount: number
+  priorCount: number
+  topThemes: string[]
+  articles: {
+    id: string
+    summary: string | null
+    feedUrl: string | null
+    urgency: number | null
+    createdAt: string
+  }[]
+  synopsis: string
+  piperImplication: string
+}
 
 function extractDomain(url: string): string {
   try {
@@ -49,7 +67,7 @@ export function StreamBriefing({
   brief,
   index,
 }: {
-  brief: StreamBrief
+  brief: SerializedStreamBrief
   index: number
 }) {
   const hex = STREAM_HEX_COLORS[brief.stream] ?? '#888'
@@ -57,7 +75,6 @@ export function StreamBriefing({
   const bgClass = STREAM_BG_COLORS[brief.stream] ?? 'bg-muted'
   const description = STREAM_DESCRIPTIONS[brief.stream as Stream] ?? ''
 
-  // Show top 5 in the articles list (synopsis already uses up to 10)
   const displayArticles = brief.articles.slice(0, 5)
 
   return (
@@ -66,7 +83,7 @@ export function StreamBriefing({
       style={{ animationDelay: `${index * 60}ms` }}
     >
       {/* Header — stream name + trend */}
-      <div className="flex items-start justify-between gap-2 px-4 pb-2 pt-3">
+      <div className="flex items-start justify-between gap-2 px-4 pb-2 pt-3 pr-10">
         <div className="flex items-center gap-2">
           <span className={`inline-block h-2 w-2 rounded-full ${bgClass}`} />
           <Link
@@ -174,7 +191,7 @@ export function StreamBriefing({
                         <span className="text-edge">&middot;</span>
                       )}
                       <span suppressHydrationWarning>
-                        {formatTimeAgo(article.createdAt)}
+                        {formatTimeAgo(new Date(article.createdAt))}
                       </span>
                       {article.urgency != null && article.urgency >= 5 && (
                         <>
