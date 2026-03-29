@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
             urgency: structured.urgency,
             confidence: structured.confidence,
             isFeedback: structured.is_feedback,
+            stream: structured.stream ?? null,
             status: 'processed',
           })
           .where(eq(inputs.id, inputId))
