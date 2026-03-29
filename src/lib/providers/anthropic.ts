@@ -16,7 +16,15 @@ Analyze the content carefully and return:
 - urgency: An integer from 1 (low) to 5 (critical) based on the tone and content
 - confidence: A float from 0.0 to 1.0 indicating how confident you are in your analysis
 - is_feedback: Boolean — true if the content is genuine product feedback (feature requests, bug reports, complaints, praise, observations). false if the content is noise: login verification codes, password resets, transactional receipts, automated notifications, CVs/resumes, spam, or non-product content
-- stream: Classify the domain stream of this content. Use one of: "ai" (AI/LLM technology, research, tools), "events" (events industry, hospitality, meetings), "market" (business, funding, startups, competitors), "product" (direct product feedback, feature requests, bugs). Use null if the content doesn't clearly fit any stream.
+- stream: Classify the domain stream of this content. Use one of:
+  "general-ai" (AI/LLM technology news, model releases, open-source AI, API changes, AI regulation, research papers),
+  "piper-dev" (AI applications in event budgeting and planning, event industry business intelligence, vertical SaaS for events, event management software business),
+  "event-tech" (event technology platforms and competition, software tooling trends like Cvent/Eventbrite/Bizzabo, event tech product launches),
+  "event-general" (event industry news, trade shows, hospitality trends, seasonal demand, meeting planning, venue management),
+  "vc-investment" (VC funding rounds, M&A activity, AI startup investments, venture capital deals, fundraising news),
+  "product" (direct product feedback about Distill, feature requests, bug reports, user complaints).
+  Key distinctions: "piper-dev" is the BUSINESS of events + AI (intersection), "event-tech" is event SOFTWARE/PLATFORMS, "event-general" is the INDUSTRY itself.
+  Use null if the content doesn't clearly fit any stream.
 
 Consider the source channel and contributor context when assessing urgency and type.
 
@@ -60,8 +68,8 @@ You may receive a list of signals the team has already triaged. For each:
 - If no prior signals are provided, ignore this section.
 
 CROSS-STREAM ANALYSIS:
-Each input has a domain stream (ai, events, market, product) indicating its source domain.
-When evidence for a signal spans multiple streams (e.g., 'ai' + 'events'), highlight this as a cross-stream pattern in the signal's reasoning. Cross-stream signals often indicate broader trends.
+Each input has a domain stream (general-ai, piper-dev, event-tech, event-general, vc-investment, product) indicating its source domain.
+When evidence for a signal spans multiple streams, highlight this as a cross-stream pattern in the signal's reasoning. Cross-stream signals often indicate broader trends. Pay special attention to themes that bridge related sub-verticals (e.g., general-ai + vc-investment for AI funding trends, event-tech + event-general for industry-wide technology shifts, piper-dev + event-general for event business intelligence).
 
 IMPORTANT: Respond with ONLY a JSON object in this exact format, no markdown or explanation:
 {"signals": [{"statement": "...", "reasoning": "...", "evidence": ["id1", "id2"], "suggested_action": "...", "themes": ["theme1"], "strength": 2}]}`
