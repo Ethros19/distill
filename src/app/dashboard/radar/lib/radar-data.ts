@@ -1,9 +1,12 @@
+import Anthropic from '@anthropic-ai/sdk'
 import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
 import { sql } from 'drizzle-orm'
 import { STREAM_VALUES, STREAM_LABELS, type Stream } from '@/lib/stream-utils'
 import { trendDirection } from '../../streams/lib/stream-intelligence'
 import type { TrendDirection } from '../../streams/lib/types'
+
+const SYNOPSIS_MODEL = process.env.ANTHROPIC_STRUCTURE_MODEL || 'claude-haiku-4-5-20251001'
 
 export interface RadarArticle {
   id: string
@@ -21,11 +24,76 @@ export interface StreamBrief {
   priorCount: number
   topThemes: string[]
   articles: RadarArticle[]
+  synopsis: string
 }
 
 /**
- * Fetch per-stream intelligence briefs: volume/trend, top themes, top 5 articles.
- * All three queries run in parallel for performance.
+ * Generate an AI synopsis for a stream from its article summaries.
+ * Uses Haiku for speed. Falls back to a theme-based summary on error.
+ */
+async function generateSynopsis(
+  label: string,
+  articles: RadarArticle[],
+  themes: string[],
+  trend: TrendDirection,
+  count: number,
+): Promise<string> {
+  const summaries = articles
+    .filter((a) => a.summary)
+    .slice(0, 10)
+    .map((a, i) => `${i + 1}. ${a.summary}`)
+
+  if (summaries.length === 0) {
+    if (themes.length > 0) {
+      return `No articles yet. Tracked themes include ${themes.join(', ')}.`
+    }
+    return 'No intelligence data available for this stream yet.'
+  }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    return buildFallbackSynopsis(summaries, themes, trend, count)
+  }
+
+  try {
+    const client = new Anthropic({ apiKey })
+    const response = await client.messages.create({
+      model: SYNOPSIS_MODEL,
+      max_tokens: 256,
+      messages: [
+        {
+          role: 'user',
+          content: `You are a business intelligence analyst. Given these article summaries from the "${label}" intelligence stream, write a 2-3 sentence brief synthesizing the overall state of this vertical. Be specific about key developments. No heading or preamble — just the brief.\n\nArticles:\n${summaries.join('\n')}`,
+        },
+      ],
+    })
+
+    const textBlock = response.content.find((b) => b.type === 'text')
+    if (textBlock && textBlock.type === 'text' && textBlock.text.trim()) {
+      return textBlock.text.trim()
+    }
+  } catch {
+    // Fall through to fallback
+  }
+
+  return buildFallbackSynopsis(summaries, themes, trend, count)
+}
+
+function buildFallbackSynopsis(
+  summaries: string[],
+  themes: string[],
+  trend: TrendDirection,
+  count: number,
+): string {
+  const trendWord = trend === 'rising' ? 'Rising' : trend === 'falling' ? 'Declining' : 'Steady'
+  const themeStr = themes.length > 0 ? ` Key themes: ${themes.slice(0, 3).join(', ')}.` : ''
+  return `${trendWord} activity with ${count} items tracked.${themeStr} ${summaries.length} articles available.`
+}
+
+/**
+ * Fetch per-stream intelligence briefs: volume/trend, top themes, top 10 articles,
+ * and AI-generated synopses. DB queries run in parallel, then synopses generated
+ * in parallel from the results.
  */
 export async function getRadarData(windowDays = 14): Promise<StreamBrief[]> {
   const now = Date.now()
@@ -35,7 +103,6 @@ export async function getRadarData(windowDays = 14): Promise<StreamBrief[]> {
   const since = priorStart
 
   const [volumeResult, themeResult, articleResult] = await Promise.all([
-    // Volume + trend per stream
     db.execute(sql`
       SELECT
         stream,
@@ -48,7 +115,6 @@ export async function getRadarData(windowDays = 14): Promise<StreamBrief[]> {
       GROUP BY stream
     `),
 
-    // Top 5 themes per stream
     db.execute(sql`
       SELECT stream, theme, freq::int AS freq
       FROM (
@@ -68,7 +134,6 @@ export async function getRadarData(windowDays = 14): Promise<StreamBrief[]> {
       ORDER BY stream, freq DESC
     `),
 
-    // Top 5 articles per stream (by urgency then recency)
     db.execute(sql`
       SELECT id, stream, summary, feed_url, urgency, created_at
       FROM (
@@ -84,7 +149,7 @@ export async function getRadarData(windowDays = 14): Promise<StreamBrief[]> {
           AND created_at >= ${since.toISOString()}
           AND stream IS NOT NULL
       ) ranked
-      WHERE rn <= 5
+      WHERE rn <= 10
       ORDER BY stream, rn
     `),
   ])
@@ -117,7 +182,8 @@ export async function getRadarData(windowDays = 14): Promise<StreamBrief[]> {
     articleMap.set(row.stream, arr)
   }
 
-  return STREAM_VALUES.map((stream) => {
+  // Build base briefs (without synopsis)
+  const baseBriefs = STREAM_VALUES.map((stream) => {
     const vol = volumeMap.get(stream)
     const current = vol?.current ?? 0
     const prior = vol?.prior ?? 0
@@ -126,11 +192,20 @@ export async function getRadarData(windowDays = 14): Promise<StreamBrief[]> {
     return {
       stream,
       label: STREAM_LABELS[stream],
-      trend: total < 5 ? ('stable' as TrendDirection) : trendDirection(current, prior),
+      trend: (total < 5 ? 'stable' : trendDirection(current, prior)) as TrendDirection,
       inputCount: total,
       priorCount: prior,
       topThemes: themeMap.get(stream) ?? [],
       articles: articleMap.get(stream) ?? [],
     }
   })
+
+  // Generate all synopses in parallel
+  const synopses = await Promise.all(
+    baseBriefs.map((b) =>
+      generateSynopsis(b.label, b.articles, b.topThemes, b.trend, b.inputCount),
+    ),
+  )
+
+  return baseBriefs.map((b, i) => ({ ...b, synopsis: synopses[i] }))
 }
