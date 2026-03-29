@@ -135,6 +135,9 @@ export async function runSynthesis(options?: {
     .where(eq(settings.key, 'product_context'))
   const productContext = ctxRow?.value || undefined
 
+  // Collect industry input IDs for traceability
+  const industryInputIds = industryInputs.map(i => i.id)
+
   // Call LLM provider — pass industry inputs as 4th arg (empty array is fine, not a skip condition)
   const llmSignals: LLMSignal[] = await getLLMProvider().synthesize(synthesisInputs, priorSignals, productContext, industryInputs)
 
@@ -147,6 +150,7 @@ export async function runSynthesis(options?: {
       inputCount: inputRows.length,
       signalCount: llmSignals.length,
       trigger: options?.trigger ?? 'cron',
+      industryInputIds,
     })
     .returning()
 
