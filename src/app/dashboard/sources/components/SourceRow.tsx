@@ -3,16 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { FeedSource } from '@/lib/schema'
-import { formatTimeAgo } from '../../components/format-utils'
+import { formatTimeAgo, healthBadge } from '../../components/format-utils'
 
 type SourceRowFeed = FeedSource & { inputCount: number }
-
-function healthBadge(feed: SourceRowFeed) {
-  if (feed.lastError) return { label: 'Error', classes: 'bg-sig-high/10 text-sig-high' }
-  if (!feed.enabled) return { label: 'Disabled', classes: 'bg-panel-alt text-dim' }
-  if (!feed.lastPolledAt) return { label: 'Never Polled', classes: 'bg-accent-wash text-accent' }
-  return { label: 'Healthy', classes: 'bg-sig-low/10 text-sig-low' }
-}
 
 export function SourceRow({
   feed,

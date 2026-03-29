@@ -111,3 +111,14 @@ export function signalStatusLabel(status: string): string {
       return status
   }
 }
+
+export function healthBadge(source: {
+  enabled: boolean
+  lastError: string | null
+  lastPolledAt: Date | null
+}): { label: string; classes: string } {
+  if (source.lastError) return { label: 'Error', classes: 'bg-sig-high/10 text-sig-high' }
+  if (!source.enabled) return { label: 'Disabled', classes: 'bg-panel-alt text-dim' }
+  if (!source.lastPolledAt) return { label: 'Never Polled', classes: 'bg-accent-wash text-accent' }
+  return { label: 'Healthy', classes: 'bg-sig-low/10 text-sig-low' }
+}
