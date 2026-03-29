@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { STREAM_VALUES } from '../stream-utils'
 
 // Input to the structurer
 export interface RawInput {
@@ -25,6 +26,13 @@ export const StructuredInputSchema = z.object({
     .describe(
       'Whether the content is genuine product feedback (true) vs noise like login codes, transactional emails, auto-replies, CVs, spam (false)',
     ),
+  stream: z
+    .enum(STREAM_VALUES)
+    .nullable()
+    .optional()
+    .describe(
+      'Domain stream classification: "ai" (AI/LLM technology), "events" (events industry, hospitality), "market" (business, funding, startups), "product" (direct product feedback). Null if unclear.',
+    ),
 })
 
 export type StructuredInput = z.infer<typeof StructuredInputSchema>
@@ -38,6 +46,7 @@ export interface SynthesisInput {
   urgency: number
   source: string
   notes?: string
+  stream?: string
 }
 
 // Prior signal context for cross-synthesis dedup
