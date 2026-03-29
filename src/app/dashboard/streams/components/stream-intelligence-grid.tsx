@@ -4,7 +4,6 @@ import type { StreamIntelligenceData, TrendDirection } from '../lib/types'
 import { StreamVolumeChart } from './stream-volume-chart'
 import { StreamThemeList } from './stream-theme-list'
 import { StreamArticleCard } from './stream-article-card'
-import { CrossStreamHighlights } from './cross-stream-highlights'
 
 function TrendIndicator({ trend }: { trend?: TrendDirection }) {
   if (!trend || trend === 'stable') {
@@ -30,8 +29,9 @@ export function StreamIntelligenceGrid({
 
   return (
     <div className="space-y-8">
-      {/* Cross-stream highlights */}
-      <CrossStreamHighlights themes={data.crossStreamThemes} />
+      <h2 className="font-display text-lg italic text-dim">
+        Volume &amp; Trends
+      </h2>
 
       {/* Volume bar chart across all streams */}
       <div className="rounded-xl border border-edge bg-panel p-5">
