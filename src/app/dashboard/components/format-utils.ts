@@ -2,11 +2,15 @@ import { STREAM_LABELS, type Stream } from '@/lib/stream-utils'
 
 export function streamBadge(stream: string | null): string {
   switch (stream) {
-    case 'ai':
+    case 'general-ai':
       return 'bg-purple-500/10 text-purple-600'
-    case 'events':
+    case 'piper-dev':
+      return 'bg-emerald-500/10 text-emerald-600'
+    case 'event-tech':
+      return 'bg-orange-500/10 text-orange-600'
+    case 'event-general':
       return 'bg-amber-500/10 text-amber-600'
-    case 'market':
+    case 'vc-investment':
       return 'bg-blue-500/10 text-blue-600'
     case 'product':
       return 'bg-sig-low/10 text-sig-low'
