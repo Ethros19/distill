@@ -8,6 +8,10 @@ import type { TrendDirection } from '../../streams/lib/types'
 
 const SYNOPSIS_MODEL = process.env.ANTHROPIC_STRUCTURE_MODEL || 'claude-haiku-4-5-20251001'
 
+// In-memory cache for stream insights (survives across requests in the same serverless instance)
+const insightCache = new Map<string, { insight: StreamInsight; expiresAt: number }>()
+const CACHE_TTL_MS = 60 * 60 * 1000 // 1 hour
+
 export interface RadarArticle {
   id: string
   summary: string | null
@@ -222,11 +226,21 @@ export async function getRadarData(windowDays = 14): Promise<StreamBrief[]> {
     }
   })
 
-  // Generate all insights (synopsis + company implication) in parallel
+  // Generate insights with caching — cache key is stream + article IDs
   const insights = await Promise.all(
-    baseBriefs.map((b) =>
-      generateStreamInsight(b.label, b.articles, b.topThemes, b.trend, b.inputCount),
-    ),
+    baseBriefs.map((b) => {
+      const articleKey = b.articles.map((a) => a.id).sort().join(',')
+      const cacheKey = `${b.stream}:${articleKey}`
+      const cached = insightCache.get(cacheKey)
+      if (cached && cached.expiresAt > Date.now()) {
+        return cached.insight
+      }
+      return generateStreamInsight(b.label, b.articles, b.topThemes, b.trend, b.inputCount)
+        .then((insight) => {
+          insightCache.set(cacheKey, { insight, expiresAt: Date.now() + CACHE_TTL_MS })
+          return insight
+        })
+    }),
   )
 
   return baseBriefs.map((b, i) => ({

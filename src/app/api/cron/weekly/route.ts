@@ -52,23 +52,20 @@ export async function GET(request: NextRequest) {
       .from(syntheses)
       .where(eq(syntheses.id, result.synthesisId))
 
-    const markdown = renderDigest(
+    // renderDigest produces a signal-listing format for the email only.
+    // The AI-generated cross-stream narrative is already stored in
+    // digestMarkdown by runSynthesis → generateNarrative. Do NOT overwrite it.
+    const emailMarkdown = renderDigest(
       llmSignals,
       synthesisRecord.periodStart,
       synthesisRecord.periodEnd,
       result.inputCount,
     )
 
-    const html = digestToHtml(markdown)
-
-    // Store digest markdown in synthesis record
-    await db
-      .update(syntheses)
-      .set({ digestMarkdown: markdown })
-      .where(eq(syntheses.id, result.synthesisId))
+    const html = digestToHtml(emailMarkdown)
 
     const emailResult = await sendDigestEmail({
-      markdown,
+      markdown: emailMarkdown,
       html,
       periodStart: synthesisRecord.periodStart,
       periodEnd: synthesisRecord.periodEnd,
