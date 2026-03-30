@@ -66,21 +66,21 @@ function makeRequest(authHeader?: string): NextRequest {
   if (authHeader) {
     headers.set('authorization', authHeader)
   }
-  return new NextRequest('http://localhost/api/cron/weekly', { headers })
+  return new NextRequest('http://localhost/api/cron/synthesis', { headers })
 }
 
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('Weekly cron route', () => {
-  let GET: typeof import('@/app/api/cron/weekly/route').GET
+describe('Synthesis cron route', () => {
+  let GET: typeof import('@/app/api/cron/synthesis/route').GET
 
   beforeEach(async () => {
     vi.clearAllMocks()
     process.env.CRON_SECRET = 'test-secret'
 
-    const mod = await import('@/app/api/cron/weekly/route')
+    const mod = await import('@/app/api/cron/synthesis/route')
     GET = mod.GET
   })
 

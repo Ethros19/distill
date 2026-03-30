@@ -5,7 +5,7 @@
       "schedule": "0 5 * * *"
     },
     {
-      "path": "/api/cron/weekly",
+      "path": "/api/cron/synthesis",
       "schedule": "0 6 * * *"
     }
   ]
