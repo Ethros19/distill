@@ -92,6 +92,7 @@ export const signals = pgTable(
   (table) => [
     index('signals_synthesis_id_idx').on(table.synthesisId),
     index('signals_status_idx').on(table.status),
+    index('signals_strength_idx').on(table.strength),
   ],
 )
 

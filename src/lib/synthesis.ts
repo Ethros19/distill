@@ -154,17 +154,19 @@ export async function runSynthesis(options?: {
     })
     .returning()
 
-  // Insert signal records
-  for (const signal of llmSignals) {
-    await db.insert(signals).values({
-      synthesisId: synthesisRecord.id,
-      statement: signal.statement,
-      reasoning: signal.reasoning,
-      evidence: signal.evidence,
-      suggestedAction: signal.suggested_action,
-      themes: signal.themes,
-      strength: signal.strength,
-    })
+  // Insert signal records (batch)
+  if (llmSignals.length > 0) {
+    await db.insert(signals).values(
+      llmSignals.map((signal) => ({
+        synthesisId: synthesisRecord.id,
+        statement: signal.statement,
+        reasoning: signal.reasoning,
+        evidence: signal.evidence,
+        suggestedAction: signal.suggested_action,
+        themes: signal.themes,
+        strength: signal.strength,
+      })),
+    )
   }
 
   // Generate synthesis narrative (supplementary — failures do not break the run)

@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import Parser from 'rss-parser'
-import { eq, or } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { feedSources, inputs, type FeedSource } from '@/lib/schema'
 import { structureInput } from '@/lib/structurer'
@@ -27,52 +27,73 @@ export async function pollFeed(feedSource: FeedSource): Promise<number> {
   // Cap items per poll to prevent archive-style feeds from flooding the system
   const items = feed.items.slice(0, MAX_ITEMS_PER_POLL)
 
-  let newCount = 0
-
-  for (const item of items) {
-    if (!item.link) continue
-
-    // Normalize URL for consistent hashing (trim, remove trailing slash)
-    const normalizedUrl = item.link.trim().replace(/\/+$/, '')
-    const contentHash = crypto.createHash('sha256').update(normalizedUrl).digest('hex')
-
-    // Dedup by both content hash (URL hash) and raw feed URL
-    const existing = await db.query.inputs.findFirst({
-      where: or(
-        eq(inputs.contentHash, contentHash),
-        eq(inputs.feedUrl, item.link),
-      ),
+  // Pre-compute hashes for all items with links
+  const candidates = items
+    .filter((item) => item.link)
+    .map((item) => {
+      const normalizedUrl = item.link!.trim().replace(/\/+$/, '')
+      return {
+        item,
+        normalizedUrl,
+        contentHash: crypto.createHash('sha256').update(normalizedUrl).digest('hex'),
+      }
     })
 
-    if (existing) continue
+  if (candidates.length === 0) return 0
 
-    const rawContent = item.title
-      ? `${item.title}\n\n${item.contentSnippet || item.content || ''}`
-      : item.contentSnippet || item.content || ''
+  // Batch dedup: single query for all hashes and URLs
+  const allHashes = candidates.map((c) => c.contentHash)
+  const allUrls = candidates.map((c) => c.item.link!)
+  const existingRows = await db
+    .select({ contentHash: inputs.contentHash, feedUrl: inputs.feedUrl })
+    .from(inputs)
+    .where(inArray(inputs.contentHash, allHashes))
 
-    if (!rawContent.trim()) continue
+  const existingUrlRows = await db
+    .select({ feedUrl: inputs.feedUrl })
+    .from(inputs)
+    .where(inArray(inputs.feedUrl, allUrls))
 
-    const result = await db
-      .insert(inputs)
-      .values({
-        source: 'rss',
+  const existingHashes = new Set(existingRows.map((r) => r.contentHash))
+  const existingUrls = new Set(existingUrlRows.map((r) => r.feedUrl))
+
+  // Filter to genuinely new items
+  const newCandidates = candidates.filter(
+    (c) => !existingHashes.has(c.contentHash) && !existingUrls.has(c.item.link!),
+  )
+
+  let newCount = 0
+
+  // Batch insert new items
+  const toInsert = newCandidates
+    .map((c) => {
+      const rawContent = c.item.title
+        ? `${c.item.title}\n\n${c.item.contentSnippet || c.item.content || ''}`
+        : c.item.contentSnippet || c.item.content || ''
+      if (!rawContent.trim()) return null
+      return {
+        source: 'rss' as const,
         contributor: feedSource.name,
         rawContent,
-        contentHash,
-        status: 'unprocessed',
+        contentHash: c.contentHash,
+        status: 'unprocessed' as const,
         stream: categoryToStream(feedSource.category),
         feedSourceId: feedSource.id,
-        feedUrl: item.link,
-        publishedAt: item.isoDate ? new Date(item.isoDate) : null,
-      })
-      .returning()
+        feedUrl: c.item.link!,
+        publishedAt: c.item.isoDate ? new Date(c.item.isoDate) : null,
+      }
+    })
+    .filter((v) => v != null)
 
-    const inputId = result[0].id
-    newCount++
+  if (toInsert.length === 0) return 0
 
-    // Fire async structuring (non-blocking, same pattern as paste/email)
-    const provider = getLLMProvider()
-    structureInput(rawContent, 'rss', feedSource.name, provider)
+  const inserted = await db.insert(inputs).values(toInsert).returning({ id: inputs.id, rawContent: inputs.rawContent })
+  newCount = inserted.length
+
+  // Fire async structuring for all new items (non-blocking)
+  const provider = getLLMProvider()
+  for (const row of inserted) {
+    structureInput(row.rawContent, 'rss', feedSource.name, provider)
       .then(async (structured) => {
         await db
           .update(inputs)
@@ -85,10 +106,10 @@ export async function pollFeed(feedSource: FeedSource): Promise<number> {
             isFeedback: structured.is_feedback,
             status: 'processed',
           })
-          .where(eq(inputs.id, inputId))
+          .where(eq(inputs.id, row.id))
       })
       .catch((error) => {
-        console.error(`Feed structuring failed for input ${inputId}:`, error)
+        console.error(`Feed structuring failed for input ${row.id}:`, error)
       })
   }
 

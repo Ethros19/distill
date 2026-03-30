@@ -1,22 +1,17 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { signals } from '@/lib/schema'
+import { sql } from 'drizzle-orm'
 
 export async function GET() {
-  const allSignals = await db.select({ themes: signals.themes }).from(signals)
+  const rows = await db.execute(sql`
+    SELECT
+      jsonb_array_elements_text(themes) AS name,
+      count(*)::int AS count
+    FROM signals
+    WHERE themes IS NOT NULL AND jsonb_array_length(themes) > 0
+    GROUP BY jsonb_array_elements_text(themes)
+    ORDER BY count DESC
+  `) as unknown as { rows: Array<{ name: string; count: number }> }
 
-  const counts = new Map<string, number>()
-  for (const row of allSignals) {
-    if (row.themes) {
-      for (const theme of row.themes) {
-        counts.set(theme, (counts.get(theme) ?? 0) + 1)
-      }
-    }
-  }
-
-  const themes = Array.from(counts.entries())
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count)
-
-  return NextResponse.json({ themes })
+  return NextResponse.json({ themes: rows.rows })
 }

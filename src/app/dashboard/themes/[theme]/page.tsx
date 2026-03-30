@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { signals, syntheses } from '@/lib/schema'
-import { eq, gte, desc } from 'drizzle-orm'
+import { eq, gte, desc, and, sql } from 'drizzle-orm'
 import { SignalCard } from '../../components/signal-card'
 import { Synopsis } from '../../components/synopsis'
 import { periodLabels, startOfPeriod } from '../../lib/periods'
@@ -20,7 +20,19 @@ export default async function ThemeDetailPage({
   const decodedTheme = decodeURIComponent(theme)
   const isFiltered = period && period in periodLabels
 
-  let query = db
+  // Filter by JSONB containment in SQL instead of fetching all rows
+  const conditions = [
+    sql`${signals.themes}::jsonb @> ${JSON.stringify([decodedTheme])}::jsonb`,
+  ]
+
+  if (isFiltered) {
+    const since = startOfPeriod(period)
+    if (since) {
+      conditions.push(gte(syntheses.periodEnd, since))
+    }
+  }
+
+  const matching = await db
     .select({
       id: signals.id,
       synthesisId: signals.synthesisId,
@@ -36,20 +48,8 @@ export default async function ThemeDetailPage({
     })
     .from(signals)
     .innerJoin(syntheses, eq(signals.synthesisId, syntheses.id))
-    .$dynamic()
-
-  if (isFiltered) {
-    const since = startOfPeriod(period)
-    if (since) {
-      query = query.where(gte(syntheses.periodEnd, since))
-    }
-  }
-
-  const rows = await query.orderBy(desc(signals.strength))
-
-  const matching = rows.filter(
-    (row) => row.themes && row.themes.includes(decodedTheme),
-  )
+    .where(and(...conditions))
+    .orderBy(desc(signals.strength))
 
   return (
     <div className="space-y-6">
