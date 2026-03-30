@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
-import { and, gte, lt, count } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
 import { StatsBar } from './stats-bar'
 
 function startOf(period: 'day' | 'week' | 'month' | 'year'): Date {
@@ -20,47 +20,31 @@ function startOf(period: 'day' | 'week' | 'month' | 'year'): Date {
   }
 }
 
-async function countInputsSince(since: Date): Promise<number> {
-  const [result] = await db
-    .select({ count: count() })
-    .from(inputs)
-    .where(gte(inputs.createdAt, since))
-  return result?.count ?? 0
-}
-
-async function countInputsBetween(since: Date, until: Date): Promise<number> {
-  const [result] = await db
-    .select({ count: count() })
-    .from(inputs)
-    .where(and(gte(inputs.createdAt, since), lt(inputs.createdAt, until)))
-  return result?.count ?? 0
-}
-
-async function countInputsTotal(): Promise<number> {
-  const [result] = await db.select({ count: count() }).from(inputs)
-  return result?.count ?? 0
-}
-
 export async function SignalStats() {
   const todayStart = startOf('day')
   const yesterdayStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), todayStart.getDate() - 1)
+  const weekStart = startOf('week')
+  const monthStart = startOf('month')
+  const yearStart = startOf('year')
 
-  const [yesterday, today, week, month, year, total] = await Promise.all([
-    countInputsBetween(yesterdayStart, todayStart),
-    countInputsSince(todayStart),
-    countInputsSince(startOf('week')),
-    countInputsSince(startOf('month')),
-    countInputsSince(startOf('year')),
-    countInputsTotal(),
-  ])
+  const [row] = await db.execute(sql`
+    SELECT
+      count(*) FILTER (WHERE created_at >= ${yesterdayStart.toISOString()} AND created_at < ${todayStart.toISOString()})::int AS yesterday,
+      count(*) FILTER (WHERE created_at >= ${todayStart.toISOString()})::int AS today,
+      count(*) FILTER (WHERE created_at >= ${weekStart.toISOString()})::int AS week,
+      count(*) FILTER (WHERE created_at >= ${monthStart.toISOString()})::int AS month,
+      count(*) FILTER (WHERE created_at >= ${yearStart.toISOString()})::int AS year,
+      count(*)::int AS total
+    FROM inputs
+  `) as unknown as [{ yesterday: number; today: number; week: number; month: number; year: number; total: number }]
 
   const stats = [
-    { label: 'Yesterday', value: yesterday, period: 'yesterday' },
-    { label: 'Today', value: today, period: 'today' },
-    { label: 'Week', value: week, period: 'week' },
-    { label: 'Month', value: month, period: 'month' },
-    { label: 'Year', value: year, period: 'year' },
-    { label: 'Total', value: total, period: 'total', highlight: true },
+    { label: 'Yesterday', value: row.yesterday, period: 'yesterday' },
+    { label: 'Today', value: row.today, period: 'today' },
+    { label: 'Week', value: row.week, period: 'week' },
+    { label: 'Month', value: row.month, period: 'month' },
+    { label: 'Year', value: row.year, period: 'year' },
+    { label: 'Total', value: row.total, period: 'total', highlight: true },
   ]
 
   return <StatsBar stats={stats} />

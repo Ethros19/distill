@@ -3,21 +3,31 @@ import { signals, inputs } from '@/lib/schema'
 import { count, gte, sql, desc } from 'drizzle-orm'
 import { STREAM_LABELS, type Stream } from '@/lib/stream-utils'
 import { MetricCard } from './metric-card'
-import { aggregateThemes } from './theme-sidebar'
 
 export async function MetricCardsSection() {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
   const [
-    [{ value: totalSignals }],
-    allSignalThemes,
+    [signalAgg],
+    [{ value: activeThemes }],
     [{ value: inputVelocity }],
     topStreamRow,
   ] = await Promise.all([
-    // Total Signals
-    db.select({ value: count() }).from(signals),
-    // Active Themes + strength data (fetch both to avoid extra query)
-    db.select({ themes: signals.themes, strength: signals.strength }).from(signals),
+    // Signal counts + strength distribution in one query
+    db.execute(sql`
+      SELECT
+        count(*)::int AS total,
+        count(*) FILTER (WHERE strength >= 5)::int AS high,
+        count(*) FILTER (WHERE strength >= 3 AND strength < 5)::int AS mid,
+        count(*) FILTER (WHERE strength < 3)::int AS low
+      FROM signals
+    `) as unknown as [{ total: number; high: number; mid: number; low: number }],
+    // Active Themes count via SQL aggregation
+    db.execute(sql`
+      SELECT count(DISTINCT jsonb_array_elements_text(themes))::int AS value
+      FROM signals
+      WHERE themes IS NOT NULL AND jsonb_array_length(themes) > 0
+    `) as unknown as [{ value: number }],
     // Input Velocity (7d)
     db
       .select({ value: count() })
@@ -35,15 +45,7 @@ export async function MetricCardsSection() {
       .limit(1),
   ])
 
-  const activeThemes = aggregateThemes(allSignalThemes).length
-
-  // Strength distribution: high (>=5), mid (>=3), low (<3)
-  let high = 0, mid = 0, low = 0
-  for (const row of allSignalThemes) {
-    if (row.strength >= 5) high++
-    else if (row.strength >= 3) mid++
-    else low++
-  }
+  const { total: totalSignals, high, mid, low } = signalAgg
 
   const topStreamRaw = topStreamRow[0]?.stream ?? null
   const topStreamLabel = topStreamRaw

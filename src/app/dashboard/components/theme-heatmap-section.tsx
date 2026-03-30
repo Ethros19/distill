@@ -1,14 +1,22 @@
 import Link from 'next/link'
 import { db } from '@/lib/db'
 import { signals } from '@/lib/schema'
-import { aggregateThemes } from './theme-sidebar'
+import { sql } from 'drizzle-orm'
 
 export async function ThemeHeatmapSection() {
-  const allSignals = await db
-    .select({ themes: signals.themes })
-    .from(signals)
+  // Aggregate themes directly in SQL instead of fetching all signal rows
+  const rows = await db.execute(sql`
+    SELECT
+      jsonb_array_elements_text(themes) AS theme,
+      count(*)::int AS count
+    FROM signals
+    WHERE themes IS NOT NULL AND jsonb_array_length(themes) > 0
+    GROUP BY jsonb_array_elements_text(themes)
+    ORDER BY count DESC
+    LIMIT 40
+  `) as unknown as { rows: Array<{ theme: string; count: number }> }
 
-  const themes = aggregateThemes(allSignals).slice(0, 40)
+  const themes = rows.rows
   const maxCount = themes.length > 0 ? themes[0].count : 0
 
   function tier(count: number): 'lg' | 'md' | 'sm' {
@@ -56,8 +64,8 @@ export async function ThemeHeatmapSection() {
 
               return (
                 <Link
-                  key={theme.name}
-                  href={`/dashboard/themes/${encodeURIComponent(theme.name)}`}
+                  key={theme.theme}
+                  href={`/dashboard/themes/${encodeURIComponent(theme.theme)}`}
                   className={`animate-fade-up group inline-flex items-center gap-2 rounded-lg text-ink transition-all hover:shadow-sm hover:ring-1 hover:ring-accent/30 ${tierStyles[t]}`}
                   style={{
                     animationDelay: `${i * 25}ms`,
@@ -65,7 +73,7 @@ export async function ThemeHeatmapSection() {
                   }}
                 >
                   <span className="transition-colors group-hover:text-accent">
-                    {theme.name}
+                    {theme.theme}
                   </span>
                   <span className="font-mono text-[11px] tabular-nums text-muted transition-colors group-hover:text-accent/70">
                     {theme.count}

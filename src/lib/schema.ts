@@ -44,6 +44,10 @@ export const inputs = pgTable(
     uniqueIndex('inputs_content_hash_idx').on(table.contentHash),
     index('inputs_status_idx').on(table.status),
     index('inputs_created_at_idx').on(table.createdAt),
+    index('inputs_stream_idx').on(table.stream),
+    index('inputs_source_idx').on(table.source),
+    index('inputs_feed_url_idx').on(table.feedUrl),
+    index('inputs_is_feedback_idx').on(table.isFeedback),
   ],
 )
 
