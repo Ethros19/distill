@@ -14,7 +14,7 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
-      <header className="border-b border-edge-dim">
+      <header className="sticky top-0 z-30 border-b border-edge-dim bg-canvas/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <div className="flex items-baseline gap-3">
             <h1 className="font-display text-2xl tracking-tight text-ink">
