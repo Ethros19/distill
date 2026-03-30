@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import type { SerializedStreamBrief } from './stream-briefing'
 import { StreamBriefing } from './stream-briefing'
+import { RadarCaptureProvider } from './radar-capture'
 
 const STORAGE_KEY = 'distill-radar-order'
 
@@ -119,6 +120,7 @@ export function RadarGrid({ briefs }: { briefs: SerializedStreamBrief[] }) {
   )
 
   return (
+    <RadarCaptureProvider>
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       {ordered.map((brief, i) => {
         const isDragging = dragIdx === i
@@ -154,5 +156,6 @@ export function RadarGrid({ briefs }: { briefs: SerializedStreamBrief[] }) {
         )
       })}
     </div>
+    </RadarCaptureProvider>
   )
 }

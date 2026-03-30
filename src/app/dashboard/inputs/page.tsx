@@ -3,25 +3,28 @@ export const dynamic = 'force-dynamic'
 import { Suspense } from 'react'
 import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
-import { eq, desc, count, and } from 'drizzle-orm'
+import { eq, desc, count, and, or, ilike, inArray, sql } from 'drizzle-orm'
 import Link from 'next/link'
 import { InputRow } from '../components/input-row'
 import { STREAM_VALUES, STREAM_LABELS } from '@/lib/stream-utils'
 import { SourceHealthPanel } from './components/source-health-panel'
+import { InputSearch } from './components/input-search'
 
 const PAGE_SIZE = 20
 
 export default async function InputsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; stream?: string; page?: string }>
+  searchParams: Promise<{ status?: string; stream?: string; page?: string; q?: string }>
 }) {
-  const { status, stream, page } = await searchParams
+  const { status, stream, page, q } = await searchParams
   const pageNum = Math.max(1, parseInt(page || '1', 10) || 1)
   const offset = (pageNum - 1) * PAGE_SIZE
 
   const validStatus = status === 'unprocessed' || status === 'processed' ? status : undefined
-  const validStream = (STREAM_VALUES as readonly string[]).includes(stream ?? '') ? stream : undefined
+  const isInternal = stream === 'internal'
+  const validStream = !isInternal && (STREAM_VALUES as readonly string[]).includes(stream ?? '') ? stream : undefined
+  const searchQuery = q?.trim() || undefined
 
   // Fetch inputs and count in parallel
   let dataQuery = db
@@ -36,7 +39,18 @@ export default async function InputsPage({
 
   const conditions = []
   if (validStatus) conditions.push(eq(inputs.status, validStatus))
-  if (validStream) conditions.push(eq(inputs.stream, validStream))
+  if (isInternal) conditions.push(inArray(inputs.source, ['email', 'paste']))
+  else if (validStream) conditions.push(eq(inputs.stream, validStream))
+  if (searchQuery) {
+    const pattern = `%${searchQuery}%`
+    conditions.push(
+      or(
+        ilike(inputs.rawContent, pattern),
+        ilike(inputs.summary, pattern),
+        sql`${inputs.id}::text ILIKE ${pattern}`,
+      )!,
+    )
+  }
   if (conditions.length > 0) {
     const where = conditions.length === 1 ? conditions[0] : and(...conditions)!
     dataQuery = dataQuery.where(where)
@@ -51,11 +65,14 @@ export default async function InputsPage({
   ])
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
+  const activeStream = isInternal ? 'internal' : validStream
+
   // Build filter link helpers
   function filterHref(s?: string, st?: string) {
     const params = new URLSearchParams()
     if (s) params.set('status', s)
     if (st) params.set('stream', st)
+    if (searchQuery) params.set('q', searchQuery)
     const qs = params.toString()
     return `/dashboard/inputs${qs ? `?${qs}` : ''}`
   }
@@ -63,7 +80,8 @@ export default async function InputsPage({
   function pageHref(p: number) {
     const params = new URLSearchParams()
     if (validStatus) params.set('status', validStatus)
-    if (validStream) params.set('stream', validStream)
+    if (activeStream) params.set('stream', activeStream)
+    if (searchQuery) params.set('q', searchQuery)
     if (p > 1) params.set('page', String(p))
     const qs = params.toString()
     return `/dashboard/inputs${qs ? `?${qs}` : ''}`
@@ -120,7 +138,7 @@ export default async function InputsPage({
           return (
             <Link
               key={tab.label}
-              href={filterHref(tab.value, validStream)}
+              href={filterHref(tab.value, activeStream)}
               className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 active
                   ? 'bg-panel text-ink shadow-sm'
@@ -134,17 +152,30 @@ export default async function InputsPage({
         })}
       </div>
 
+      {/* Search */}
+      <InputSearch />
+
       {/* Stream filter tabs */}
-      <div className="flex gap-1 rounded-lg bg-panel-alt p-1">
+      <div className="flex flex-wrap gap-1 rounded-lg bg-panel-alt p-1">
         <Link
           href={filterHref(validStatus, undefined)}
           className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-            !validStream
+            !activeStream
               ? 'bg-panel text-ink shadow-sm'
               : 'text-muted hover:text-ink'
           }`}
         >
           All Streams
+        </Link>
+        <Link
+          href={filterHref(validStatus, 'internal')}
+          className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+            isInternal
+              ? 'bg-panel text-ink shadow-sm'
+              : 'text-muted hover:text-ink'
+          }`}
+        >
+          Internal
         </Link>
         {STREAM_VALUES.map((s) => (
           <Link
@@ -173,7 +204,7 @@ export default async function InputsPage({
       ) : (
         <div className="py-12 text-center">
           <p className="text-sm italic text-muted">
-            {validStatus || validStream
+            {validStatus || activeStream || searchQuery
               ? `No inputs found matching the current filters.`
               : 'No inputs found. Add feedback to get started.'}
           </p>

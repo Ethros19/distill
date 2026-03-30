@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import Parser from 'rss-parser'
-import { eq } from 'drizzle-orm'
+import { eq, or } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { feedSources, inputs, type FeedSource } from '@/lib/schema'
 import { structureInput } from '@/lib/structurer'
@@ -10,6 +10,7 @@ import { categoryToStream } from '@/lib/stream-utils'
 const parser = new Parser()
 
 const FEED_TIMEOUT_MS = 8_000
+const MAX_ITEMS_PER_POLL = 50
 
 /**
  * Poll a single feed source: fetch, parse, dedup, insert, and trigger structuring.
@@ -23,16 +24,24 @@ export async function pollFeed(feedSource: FeedSource): Promise<number> {
     ),
   ])
 
+  // Cap items per poll to prevent archive-style feeds from flooding the system
+  const items = feed.items.slice(0, MAX_ITEMS_PER_POLL)
+
   let newCount = 0
 
-  for (const item of feed.items) {
+  for (const item of items) {
     if (!item.link) continue
 
-    const contentHash = crypto.createHash('sha256').update(item.link).digest('hex')
+    // Normalize URL for consistent hashing (trim, remove trailing slash)
+    const normalizedUrl = item.link.trim().replace(/\/+$/, '')
+    const contentHash = crypto.createHash('sha256').update(normalizedUrl).digest('hex')
 
-    // Check for existing input with this hash (dedup by article URL)
+    // Dedup by both content hash (URL hash) and raw feed URL
     const existing = await db.query.inputs.findFirst({
-      where: eq(inputs.contentHash, contentHash),
+      where: or(
+        eq(inputs.contentHash, contentHash),
+        eq(inputs.feedUrl, item.link),
+      ),
     })
 
     if (existing) continue

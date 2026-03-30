@@ -7,6 +7,7 @@ import {
   type Stream,
 } from '@/lib/stream-utils'
 import { formatTimeAgo } from '@/app/dashboard/components/format-utils'
+import { CaptureButton } from './radar-capture'
 
 /** Serializable version of StreamBrief (dates as ISO strings) */
 export interface SerializedStreamBrief {
@@ -104,9 +105,15 @@ export function StreamBriefing({
           background: `linear-gradient(135deg, ${hex}0A 0%, ${hex}04 100%)`,
         }}
       >
-        <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
-          Brief
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-[11px] font-medium uppercase tracking-wider text-muted">
+            Brief
+          </p>
+          <CaptureButton
+            text={brief.synopsis}
+            context={`${brief.label} — Brief`}
+          />
+        </div>
         <p className="mt-1.5 text-[13px] leading-relaxed text-ink">
           {brief.synopsis}
         </p>
@@ -129,9 +136,15 @@ export function StreamBriefing({
       {/* company implication */}
       {brief.companyImplication && (
         <div className="mx-3 mb-3 rounded-lg bg-panel-alt px-4 py-3">
-          <p className="text-[11px] font-medium uppercase tracking-wider text-accent">
-            What this means for your company
-          </p>
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-accent">
+              What this means for your company
+            </p>
+            <CaptureButton
+              text={brief.companyImplication}
+              context={`${brief.label} — Company Implication`}
+            />
+          </div>
           <p className="mt-1 text-[13px] leading-relaxed text-dim">
             {brief.companyImplication}
           </p>
@@ -203,6 +216,11 @@ export function StreamBriefing({
                       )}
                     </div>
                   </div>
+                  <CaptureButton
+                    text={article.summary ?? 'Untitled'}
+                    context={`${brief.label} — Article`}
+                    className="mt-0.5"
+                  />
                 </div>
               )
             })}
