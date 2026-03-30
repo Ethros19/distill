@@ -8,8 +8,8 @@ export async function MetricCardsSection() {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 
   const [
-    [signalAgg],
-    [{ value: activeThemes }],
+    signalAggResult,
+    themeCountResult,
     [{ value: inputVelocity }],
     topStreamRow,
   ] = await Promise.all([
@@ -21,13 +21,15 @@ export async function MetricCardsSection() {
         count(*) FILTER (WHERE strength >= 3 AND strength < 5)::int AS mid,
         count(*) FILTER (WHERE strength < 3)::int AS low
       FROM signals
-    `) as unknown as [{ total: number; high: number; mid: number; low: number }],
-    // Active Themes count via SQL aggregation
+    `),
+    // Active Themes count via subquery
     db.execute(sql`
-      SELECT count(DISTINCT jsonb_array_elements_text(themes))::int AS value
-      FROM signals
-      WHERE themes IS NOT NULL AND jsonb_array_length(themes) > 0
-    `) as unknown as [{ value: number }],
+      SELECT count(*)::int AS value FROM (
+        SELECT DISTINCT jsonb_array_elements_text(themes) AS theme
+        FROM signals
+        WHERE themes IS NOT NULL AND jsonb_array_length(themes) > 0
+      ) t
+    `),
     // Input Velocity (7d)
     db
       .select({ value: count() })
@@ -45,7 +47,10 @@ export async function MetricCardsSection() {
       .limit(1),
   ])
 
+  const signalAgg = (signalAggResult as unknown as { rows: Array<{ total: number; high: number; mid: number; low: number }> }).rows[0]
   const { total: totalSignals, high, mid, low } = signalAgg
+
+  const activeThemes = (themeCountResult as unknown as { rows: Array<{ value: number }> }).rows[0].value
 
   const topStreamRaw = topStreamRow[0]?.stream ?? null
   const topStreamLabel = topStreamRaw

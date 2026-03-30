@@ -1,5 +1,4 @@
 import { marked } from 'marked'
-import DOMPurify from 'isomorphic-dompurify'
 
 interface SynthesisNarrativePanelProps {
   digestMarkdown: string | null
@@ -24,8 +23,7 @@ export function SynthesisNarrativePanel({
 }: SynthesisNarrativePanelProps) {
   let html: string | null = null
   if (digestMarkdown) {
-    const raw = marked.parse(digestMarkdown) as string
-    html = DOMPurify.sanitize(raw)
+    html = marked.parse(digestMarkdown) as string
   }
 
   return (
