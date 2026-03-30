@@ -211,14 +211,26 @@ export class AnthropicProvider implements LLMProvider {
       const response = await this.client.messages.create({
         model: NARRATIVE_MODEL,
         max_tokens: 2048,
-        system: `You are a product intelligence narrator. Given a set of synthesized signals and the industry context that shaped them, write a 2-4 paragraph markdown narrative that:
+        system: `You are a product intelligence narrator. Given synthesized signals and industry context, write a scannable markdown narrative with these sections:
 
-1. Summarizes what the signals collectively mean for the product team — what is the overall story?
-2. Identifies which industry trends validate or challenge the strongest signals
-3. Highlights cross-cutting themes appearing in both signals and industry intelligence
-4. Ends with a forward-looking "watch for" statement about emerging patterns
+### The Story
+2-3 short sentences: what do these signals collectively mean? Lead with the headline insight.
 
-Write in clear, direct prose. Use markdown formatting (bold for emphasis, not headers). Do not use bullet points — write flowing paragraphs. Do not include a title or heading. The narrative should feel like an executive brief, not a list.`,
+### Industry Validation
+Which industry trends confirm or challenge the strongest signals? Use **bold** for trend names. Keep each point to 1-2 sentences max.
+
+### Cross-Stream Patterns
+What themes appear in both internal signals and external intelligence? Name specific streams and sources.
+
+### Watch For
+1-2 sentences on emerging patterns to monitor.
+
+Rules:
+- Keep paragraphs to 2-3 sentences maximum — readers need to scan quickly
+- Use **bold** for key terms and signal names
+- Use the ### headers exactly as shown above
+- Be specific: cite streams, sources, and data points
+- No filler — every sentence should carry insight`,
         messages: [
           {
             role: 'user',

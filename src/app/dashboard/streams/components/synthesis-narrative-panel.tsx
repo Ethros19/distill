@@ -1,4 +1,5 @@
 import { marked } from 'marked'
+import { NarrativeContent } from './narrative-content'
 
 interface SynthesisNarrativePanelProps {
   digestMarkdown: string | null
@@ -28,24 +29,23 @@ export function SynthesisNarrativePanel({
 
   return (
     <div className="rounded-xl border border-edge border-l-[3px] border-l-accent bg-panel p-6">
-      <div className="mb-4">
-        <h2 className="font-display text-lg italic text-dim">
-          Synthesis Narrative
-        </h2>
-        {synthesisDate && (
-          <p className="mt-1 text-xs text-muted">
-            Generated {formatDate(synthesisDate)} from {signalCount} signal
-            {signalCount !== 1 ? 's' : ''} and {industryInputCount} industry
-            input{industryInputCount !== 1 ? 's' : ''}
-          </p>
-        )}
+      <div className="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="font-display text-lg italic text-dim">
+            Synthesis Narrative
+          </h2>
+          {synthesisDate && (
+            <p className="mt-1 text-xs text-muted">
+              Generated {formatDate(synthesisDate)} from {signalCount} signal
+              {signalCount !== 1 ? 's' : ''} and {industryInputCount} industry
+              input{industryInputCount !== 1 ? 's' : ''}
+            </p>
+          )}
+        </div>
       </div>
 
       {html ? (
-        <div
-          className="prose prose-sm max-w-none text-dim prose-headings:text-ink prose-strong:text-ink prose-blockquote:border-l-accent prose-blockquote:text-dim prose-code:rounded prose-code:bg-panel-alt prose-code:px-1 prose-code:py-0.5 prose-code:text-xs prose-code:text-accent prose-a:text-accent"
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
+        <NarrativeContent html={html} />
       ) : (
         <p className="py-4 text-center text-sm italic text-muted">
           No synthesis narrative available. Run a synthesis to generate
