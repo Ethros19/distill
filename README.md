@@ -94,28 +94,75 @@ Vercel auto-detects Next.js and reads `vercel.json` for cron schedules.
 ## Features
 
 ### Dashboard
-Main overview showing latest synthesis at a glance -- signal count, input count, unprocessed items, and when synthesis last ran.
+Main intelligence overview showing latest synthesis at a glance -- signal count, input count, unprocessed items, time since last run. Includes signal strength distribution, stream distribution breakdown, and unsynthesized input count with tooltips.
 
 ### Signals
-Browse all detected signals with filtering by synthesis period, status, and search. Each signal shows its statement, reasoning, evidence (linked inputs), themes, and a suggested action. Statuses: `new` > `acknowledged` > `in_progress` > `resolved`.
-
-### Intelligence Radar
-AI-synthesized intelligence briefs across 6 domain streams (general AI, product, event tech, event industry, VC/investment, and your product's own stream). Each stream card shows a synopsis of recent activity with expandable articles.
-
-### Streams
-Cross-stream synthesis view with an AI-generated narrative connecting internal product signals with external industry intelligence. Includes market validation, cross-stream pattern detection, and a themes heatmap.
-
-### Inputs
-Reference layer for all raw data. Paginated with filtering by processing status, domain stream, and keyword search. Includes a source health panel showing feed status.
-
-### Sources
-Manage RSS feed sources -- add feeds, set polling intervals, enable/disable, view health status, and trigger manual polls. Seed sample feeds with one click.
+Browse all detected signals with filtering by synthesis period, status (`new`, `acknowledged`, `in_progress`, `resolved`), and text search. Each signal card shows strength rating, theme tags, status badge, and links to full detail. Inline status dropdown for quick triage.
 
 ### Signal Detail
-Full signal view with reasoning, evidence trail, suggested action, and theme tags. Add notes, change status, and push to Linear with one click.
+Full signal view at `/dashboard/signals/[id]` with:
+- Statement, reasoning, and suggested action
+- Evidence trail with expandable raw input content
+- Theme tags
+- Editable notes field for team annotations
+- Status lifecycle controls
+- **Push to Linear** button (creates an issue with full signal context)
+
+### Intelligence Radar
+AI-synthesized intelligence briefs across 6 domain streams:
+- **General AI** -- model releases, regulations, research papers
+- **Product** -- direct product feedback signals
+- **Event Tech** -- event platforms, competition, product launches
+- **Event Industry** -- hospitality, venues, trade shows, seasonal trends
+- **VC/Investment** -- funding rounds, M&A, startup investments
+- **Business Dev** -- AI + events intersection, vertical SaaS
+
+Each stream card shows a "What this means" synopsis with expandable articles. Cards are drag-to-reorder. Synopses are cached in-memory (1hr TTL) to avoid redundant LLM calls.
+
+### Streams
+Cross-stream synthesis view with:
+- **Synthesis Narrative** -- AI-generated markdown with sections: The Story, Industry Validation, Cross-Stream Patterns, Watch For. Text size S/M/L toggle.
+- **Market Validation** -- how industry trends confirm or challenge signals
+- **Cross-Stream Highlights** -- themes that bridge multiple domain streams
+- **Per-Stream Synthesis Cards** -- drill into individual streams at `/dashboard/streams/[stream]` with volume charts, top themes, and article lists
+- **Theme Heatmap** -- visual frequency grid across all themes
+
+### Inputs
+Raw data reference layer at `/dashboard/inputs`:
+- Paginated list (20 per page) with filtering by processing status, domain stream, and keyword search
+- Source health panel showing feed status, error counts, and intake breakdown
+- Stream coverage grid showing which streams have active sources
+- Per-input controls: edit notes, toggle feedback/noise classification, delete with evidence dependency warnings
+- Type badges (feature request, bug report, praise, complaint, observation)
+
+### Sources
+Feed source management at `/dashboard/sources`:
+- Add new RSS/Atom feeds with URL, name, category, and polling interval
+- Enable/disable individual feeds
+- View health status (healthy/warning/error), last polled time, error messages
+- Input count and mapped stream per source
+- One-click manual poll for individual feeds
+- Seed 24+ curated industry feeds with one button
 
 ### Settings
-Configure product context -- tell the LLM what features you've already shipped so synthesis focuses on what's genuinely missing rather than re-surfacing known capabilities.
+- **Product Context** -- tell the LLM what features you've shipped so synthesis skips known capabilities
+- **Theme Switcher** -- light, dark, and system theme modes
+
+### Security
+- Bcrypt password hashing (no plaintext storage)
+- Database-backed rate limiting with escalating lockout (5 attempts > 1min lock, 10 > 5min, 15 > 15min)
+- Session rotation on login (old sessions invalidated)
+- 4-hour idle timeout + 7-day absolute session expiry
+- CSRF protection via Origin header validation
+- CSP, HSTS, and security headers via Next.js config
+
+### Performance
+- SQL-level aggregation (no fetching full tables into JS)
+- Batch feed dedup with content hash + URL matching
+- Batch signal insertion
+- Database indexes on high-query columns (stream, source, contentHash, isFeedback, strength)
+- In-memory LLM response caching with TTL for radar synopses
+- Sticky header with backdrop blur for navigation
 
 ## Sending Feedback
 
@@ -217,6 +264,49 @@ Product context tells Distill what your product already has so synthesis focuses
 
 Update it after each major release or sprint.
 
+## Architecture
+
+```
+                         ┌─────────────────────────────────────────────┐
+                         │              Neon Postgres                  │
+                         │  inputs · signals · syntheses · feeds      │
+                         └────────▲──────────────┬────────────────────┘
+                                  │              │
+  Email ──→ Resend Webhook ──┐    │              │
+                             ├──→ Intake API ────┘
+  Paste ──→ Paste API ───────┘         │
+                                       ▼
+  RSS Feeds ──→ Feed Poller ──→  LLM Structuring
+                                 (summary, themes,
+                                  urgency, stream)
+                                       │
+                              ┌────────┴────────┐
+                              ▼                  ▼
+                     Daily Synthesis      Manual Trigger
+                     (6:30am + 7am UTC)   (POST /api/synthesis)
+                              │
+                    ┌─────────┼─────────┐
+                    ▼         ▼         ▼
+              LLM Signal   Narrative  Digest
+              Clustering   Generation Email
+                    │         │         │
+                    ▼         ▼         ▼
+              Dashboard    Streams   Resend
+              + Radar      Page      → Recipients
+                    │
+                    ▼
+              MCP Server ──→ Claude Desktop
+              Linear     ──→ Issue Tracker
+```
+
+**Pipeline flow:**
+1. Inputs arrive via email webhook, paste API, or RSS feed polling
+2. Each input is structured by the LLM (extract summary, type, themes, urgency, domain stream, feedback vs. noise classification)
+3. Daily synthesis clusters recent structured inputs into signals, considering prior signal state, product context, and industry inputs
+4. A cross-stream narrative is generated connecting signals with industry intelligence
+5. Digest email is sent to configured recipients
+6. Everything is queryable via dashboard, MCP server, and REST API
+
 ## Database
 
 Distill uses [Drizzle ORM](https://orm.drizzle.team) with Neon Postgres.
@@ -265,6 +355,20 @@ npm run build     # Production build
 npm run lint      # ESLint
 npx vitest        # Run tests
 ```
+
+## Development History
+
+Built across 265+ commits in 4 milestones:
+
+**Milestone 1: Foundation** -- Intake, structuring, synthesis pipeline, digest email, basic dashboard with signal cards and theme sidebar.
+
+**Milestone 2: Dashboard Redesign** -- Full UI redesign with design system, signal strength charts, stream distribution, theme heatmap, intelligence panels, and dark/light theme support.
+
+**Milestone 3: Signal Actions & Intelligence Feeds** -- Login security hardening (bcrypt, rate limiting, session rotation, idle timeout), signal status lifecycle and detail pages, MCP server for Claude Desktop, Linear integration, input management (delete, notes, feedback classification), RSS/web feed ingestion with 24+ curated sources, configurable feed sources UI, cross-stream tagging with 6-domain taxonomy, and dashboard intelligence upgrades (radar, streams, per-stream synthesis, narrative generation).
+
+**Milestone 4: Dashboard IA & Synthesis Visibility** -- Dashboard restructure with focused intelligence overview, dedicated signals page, streams synthesis view with AI narrative and cross-stream pattern detection, input reference layer with source health monitoring, and performance optimizations (SQL aggregation, batch operations, response caching).
+
+Built with [Claude Code](https://claude.ai/code) using the [VBW](https://github.com/swt-labs/vibe-better-with-claude-code-vbw) agentic development workflow.
 
 ## License
 
