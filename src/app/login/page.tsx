@@ -52,6 +52,20 @@ function LoginForm() {
       />
       <div className="relative w-full max-w-sm animate-fade-up">
         <div className="text-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="72"
+            height="72"
+            viewBox="0 0 32 32"
+            className="mx-auto mb-6"
+          >
+            <circle cx="16" cy="16" r="14" fill="none" stroke="var(--accent)" strokeWidth="1" opacity="0.4" />
+            <circle cx="16" cy="16" r="8" fill="none" stroke="var(--accent)" strokeWidth="0.75" opacity="0.25" />
+            <circle cx="16" cy="16" r="2.5" fill="var(--accent)" />
+            <circle cx="16" cy="2" r="1.5" fill="var(--accent)" opacity="0.5" />
+            <circle cx="28.5" cy="20" r="1.5" fill="var(--accent)" opacity="0.35" />
+            <circle cx="5" cy="23" r="1.5" fill="var(--accent)" opacity="0.25" />
+          </svg>
           <h1 className="font-display text-5xl tracking-tight text-ink">Distill</h1>
           <p className="mt-3 text-sm tracking-wide text-dim">Signal Intelligence</p>
         </div>

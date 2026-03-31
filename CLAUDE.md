@@ -12,7 +12,9 @@ Open-source signal intelligence system for product teams. Self-hosted web app.
 
 ## Structure
 - `src/` — application source code (Next.js App Router)
-- `specs/` — feature specifications (Speckit format)
+- `src/lib/llm/` — provider interface and types
+- `src/lib/providers/` — LLM implementations (Anthropic, OpenAI, Ollama)
+- `mcp-server/` — MCP server for Claude Desktop integration
 - `migrations/` — Drizzle database migrations
 - `tests/` — test files
 - `docs/` — documentation
@@ -26,9 +28,12 @@ Open-source signal intelligence system for product teams. Self-hosted web app.
 
 ## Active Context
 
-**Last shipped:** Vertical Intelligence & Context-Enriched Synthesis (4 phases, 12 plans, 36 commits)
+**Shipped milestones:**
+1. Foundation — Intake, Structuring & Synthesis + Digest
+2. Dashboard Redesign
+3. Signal Actions & Intelligence Feeds (login hardening, signal status, MCP server, Linear, input management, RSS feeds, signal sources UI, cross-stream tagging, dashboard upgrades)
+
 **Current milestone:** Dashboard IA & Synthesis Visibility (4 phases)
-**Next action:** Run /vbw:vibe to plan Phase 01
 
 ## VBW Rules
 
