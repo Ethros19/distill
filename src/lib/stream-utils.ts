@@ -1,114 +1,72 @@
 // ---------------------------------------------------------------------------
-// Stream utilities — canonical stream values and category-to-stream mapping
+// Stream utilities — derived from distill.config.ts
 // ---------------------------------------------------------------------------
 
-export const STREAM_VALUES = ['general-ai', 'business-dev', 'event-tech', 'event-general', 'vc-investment', 'product'] as const
+import { streams } from '../../distill.config'
 
-export type Stream = (typeof STREAM_VALUES)[number]
+// Stream IDs — dynamic array derived from config
+export const STREAM_VALUES: string[] = streams.map((s) => s.id)
 
-/**
- * Maps every recommended-feeds.ts category to a canonical stream.
- * When new categories are added, extend this mapping.
- */
-export const CATEGORY_TO_STREAM: Record<string, Stream> = {
-  'AI News': 'general-ai',
-  'AI Research': 'general-ai',
-  'AI Digest': 'general-ai',
-  'LLM/Product': 'general-ai',
-  Events: 'event-general',
-  Meetings: 'event-general',
-  Hospitality: 'event-general',
-  'Event Tech': 'event-tech',
-  'Competitor Intel': 'event-tech',
-  Funding: 'vc-investment',
-  Startups: 'vc-investment',
-  'SaaS/Business': 'business-dev',
-  'Tech Business': 'general-ai',
-  'Business Dev': 'business-dev',
-  'VC/AI Investment': 'vc-investment',
+// Type alias — now a string since streams are configurable
+export type Stream = string
+
+// Human-readable labels
+export const STREAM_LABELS: Record<string, string> = Object.fromEntries(
+  streams.map((s) => [s.id, s.label]),
+)
+
+// Short descriptions for radar and LLM prompts
+export const STREAM_DESCRIPTIONS: Record<string, string> = Object.fromEntries(
+  streams.map((s) => [s.id, s.description]),
+)
+
+// Hex colors for inline styles
+export const STREAM_HEX_COLORS: Record<string, string> = Object.fromEntries(
+  streams.map((s) => [s.id, s.hex]),
+)
+
+// Pinned stream for radar default ordering
+export const PINNED_STREAM: string | null =
+  streams.find((s) => s.pinFirst)?.id ?? null
+
+// High-volume streams get a lower query limit in synthesis
+export const HIGH_VOLUME_STREAMS: string[] = streams
+  .filter((s) => s.highVolume)
+  .map((s) => s.id)
+
+// Category-to-stream mapping — derived from config categories
+export const CATEGORY_TO_STREAM: Record<string, string> = Object.fromEntries(
+  streams.flatMap((s) => (s.categories ?? []).map((cat) => [cat, s.id])),
+)
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Get hex color for a stream, with fallback */
+export function streamHex(stream: string | null | undefined): string {
+  return STREAM_HEX_COLORS[stream ?? ''] ?? '#888888'
 }
 
-/**
- * Human-readable labels for each stream, used in UI badges and filters.
- */
-export const STREAM_LABELS: Record<Stream, string> = {
-  'general-ai': 'AI & LLM',
-  'business-dev': 'Business & Vertical AI',
-  'event-tech': 'Event Technology',
-  'event-general': 'Events & Hospitality',
-  'vc-investment': 'VC & Investment',
-  product: 'Product Feedback',
+/** Check if a string is a valid configured stream */
+export function isValidStream(value: string): boolean {
+  return STREAM_VALUES.includes(value)
 }
 
-/**
- * Look up the canonical stream for a feed source category.
- * Returns null if the category is null, undefined, or not in the mapping.
- */
-/**
- * Background color classes per stream — for bars, pills, and distribution charts.
- */
-export const STREAM_BG_COLORS: Record<string, string> = {
-  'general-ai': 'bg-purple-500',
-  'business-dev': 'bg-emerald-500',
-  'event-tech': 'bg-orange-500',
-  'event-general': 'bg-amber-500',
-  'vc-investment': 'bg-blue-500',
-  product: 'bg-sig-low',
-}
-
-/**
- * Text color classes per stream — for labels and indicators.
- */
-export const STREAM_TEXT_COLORS: Record<string, string> = {
-  'general-ai': 'text-purple-500',
-  'business-dev': 'text-emerald-500',
-  'event-tech': 'text-orange-500',
-  'event-general': 'text-amber-500',
-  'vc-investment': 'text-blue-500',
-  product: 'text-sig-low',
-}
-
-/**
- * Border-top color classes per stream — for card accents.
- */
-export const STREAM_BORDER_COLORS: Record<string, string> = {
-  'general-ai': 'border-t-purple-500',
-  'business-dev': 'border-t-emerald-500',
-  'event-tech': 'border-t-orange-500',
-  'event-general': 'border-t-amber-500',
-  'vc-investment': 'border-t-blue-500',
-  product: 'border-t-sig-low',
-}
-
-/**
- * Hex color values per stream — for inline styles and gradients.
- */
-export const STREAM_HEX_COLORS: Record<string, string> = {
-  'general-ai': '#a855f7',
-  'business-dev': '#10b981',
-  'event-tech': '#f97316',
-  'event-general': '#f59e0b',
-  'vc-investment': '#3b82f6',
-  product: '#3D8A4A',
-}
-
-/**
- * Short stream descriptions for radar page context.
- */
-export const STREAM_DESCRIPTIONS: Record<Stream, string> = {
-  'general-ai': 'AI model releases, API changes, research breakthroughs, regulation',
-  'business-dev': 'AI applications in your vertical, business intelligence',
-  'event-tech': 'Event platforms, competitor moves, tooling trends',
-  'event-general': 'Industry trends, trade shows, hospitality, seasonal demand',
-  'vc-investment': 'Funding rounds, M&A activity, startup investments',
-  product: 'Direct product feedback, feature requests, user insights',
-}
-
-/**
- * Look up the canonical stream for a feed source category.
- * Returns null if the category is null, undefined, or not in the mapping.
- */
-export function categoryToStream(category: string | null | undefined): Stream | null {
+/** Look up the canonical stream for a feed source category */
+export function categoryToStream(
+  category: string | null | undefined,
+): string | null {
   if (!category) return null
   return CATEGORY_TO_STREAM[category] ?? null
+}
+
+/**
+ * Build the stream description block for LLM prompts.
+ * Lists each stream with its description for classification guidance.
+ */
+export function buildStreamPromptList(): string {
+  return streams
+    .map((s) => `"${s.id}" (${s.description})`)
+    .join(',\n  ')
 }

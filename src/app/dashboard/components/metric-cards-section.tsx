@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { signals, inputs } from '@/lib/schema'
 import { count, gte, sql, desc } from 'drizzle-orm'
-import { STREAM_LABELS, type Stream } from '@/lib/stream-utils'
+import { STREAM_LABELS } from '@/lib/stream-utils'
 import { MetricCard } from './metric-card'
 
 export async function MetricCardsSection() {
@@ -54,7 +54,7 @@ export async function MetricCardsSection() {
 
   const topStreamRaw = topStreamRow[0]?.stream ?? null
   const topStreamLabel = topStreamRaw
-    ? (STREAM_LABELS[topStreamRaw as Stream] ?? topStreamRaw)
+    ? (STREAM_LABELS[topStreamRaw] ?? topStreamRaw)
     : totalSignals === 0 && inputVelocity === 0
       ? 'None'
       : 'Untagged'

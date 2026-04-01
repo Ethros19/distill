@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { eq, sql } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { inputs, signals } from '@/lib/schema'
-import { STREAM_VALUES } from '@/lib/stream-utils'
+import { STREAM_VALUES, isValidStream } from '@/lib/stream-utils'
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -35,7 +35,7 @@ export async function PATCH(
     if (is_feedback !== undefined && typeof is_feedback !== 'boolean') {
       return NextResponse.json({ error: 'is_feedback must be a boolean' }, { status: 400 })
     }
-    if (stream !== undefined && stream !== null && !(STREAM_VALUES as readonly string[]).includes(stream)) {
+    if (stream !== undefined && stream !== null && !isValidStream(stream)) {
       return NextResponse.json({ error: `stream must be one of: ${STREAM_VALUES.join(', ')} or null` }, { status: 400 })
     }
 

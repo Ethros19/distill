@@ -1,26 +1,13 @@
-import { STREAM_LABELS, type Stream } from '@/lib/stream-utils'
+import { STREAM_LABELS, streamHex } from '@/lib/stream-utils'
 
-export function streamBadge(stream: string | null): string {
-  switch (stream) {
-    case 'general-ai':
-      return 'bg-purple-500/10 text-purple-600'
-    case 'business-dev':
-      return 'bg-emerald-500/10 text-emerald-600'
-    case 'event-tech':
-      return 'bg-orange-500/10 text-orange-600'
-    case 'event-general':
-      return 'bg-amber-500/10 text-amber-600'
-    case 'vc-investment':
-      return 'bg-blue-500/10 text-blue-600'
-    case 'product':
-      return 'bg-sig-low/10 text-sig-low'
-    default:
-      return 'bg-panel-alt text-dim'
-  }
+export function streamBadgeStyle(stream: string | null): React.CSSProperties {
+  if (!stream) return {}
+  const hex = streamHex(stream)
+  return { backgroundColor: `${hex}1A`, color: hex }
 }
 
 export function streamLabel(stream: string | null): string {
-  if (stream && stream in STREAM_LABELS) return STREAM_LABELS[stream as Stream]
+  if (stream && stream in STREAM_LABELS) return STREAM_LABELS[stream]
   return stream ?? 'Untagged'
 }
 

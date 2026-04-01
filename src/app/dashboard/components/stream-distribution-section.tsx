@@ -1,20 +1,10 @@
 import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
 import { count } from 'drizzle-orm'
-import { STREAM_LABELS, STREAM_BG_COLORS, type Stream } from '@/lib/stream-utils'
-
-const STREAM_COLORS: Record<string, string> = {
-  ...STREAM_BG_COLORS,
-  Untagged: 'bg-dim',
-}
-
-const STREAM_DOT_COLORS: Record<string, string> = {
-  ...STREAM_BG_COLORS,
-  Untagged: 'bg-muted',
-}
+import { STREAM_LABELS, streamHex } from '@/lib/stream-utils'
 
 function label(stream: string): string {
-  if (stream in STREAM_LABELS) return STREAM_LABELS[stream as Stream]
+  if (stream in STREAM_LABELS) return STREAM_LABELS[stream]
   return stream
 }
 
@@ -54,8 +44,11 @@ export async function StreamDistributionSection() {
         {segments.map((seg) => (
           <div
             key={seg.key}
-            className={`${STREAM_COLORS[seg.key] ?? 'bg-muted'} transition-all`}
-            style={{ width: `${(seg.count / total) * 100}%` }}
+            className="transition-all"
+            style={{
+              width: `${(seg.count / total) * 100}%`,
+              backgroundColor: seg.key === 'Untagged' ? 'var(--dim)' : streamHex(seg.key),
+            }}
           />
         ))}
       </div>
@@ -65,7 +58,8 @@ export async function StreamDistributionSection() {
         {segments.map((seg) => (
           <div key={seg.key} className="flex items-center gap-2 text-xs">
             <span
-              className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${STREAM_DOT_COLORS[seg.key] ?? 'bg-muted'}`}
+              className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: seg.key === 'Untagged' ? 'var(--muted)' : streamHex(seg.key) }}
             />
             <span className="truncate text-dim">{label(seg.key)}</span>
             <span className="ml-auto font-medium text-ink">{seg.count}</span>

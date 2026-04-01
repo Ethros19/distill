@@ -1,15 +1,11 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { STREAM_VALUES, STREAM_LABELS, type Stream } from '@/lib/stream-utils'
+import { STREAM_LABELS, isValidStream } from '@/lib/stream-utils'
 import { getStreamDetail } from './lib/stream-detail'
 import { StreamDetailPanel } from './components/stream-detail-panel'
 import { StreamSwitcherTabs } from '../components/stream-switcher-tabs'
 import type { Metadata } from 'next'
-
-function isValidStream(value: string): value is Stream {
-  return (STREAM_VALUES as readonly string[]).includes(value)
-}
 
 export async function generateMetadata({
   params,
@@ -23,7 +19,7 @@ export async function generateMetadata({
 
 export const dynamic = 'force-dynamic'
 
-async function StreamDetailContent({ stream }: { stream: Stream }) {
+async function StreamDetailContent({ stream }: { stream: string }) {
   const data = await getStreamDetail(stream)
   return <StreamDetailPanel label={STREAM_LABELS[stream]} data={data} />
 }

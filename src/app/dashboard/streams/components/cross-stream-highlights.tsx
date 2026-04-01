@@ -1,4 +1,4 @@
-import { STREAM_BG_COLORS, STREAM_LABELS, type Stream } from '@/lib/stream-utils'
+import { STREAM_LABELS, streamHex } from '@/lib/stream-utils'
 import type { CrossStreamTheme } from '../lib/types'
 
 export function CrossStreamHighlights({
@@ -65,9 +65,10 @@ export function CrossStreamHighlights({
                   className="inline-flex items-center gap-1.5 rounded-full bg-panel-alt px-2 py-0.5 text-[10px] font-medium text-dim"
                 >
                   <span
-                    className={`inline-block h-1.5 w-1.5 rounded-full ${STREAM_BG_COLORS[stream] ?? 'bg-muted'}`}
+                    className="inline-block h-1.5 w-1.5 rounded-full"
+                    style={{ backgroundColor: streamHex(stream) }}
                   />
-                  {STREAM_LABELS[stream as Stream] ?? stream}
+                  {STREAM_LABELS[stream] ?? stream}
                 </span>
               ))}
             </div>

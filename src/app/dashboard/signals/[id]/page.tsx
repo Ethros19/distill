@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import { signals, inputs } from '@/lib/schema'
 import { eq, inArray } from 'drizzle-orm'
-import { signalStatusBadge, signalStatusLabel, streamBadge, streamLabel } from '../../components/format-utils'
+import { signalStatusBadge, signalStatusLabel, streamBadgeStyle, streamLabel } from '../../components/format-utils'
 import { strengthColor } from '../../components/signal-card'
 import { StatusControls } from './components/status-controls'
 import { LinearPushButton } from './components/linear-push-button'
@@ -205,7 +205,8 @@ export default async function SignalDetailPage({
                 .map(([key, ct]) => (
                   <span
                     key={key}
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${streamBadge(key)}`}
+                    className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
+                    style={streamBadgeStyle(key)}
                   >
                     {streamLabel(key)} ({ct})
                   </span>
@@ -236,7 +237,7 @@ export default async function SignalDetailPage({
                   </p>
                   <div className="flex shrink-0 items-center gap-1.5">
                     {input.stream && (
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${streamBadge(input.stream)}`}>
+                      <span className="rounded-full px-2 py-0.5 text-[11px] font-medium" style={streamBadgeStyle(input.stream)}>
                         {streamLabel(input.stream)}
                       </span>
                     )}

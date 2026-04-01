@@ -6,7 +6,7 @@ import { inputs } from '@/lib/schema'
 import { eq, desc, count, and, or, ilike, inArray, sql } from 'drizzle-orm'
 import Link from 'next/link'
 import { InputRow } from '../components/input-row'
-import { STREAM_VALUES, STREAM_LABELS } from '@/lib/stream-utils'
+import { STREAM_VALUES, STREAM_LABELS, isValidStream } from '@/lib/stream-utils'
 import { SourceHealthPanel } from './components/source-health-panel'
 import { InputSearch } from './components/input-search'
 
@@ -23,7 +23,7 @@ export default async function InputsPage({
 
   const validStatus = status === 'unprocessed' || status === 'processed' ? status : undefined
   const isInternal = stream === 'internal'
-  const validStream = !isInternal && (STREAM_VALUES as readonly string[]).includes(stream ?? '') ? stream : undefined
+  const validStream = !isInternal && isValidStream(stream ?? '') ? stream : undefined
   const searchQuery = q?.trim() || undefined
 
   // Fetch inputs and count in parallel

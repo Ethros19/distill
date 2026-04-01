@@ -4,10 +4,8 @@ import { eq, count, sql } from 'drizzle-orm'
 import {
   STREAM_VALUES,
   STREAM_LABELS,
-  STREAM_BG_COLORS,
-  STREAM_TEXT_COLORS,
   CATEGORY_TO_STREAM,
-  type Stream,
+  streamHex,
 } from '@/lib/stream-utils'
 
 export async function StreamCoverageGrid() {
@@ -53,17 +51,16 @@ export async function StreamCoverageGrid() {
       {STREAM_VALUES.map((stream) => {
         const sourceCount = sourcesByStream[stream] || 0
         const inputCount = inputsByStream[stream] || 0
-        const bgColor = STREAM_BG_COLORS[stream]
-        const textColor = STREAM_TEXT_COLORS[stream]
+        const hex = streamHex(stream)
 
         return (
           <div
             key={stream}
             className="flex items-start gap-2 rounded-md border border-edge bg-panel-alt/50 px-3 py-2"
           >
-            <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${bgColor}`} />
+            <div className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: hex }} />
             <div className="min-w-0">
-              <p className={`text-xs font-medium ${textColor}`}>
+              <p className="text-xs font-medium" style={{ color: hex }}>
                 {STREAM_LABELS[stream]}
               </p>
               {sourceCount > 0 ? (

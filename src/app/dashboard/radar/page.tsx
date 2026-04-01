@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { getRadarData } from './lib/radar-data'
 import { RadarGrid } from './components/radar-grid'
+import { PINNED_STREAM } from '@/lib/stream-utils'
 import type { SerializedStreamBrief } from './components/stream-briefing'
 import type { Metadata } from 'next'
 
@@ -10,16 +11,16 @@ export const metadata: Metadata = {
   title: 'Intelligence Radar | Distill',
 }
 
-/** Pin business-dev first, then sort remaining by activity */
+/** Pin the configured stream first, then sort remaining by activity */
 function defaultOrder(briefs: SerializedStreamBrief[]): SerializedStreamBrief[] {
-  const businessDev = briefs.find((b) => b.stream === 'business-dev')
+  const pinned = PINNED_STREAM ? briefs.find((b) => b.stream === PINNED_STREAM) : null
   const rest = briefs
-    .filter((b) => b.stream !== 'business-dev')
+    .filter((b) => b.stream !== PINNED_STREAM)
     .sort((a, b) => {
       if (b.articles.length !== a.articles.length) return b.articles.length - a.articles.length
       return b.inputCount - a.inputCount
     })
-  return businessDev ? [businessDev, ...rest] : rest
+  return pinned ? [pinned, ...rest] : rest
 }
 
 async function RadarContent() {
@@ -60,7 +61,7 @@ export default function RadarPage() {
           Intelligence Radar
         </h2>
         <p className="mt-1 text-sm text-muted">
-          AI-synthesized briefs across your six intelligence streams &mdash; drag to reorder
+          AI-synthesized briefs across your intelligence streams &mdash; drag to reorder
         </p>
       </div>
       <Suspense fallback={<RadarSkeleton />}>

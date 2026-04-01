@@ -3,6 +3,7 @@ import type { LLMProvider } from '../llm/provider'
 import type { RawInput, StructuredInput, SynthesisInput, LLMSignal, PriorSignal } from '../llm/types'
 import { StructuredInputSchema, SynthesisResultSchema } from '../llm/types'
 import { LLMError, LLMRateLimitError } from '../llm/errors'
+import { buildStreamPromptList, STREAM_VALUES } from '../stream-utils'
 
 const STRUCTURE_MODEL = process.env.ANTHROPIC_STRUCTURE_MODEL || 'claude-haiku-4-5-20251001'
 const SYNTHESIZE_MODEL = process.env.ANTHROPIC_SYNTHESIZE_MODEL || 'claude-sonnet-4-6'
@@ -18,13 +19,7 @@ Analyze the content carefully and return:
 - confidence: A float from 0.0 to 1.0 indicating how confident you are in your analysis
 - is_feedback: Boolean — true if the content is genuine product feedback (feature requests, bug reports, complaints, praise, observations). false if the content is noise: login verification codes, password resets, transactional receipts, automated notifications, CVs/resumes, spam, or non-product content
 - stream: Classify the domain stream of this content. Use one of:
-  "general-ai" (AI/LLM technology news, model releases, open-source AI, API changes, AI regulation, research papers),
-  "business-dev" (AI applications in your vertical industry, business intelligence, vertical SaaS),
-  "event-tech" (event technology platforms and competition, software tooling trends like Cvent/Eventbrite/Bizzabo, event tech product launches),
-  "event-general" (event industry news, trade shows, hospitality trends, seasonal demand, meeting planning, venue management),
-  "vc-investment" (VC funding rounds, M&A activity, AI startup investments, venture capital deals, fundraising news),
-  "product" (direct product feedback about Distill, feature requests, bug reports, user complaints).
-  Key distinctions: "business-dev" is the BUSINESS of your vertical + AI (intersection), "event-tech" is event SOFTWARE/PLATFORMS, "event-general" is the INDUSTRY itself.
+  ${buildStreamPromptList()}.
   Use null if the content doesn't clearly fit any stream.
 
 Consider the source channel and contributor context when assessing urgency and type.
@@ -69,8 +64,8 @@ You may receive a list of signals the team has already triaged. For each:
 - If no prior signals are provided, ignore this section.
 
 CROSS-STREAM ANALYSIS:
-Each input has a domain stream (general-ai, business-dev, event-tech, event-general, vc-investment, product) indicating its source domain.
-When evidence for a signal spans multiple streams, highlight this as a cross-stream pattern in the signal's reasoning. Cross-stream signals often indicate broader trends. Pay special attention to themes that bridge related sub-verticals (e.g., general-ai + vc-investment for AI funding trends, event-tech + event-general for industry-wide technology shifts, business-dev + event-general for industry business intelligence).
+Each input has a domain stream (${STREAM_VALUES.join(', ')}) indicating its source domain.
+When evidence for a signal spans multiple streams, highlight this as a cross-stream pattern in the signal's reasoning. Cross-stream signals often indicate broader trends. Pay special attention to themes that bridge related sub-verticals.
 
 HANDLING INDUSTRY CONTEXT:
 You may receive an "INDUSTRY CONTEXT" section with recent industry and market intelligence from RSS feeds. Use it to:

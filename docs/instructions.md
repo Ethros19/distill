@@ -88,7 +88,7 @@ Click any signal to see the full detail page (`/dashboard/signals/[id]`):
 
 ### Intelligence Radar
 
-The Radar page (`/dashboard/radar`) shows AI-synthesized intelligence briefs across 6 domain streams:
+The Radar page (`/dashboard/radar`) shows AI-synthesized intelligence briefs across your configured domain streams. The default streams are:
 - **General AI** -- model releases, regulations, research
 - **Product** -- direct product feedback signals
 - **Event Tech** -- event technology platforms and competition
@@ -96,7 +96,7 @@ The Radar page (`/dashboard/radar`) shows AI-synthesized intelligence briefs acr
 - **VC/Investment** -- funding rounds, M&A, startup investments
 - **Business Dev** -- AI applications in your vertical, business intelligence
 
-Each stream card includes a synopsis and expandable article list. Cards are drag-to-reorder.
+Streams are fully configurable -- edit `distill.config.ts` to define your own domain taxonomy. Each stream card includes a synopsis and expandable article list. Cards are drag-to-reorder.
 
 ### Streams
 

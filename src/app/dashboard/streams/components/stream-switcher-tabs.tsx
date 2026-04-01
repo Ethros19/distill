@@ -1,8 +1,8 @@
 import Link from 'next/link'
-import { STREAM_VALUES, STREAM_LABELS, type Stream } from '@/lib/stream-utils'
+import { STREAM_VALUES, STREAM_LABELS } from '@/lib/stream-utils'
 
 interface StreamSwitcherTabsProps {
-  current: Stream
+  current: string
 }
 
 export function StreamSwitcherTabs({ current }: StreamSwitcherTabsProps) {

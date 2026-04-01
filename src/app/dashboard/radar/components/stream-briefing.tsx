@@ -1,10 +1,8 @@
 import Link from 'next/link'
 import {
   STREAM_HEX_COLORS,
-  STREAM_BORDER_COLORS,
-  STREAM_BG_COLORS,
   STREAM_DESCRIPTIONS,
-  type Stream,
+  streamHex,
 } from '@/lib/stream-utils'
 import { formatTimeAgo } from '@/app/dashboard/components/format-utils'
 import { COMPANY_NAME } from '@/lib/company-config'
@@ -72,22 +70,20 @@ export function StreamBriefing({
   brief: SerializedStreamBrief
   index: number
 }) {
-  const hex = STREAM_HEX_COLORS[brief.stream] ?? '#888'
-  const borderClass = STREAM_BORDER_COLORS[brief.stream] ?? 'border-t-edge'
-  const bgClass = STREAM_BG_COLORS[brief.stream] ?? 'bg-muted'
-  const description = STREAM_DESCRIPTIONS[brief.stream as Stream] ?? ''
+  const hex = streamHex(brief.stream)
+  const description = STREAM_DESCRIPTIONS[brief.stream] ?? ''
 
   const displayArticles = brief.articles.slice(0, 5)
 
   return (
     <div
-      className={`animate-fade-up flex flex-col rounded-xl border border-edge border-t-[3px] ${borderClass} bg-panel transition-shadow hover:shadow-md`}
-      style={{ animationDelay: `${index * 60}ms` }}
+      className="animate-fade-up flex flex-col rounded-xl border border-edge border-t-[3px] bg-panel transition-shadow hover:shadow-md"
+      style={{ animationDelay: `${index * 60}ms`, borderTopColor: hex }}
     >
       {/* Header — stream name + trend */}
       <div className="flex items-start justify-between gap-2 px-4 pb-2 pt-3 pr-10">
         <div className="flex items-center gap-2">
-          <span className={`inline-block h-2 w-2 rounded-full ${bgClass}`} />
+          <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: hex }} />
           <Link
             href={`/dashboard/streams/${brief.stream}`}
             className="text-sm font-semibold text-ink transition-colors hover:text-accent"

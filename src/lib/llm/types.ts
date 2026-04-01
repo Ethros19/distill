@@ -1,6 +1,16 @@
 import { z } from 'zod'
 import { STREAM_VALUES } from '../stream-utils'
 
+function dynamicStreamEnum() {
+  if (STREAM_VALUES.length >= 2) {
+    return z.enum(STREAM_VALUES as [string, string, ...string[]])
+  }
+  if (STREAM_VALUES.length === 1) {
+    return z.literal(STREAM_VALUES[0])
+  }
+  return z.string()
+}
+
 // Input to the structurer
 export interface RawInput {
   content: string
@@ -26,12 +36,11 @@ export const StructuredInputSchema = z.object({
     .describe(
       'Whether the content is genuine product feedback (true) vs noise like login codes, transactional emails, auto-replies, CVs, spam (false)',
     ),
-  stream: z
-    .enum(STREAM_VALUES)
+  stream: dynamicStreamEnum()
     .nullable()
     .optional()
     .describe(
-      'Domain stream: "general-ai" (AI news), "business-dev" (your vertical/business), "event-tech" (event platforms), "event-general" (events industry), "vc-investment" (VC/funding), "product" (direct feedback). Null if unclear.',
+      `Domain stream — one of: ${STREAM_VALUES.join(', ')}. Null if unclear.`,
     ),
 })
 

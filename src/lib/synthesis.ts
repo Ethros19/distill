@@ -3,6 +3,7 @@ import { inputs, syntheses, signals, settings } from '@/lib/schema'
 import { getLLMProvider } from '@/lib/llm/provider-factory'
 import type { SynthesisInput, LLMSignal, PriorSignal } from '@/lib/llm/types'
 import { and, eq, gte, lt, ne, inArray, desc } from 'drizzle-orm'
+import { STREAM_VALUES, HIGH_VOLUME_STREAMS } from '@/lib/stream-utils'
 
 // ---------------------------------------------------------------------------
 // Period calculation
@@ -62,10 +63,12 @@ export async function runSynthesis(options?: {
     stream: row.stream ?? undefined,
   }))
 
-  // Query non-feedback industry inputs from all business-relevant streams
-  // general-ai has high volume (~1000+/week) so we query it separately with a tighter limit
-  const coreStreams = ['business-dev', 'event-tech', 'event-general', 'vc-investment'] as const
-  const [coreRows, aiRows] = await Promise.all([
+  // Query non-feedback industry inputs from all configured streams
+  // High-volume streams get a lower query limit to avoid prompt bloat
+  const coreStreams = STREAM_VALUES.filter(
+    (s) => s !== 'product' && !HIGH_VOLUME_STREAMS.includes(s),
+  )
+  const queries = [
     db
       .select()
       .from(inputs)
@@ -75,27 +78,30 @@ export async function runSynthesis(options?: {
           lt(inputs.createdAt, periodEnd),
           eq(inputs.status, 'processed'),
           eq(inputs.isFeedback, false),
-          inArray(inputs.stream, [...coreStreams]),
+          inArray(inputs.stream, coreStreams),
         ),
       )
       .orderBy(desc(inputs.urgency), desc(inputs.createdAt))
       .limit(50),
-    db
-      .select()
-      .from(inputs)
-      .where(
-        and(
-          gte(inputs.createdAt, periodStart),
-          lt(inputs.createdAt, periodEnd),
-          eq(inputs.status, 'processed'),
-          eq(inputs.isFeedback, false),
-          eq(inputs.stream, 'general-ai'),
-        ),
-      )
-      .orderBy(desc(inputs.urgency), desc(inputs.createdAt))
-      .limit(20),
-  ])
-  const industryRows = [...coreRows, ...aiRows]
+    ...HIGH_VOLUME_STREAMS.map((stream) =>
+      db
+        .select()
+        .from(inputs)
+        .where(
+          and(
+            gte(inputs.createdAt, periodStart),
+            lt(inputs.createdAt, periodEnd),
+            eq(inputs.status, 'processed'),
+            eq(inputs.isFeedback, false),
+            eq(inputs.stream, stream),
+          ),
+        )
+        .orderBy(desc(inputs.urgency), desc(inputs.createdAt))
+        .limit(20),
+    ),
+  ]
+  const results = await Promise.all(queries)
+  const industryRows = results.flat()
 
   const industryInputs: SynthesisInput[] = industryRows.map((row) => ({
     id: row.id,

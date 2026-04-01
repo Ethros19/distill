@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Input } from '@/lib/schema'
-import { formatTimeAgo, statusBadge, typeBadge, typeLabel, streamBadge, streamLabel } from './format-utils'
+import { formatTimeAgo, statusBadge, typeBadge, typeLabel, streamBadgeStyle, streamLabel } from './format-utils'
 import { STREAM_VALUES, STREAM_LABELS } from '@/lib/stream-utils'
 
 export function InputRow({ input }: { input: Input }) {
@@ -262,9 +262,8 @@ export function InputRow({ input }: { input: Input }) {
             value={currentStream}
             onChange={(e) => handleStreamChange(e.target.value)}
             disabled={updatingStream}
-            className={`rounded-full px-2 py-0.5 text-[10px] font-medium border-0 cursor-pointer disabled:opacity-50 ${
-              currentStream ? streamBadge(currentStream) : 'bg-panel-alt text-muted'
-            }`}
+            className="rounded-full px-2 py-0.5 text-[10px] font-medium border-0 cursor-pointer disabled:opacity-50"
+            style={currentStream ? streamBadgeStyle(currentStream) : { backgroundColor: 'var(--panel-alt)', color: 'var(--muted)' }}
           >
             <option value="">Set stream...</option>
             {STREAM_VALUES.map((s) => (

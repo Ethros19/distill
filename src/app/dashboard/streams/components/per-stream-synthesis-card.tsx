@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { STREAM_LABELS, STREAM_BORDER_COLORS, type Stream } from '@/lib/stream-utils'
+import { STREAM_LABELS, streamHex } from '@/lib/stream-utils'
 import type { PerStreamSynthesis } from '../lib/types'
 
 function strengthBadge(strength: number): string {
@@ -19,15 +19,16 @@ export function PerStreamSynthesisCard({
 }: {
   data: PerStreamSynthesis
 }) {
-  const label = STREAM_LABELS[data.stream as Stream] ?? data.stream
-  const borderColor = STREAM_BORDER_COLORS[data.stream] ?? 'border-t-muted'
+  const label = STREAM_LABELS[data.stream] ?? data.stream
+  const hex = streamHex(data.stream)
   const maxSignals = 3
   const maxArticles = 3
   const maxThemes = 5
 
   return (
     <div
-      className={`rounded-xl border border-edge border-t-2 bg-panel p-4 ${borderColor}`}
+      className="rounded-xl border border-edge border-t-2 bg-panel p-4"
+      style={{ borderTopColor: hex }}
     >
       {/* Header */}
       <div className="mb-3 flex items-baseline justify-between">

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { FeedSource } from '@/lib/schema'
-import { formatTimeAgo, healthBadge, streamBadge, streamLabel } from '../../components/format-utils'
+import { formatTimeAgo, healthBadge, streamBadgeStyle, streamLabel } from '../../components/format-utils'
 import { CATEGORY_TO_STREAM } from '@/lib/stream-utils'
 
 type SourceRowFeed = FeedSource & { inputCount: number }
@@ -117,7 +117,7 @@ export function SourceRow({
               </span>
             )}
             {stream && (
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${streamBadge(stream)}`}>
+              <span className="rounded-full px-2 py-0.5 text-[10px] font-medium" style={streamBadgeStyle(stream)}>
                 {streamLabel(stream)}
               </span>
             )}

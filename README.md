@@ -254,6 +254,38 @@ Set `LLM_PROVIDER` to switch between providers:
 
 Model names are configurable per provider. See `.env.example` for override variables.
 
+## Configuring Streams
+
+Distill's intelligence streams are fully configurable. Edit `distill.config.ts` in the project root to define your own domain taxonomy:
+
+```typescript
+export const streams: StreamConfig[] = [
+  {
+    id: 'general-ai',           // URL slug and database value
+    label: 'AI & LLM',          // UI display name
+    description: 'AI model releases, API changes, research', // LLM classification prompt
+    hex: '#a855f7',             // Color for charts, badges, borders
+    highVolume: true,           // Lower query limit in synthesis
+    categories: ['AI News'],    // RSS feed categories that map here
+  },
+  {
+    id: 'product',
+    label: 'Product Feedback',
+    description: 'Direct product feedback, feature requests',
+    hex: '#3D8A4A',
+    pinFirst: true,             // Pin first on Intelligence Radar
+  },
+  // Add, remove, or rename streams to match your domain
+]
+```
+
+Each stream supports:
+- **`pinFirst`** -- pin this stream to the top of the Intelligence Radar
+- **`highVolume`** -- limit query volume in synthesis to avoid prompt bloat
+- **`categories`** -- map RSS feed source categories to this stream automatically
+
+After changing streams, run a new synthesis to re-classify inputs. Existing data in the database keeps its original stream value until re-processed.
+
 ## Product Context
 
 Product context tells Distill what your product already has so synthesis focuses on what's genuinely missing rather than re-surfacing shipped features.

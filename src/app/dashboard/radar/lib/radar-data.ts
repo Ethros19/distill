@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
 import { sql } from 'drizzle-orm'
-import { STREAM_VALUES, STREAM_LABELS, type Stream } from '@/lib/stream-utils'
+import { STREAM_VALUES, STREAM_LABELS } from '@/lib/stream-utils'
 import { trendDirection } from '../../streams/lib/stream-intelligence'
 import type { TrendDirection } from '../../streams/lib/types'
 
@@ -21,7 +21,7 @@ export interface RadarArticle {
 }
 
 export interface StreamBrief {
-  stream: Stream
+  stream: string
   label: string
   trend: TrendDirection
   inputCount: number
