@@ -19,12 +19,12 @@ Analyze the content carefully and return:
 - is_feedback: Boolean — true if the content is genuine product feedback (feature requests, bug reports, complaints, praise, observations). false if the content is noise: login verification codes, password resets, transactional receipts, automated notifications, CVs/resumes, spam, or non-product content
 - stream: Classify the domain stream of this content. Use one of:
   "general-ai" (AI/LLM technology news, model releases, open-source AI, API changes, AI regulation, research papers),
-  "business-dev" (AI applications in event budgeting and planning, event industry business intelligence, vertical SaaS for events, event management software business),
+  "business-dev" (AI applications in your vertical industry, business intelligence, vertical SaaS),
   "event-tech" (event technology platforms and competition, software tooling trends like Cvent/Eventbrite/Bizzabo, event tech product launches),
   "event-general" (event industry news, trade shows, hospitality trends, seasonal demand, meeting planning, venue management),
   "vc-investment" (VC funding rounds, M&A activity, AI startup investments, venture capital deals, fundraising news),
   "product" (direct product feedback about Distill, feature requests, bug reports, user complaints).
-  Key distinctions: "business-dev" is the BUSINESS of events + AI (intersection), "event-tech" is event SOFTWARE/PLATFORMS, "event-general" is the INDUSTRY itself.
+  Key distinctions: "business-dev" is the BUSINESS of your vertical + AI (intersection), "event-tech" is event SOFTWARE/PLATFORMS, "event-general" is the INDUSTRY itself.
   Use null if the content doesn't clearly fit any stream.
 
 Consider the source channel and contributor context when assessing urgency and type.
@@ -70,7 +70,7 @@ You may receive a list of signals the team has already triaged. For each:
 
 CROSS-STREAM ANALYSIS:
 Each input has a domain stream (general-ai, business-dev, event-tech, event-general, vc-investment, product) indicating its source domain.
-When evidence for a signal spans multiple streams, highlight this as a cross-stream pattern in the signal's reasoning. Cross-stream signals often indicate broader trends. Pay special attention to themes that bridge related sub-verticals (e.g., general-ai + vc-investment for AI funding trends, event-tech + event-general for industry-wide technology shifts, business-dev + event-general for event business intelligence).
+When evidence for a signal spans multiple streams, highlight this as a cross-stream pattern in the signal's reasoning. Cross-stream signals often indicate broader trends. Pay special attention to themes that bridge related sub-verticals (e.g., general-ai + vc-investment for AI funding trends, event-tech + event-general for industry-wide technology shifts, business-dev + event-general for industry business intelligence).
 
 HANDLING INDUSTRY CONTEXT:
 You may receive an "INDUSTRY CONTEXT" section with recent industry and market intelligence from RSS feeds. Use it to:

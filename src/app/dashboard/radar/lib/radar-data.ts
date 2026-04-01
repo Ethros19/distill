@@ -37,7 +37,7 @@ interface StreamInsight {
   companyImplication: string
 }
 
-const COMPANY_CONTEXT = 'Company context placeholder.'
+import { COMPANY_NAME, COMPANY_DESCRIPTION, companyContext } from '@/lib/company-config'
 
 /**
  * Generate an AI synopsis and company implication for a stream.
@@ -77,13 +77,13 @@ async function generateStreamInsight(
           role: 'user',
           content: `You are a business intelligence analyst. Given these article summaries from the "${label}" intelligence stream, produce two outputs.
 
-${COMPANY_CONTEXT}
+${COMPANY_DESCRIPTION ? `Company context: ${companyContext()}` : ''}
 
 Articles:
 ${summaries.join('\n')}
 
 Respond with ONLY a JSON object in this exact format, no markdown:
-{"synopsis": "2-3 sentence brief synthesizing the overall state of this vertical. Be specific about key developments.", "company_implication": "1-2 sentences on what this means for your company — how these developments affect your company's product strategy, competitive position, or market opportunity."}`,
+{"synopsis": "2-3 sentence brief synthesizing the overall state of this vertical. Be specific about key developments.", "company_implication": "1-2 sentences on what this means for ${COMPANY_NAME} — how these developments affect product strategy, competitive position, or market opportunity."}`,
         },
       ],
     })

@@ -33,7 +33,7 @@ export const CATEGORY_TO_STREAM: Record<string, Stream> = {
  */
 export const STREAM_LABELS: Record<Stream, string> = {
   'general-ai': 'AI & LLM',
-  'business-dev': 'Business Intelligence',
+  'business-dev': 'Business & Vertical AI',
   'event-tech': 'Event Technology',
   'event-general': 'Events & Hospitality',
   'vc-investment': 'VC & Investment',
@@ -97,7 +97,7 @@ export const STREAM_HEX_COLORS: Record<string, string> = {
  */
 export const STREAM_DESCRIPTIONS: Record<Stream, string> = {
   'general-ai': 'AI model releases, API changes, research breakthroughs, regulation',
-  'business-dev': 'AI applications in event planning, vertical SaaS intelligence',
+  'business-dev': 'AI applications in your vertical, business intelligence',
   'event-tech': 'Event platforms, competitor moves, tooling trends',
   'event-general': 'Industry trends, trade shows, hospitality, seasonal demand',
   'vc-investment': 'Funding rounds, M&A activity, startup investments',

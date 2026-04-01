@@ -31,7 +31,7 @@ export const StructuredInputSchema = z.object({
     .nullable()
     .optional()
     .describe(
-      'Domain stream: "general-ai" (AI news), "business-dev" (business-relevant), "event-tech" (event platforms), "event-general" (events industry), "vc-investment" (VC/funding), "product" (direct feedback). Null if unclear.',
+      'Domain stream: "general-ai" (AI news), "business-dev" (your vertical/business), "event-tech" (event platforms), "event-general" (events industry), "vc-investment" (VC/funding), "product" (direct feedback). Null if unclear.',
     ),
 })
 

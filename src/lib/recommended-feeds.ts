@@ -38,7 +38,7 @@ export const recommendedFeeds: Array<{ name: string; url: string; category: stri
   { name: 'Strictly VC', url: 'https://strictlyvc.com/feed/', category: 'VC/AI Investment' },
   { name: 'Axios Pro Rata', url: 'https://www.axios.com/feeds/feed/pro-rata', category: 'VC/AI Investment' },
 
-  // Business Dev — Event Industry Business Intelligence
+  // Business Dev — Vertical Industry Business Intelligence
   { name: 'MeetingsNet', url: 'https://www.meetingsnet.com/rss.xml', category: 'Business Dev' },
   { name: 'Eventbrite Blog', url: 'https://www.eventbrite.com/blog/feed/', category: 'Business Dev' },
 ]

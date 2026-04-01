@@ -7,6 +7,7 @@ import {
   type Stream,
 } from '@/lib/stream-utils'
 import { formatTimeAgo } from '@/app/dashboard/components/format-utils'
+import { COMPANY_NAME } from '@/lib/company-config'
 import { CaptureButton } from './radar-capture'
 
 /** Serializable version of StreamBrief (dates as ISO strings) */
@@ -97,6 +98,24 @@ export function StreamBriefing({
         <TrendBadge trend={brief.trend} count={brief.inputCount} />
       </div>
 
+      {/* Company implication */}
+      {brief.companyImplication && (
+        <div className="mx-3 mb-3 rounded-lg bg-panel-alt px-4 py-3">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-[11px] font-medium uppercase tracking-wider text-accent">
+              What this means for {COMPANY_NAME}
+            </p>
+            <CaptureButton
+              text={brief.companyImplication}
+              context={`${brief.label} — Company Implication`}
+            />
+          </div>
+          <p className="mt-1 text-[13px] leading-relaxed text-dim">
+            {brief.companyImplication}
+          </p>
+        </div>
+      )}
+
       {/* Synopsis — visually distinct, tinted background */}
       <div
         className="mx-3 mb-3 rounded-lg border-l-[3px] px-4 py-3"
@@ -132,24 +151,6 @@ export function StreamBriefing({
           </div>
         )}
       </div>
-
-      {/* company implication */}
-      {brief.companyImplication && (
-        <div className="mx-3 mb-3 rounded-lg bg-panel-alt px-4 py-3">
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-accent">
-              What this means for your company
-            </p>
-            <CaptureButton
-              text={brief.companyImplication}
-              context={`${brief.label} — Company Implication`}
-            />
-          </div>
-          <p className="mt-1 text-[13px] leading-relaxed text-dim">
-            {brief.companyImplication}
-          </p>
-        </div>
-      )}
 
       {/* Articles feed — compact list */}
       <div className="border-t border-edge-dim">
