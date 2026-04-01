@@ -13,6 +13,49 @@ Open-source signal intelligence for product teams. Collects feedback from email,
 
 Your data stays on your infrastructure. There is no hosted service.
 
+## Architecture
+
+```
+                         ┌─────────────────────────────────────────────┐
+                         │              Neon Postgres                  │
+                         │  inputs · signals · syntheses · feeds      │
+                         └────────▲──────────────┬────────────────────┘
+                                  │              │
+  Email ──→ Resend Webhook ──┐    │              │
+                             ├──→ Intake API ────┘
+  Paste ──→ Paste API ───────┘         │
+                                       ▼
+  RSS Feeds ──→ Feed Poller ──→  LLM Structuring
+                                 (summary, themes,
+                                  urgency, stream)
+                                       │
+                              ┌────────┴────────┐
+                              ▼                  ▼
+                     Daily Synthesis      Manual Trigger
+                     (6:30am + 7am UTC)   (POST /api/synthesis)
+                              │
+                    ┌─────────┼─────────┐
+                    ▼         ▼         ▼
+              LLM Signal   Narrative  Digest
+              Clustering   Generation Email
+                    │         │         │
+                    ▼         ▼         ▼
+              Dashboard    Streams   Resend
+              + Radar      Page      → Recipients
+                    │
+                    ▼
+              MCP Server ──→ Claude Desktop
+              Linear     ──→ Issue Tracker
+```
+
+**Pipeline flow:**
+1. Inputs arrive via email webhook, paste API, or RSS feed polling
+2. Each input is structured by the LLM (extract summary, type, themes, urgency, domain stream, feedback vs. noise classification)
+3. Daily synthesis clusters recent structured inputs into signals, considering prior signal state, product context, and industry inputs
+4. A cross-stream narrative is generated connecting signals with industry intelligence
+5. Digest email is sent to configured recipients
+6. Everything is queryable via dashboard, MCP server, and REST API
+
 ## Stack
 
 | Layer | Technology |
@@ -310,49 +353,6 @@ Product context tells Distill what your product already has so synthesis focuses
 3. Paste the output into Settings > Product Context in the Distill dashboard
 
 Update it after each major release or sprint.
-
-## Architecture
-
-```
-                         ┌─────────────────────────────────────────────┐
-                         │              Neon Postgres                  │
-                         │  inputs · signals · syntheses · feeds      │
-                         └────────▲──────────────┬────────────────────┘
-                                  │              │
-  Email ──→ Resend Webhook ──┐    │              │
-                             ├──→ Intake API ────┘
-  Paste ──→ Paste API ───────┘         │
-                                       ▼
-  RSS Feeds ──→ Feed Poller ──→  LLM Structuring
-                                 (summary, themes,
-                                  urgency, stream)
-                                       │
-                              ┌────────┴────────┐
-                              ▼                  ▼
-                     Daily Synthesis      Manual Trigger
-                     (6:30am + 7am UTC)   (POST /api/synthesis)
-                              │
-                    ┌─────────┼─────────┐
-                    ▼         ▼         ▼
-              LLM Signal   Narrative  Digest
-              Clustering   Generation Email
-                    │         │         │
-                    ▼         ▼         ▼
-              Dashboard    Streams   Resend
-              + Radar      Page      → Recipients
-                    │
-                    ▼
-              MCP Server ──→ Claude Desktop
-              Linear     ──→ Issue Tracker
-```
-
-**Pipeline flow:**
-1. Inputs arrive via email webhook, paste API, or RSS feed polling
-2. Each input is structured by the LLM (extract summary, type, themes, urgency, domain stream, feedback vs. noise classification)
-3. Daily synthesis clusters recent structured inputs into signals, considering prior signal state, product context, and industry inputs
-4. A cross-stream narrative is generated connecting signals with industry intelligence
-5. Digest email is sent to configured recipients
-6. Everything is queryable via dashboard, MCP server, and REST API
 
 ## Database
 
