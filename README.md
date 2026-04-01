@@ -1,15 +1,15 @@
 # Distill
 
-Open-source signal intelligence for product teams. Collects feedback from email, paste, and RSS feeds, structures it with AI, and synthesizes recurring patterns into actionable signals.
+Open-source signal intelligence for product teams. Collects feedback from email, paste, URLs, RSS feeds, and Linear, structures it with AI, and synthesizes recurring patterns into actionable signals. Inspired by [WorldMonitor](https://www.worldmonitor.app/).
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 
 ## What It Does
 
-1. **Collect** -- feedback arrives via email webhook, paste API, or RSS feed polling
+1. **Collect** -- feedback arrives via email webhook, paste, article URLs, RSS feeds, or Linear events
 2. **Structure** -- AI extracts summary, type, themes, urgency, and domain stream from each input
 3. **Synthesize** -- a daily cron clusters recent inputs into signals (recurring patterns backed by evidence)
-4. **Deliver** -- digest email goes out, dashboard shows everything, MCP server lets you chat with your data
+4. **Deliver** -- digest email goes out, dashboard shows everything, Linear issues get created, MCP server lets you chat with your data
 
 Your data stays on your infrastructure. There is no hosted service.
 
@@ -24,6 +24,7 @@ Your data stays on your infrastructure. There is no hosted service.
   Email ──→ Resend Webhook ──┐    │              │
                              ├──→ Intake API ────┘
   Paste ──→ Paste API ───────┤         │
+  URLs  ──→ URL Fetcher ─────┤         │
   Linear ──→ Linear Webhook ─┘         ▼
                                  LLM Structuring
   RSS Feeds ──→ Feed Poller ──→  (summary, themes,
@@ -228,7 +229,7 @@ Raw data reference layer with paginated list, filtering by status/stream/keyword
 Feed source management: add RSS/Atom feeds, enable/disable, view health status, manual poll, and seed 24+ curated feeds with one button.
 
 ### Integrations
-View all connected and available integrations at `/dashboard/integrations`. Shows connection status for Linear (push, two-way sync, intake), Resend (email intake, digest), AI providers, and MCP server. Planned integrations (Slack, GitHub) shown for visibility.
+View all connected and available integrations at `/dashboard/integrations`. Shows connection status for Linear (push, two-way sync, intake), Resend (email intake, digest), AI providers, and MCP server. Configure AI provider API keys directly from the UI (stored in database, overrides env vars). Inline setup instructions for each unconfigured integration. Planned integrations (Slack, GitHub) shown for visibility.
 
 ### Settings
 Stream editor (drag-and-drop reordering, color picker, feed categories), product context editor, and theme switcher (light/dark/system).
@@ -241,6 +242,10 @@ Bcrypt password hashing, database-backed rate limiting with escalating lockout, 
 ### Paste (in-app)
 
 Click **+ Add Feedback** on the dashboard to paste customer quotes, support tickets, or observations.
+
+### URL (in-app)
+
+Click **+ Add Source** on the dashboard to paste an article URL. Distill fetches the content automatically. If the site blocks automated access, a paste fallback appears so you can copy/paste the article text directly.
 
 ### Email
 
@@ -370,7 +375,7 @@ Built across 265+ commits in 4 milestones:
 
 **Milestone 3: Signal Actions & Intelligence Feeds** -- Login security hardening, signal status lifecycle, MCP server, Linear integration, input management, RSS feeds, configurable sources UI, cross-stream tagging, and dashboard intelligence upgrades.
 
-**Milestone 4: Dashboard IA & Synthesis Visibility** -- Dashboard restructure, dedicated signals page, streams synthesis view with AI narrative, input reference layer, and performance optimizations.
+**Milestone 4: Dashboard IA & Synthesis Visibility** -- Dashboard restructure, dedicated signals page, streams synthesis view with AI narrative, input reference layer, URL article intake with paste fallback, in-app AI provider configuration, and integrations hub with inline setup guides.
 
 Built with [Claude Code](https://claude.ai/code) using the [VBW](https://github.com/swt-labs/vibe-better-with-claude-code-vbw) agentic development workflow.
 
