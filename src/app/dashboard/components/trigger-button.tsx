@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { PasteModal } from './paste-form'
+import { UrlModal } from './url-modal'
 import { SynthesisOverlay } from './synthesis-overlay'
 
 export async function triggerSynthesis(): Promise<{ ok: boolean; error?: string }> {
@@ -18,6 +19,7 @@ export function TriggerButton() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
+  const [urlModalOpen, setUrlModalOpen] = useState(false)
   const router = useRouter()
 
   async function handleClick() {
@@ -53,8 +55,16 @@ export function TriggerButton() {
       >
         + Add Feedback
       </button>
+      <button
+        type="button"
+        onClick={() => setUrlModalOpen(true)}
+        className="rounded-lg border border-edge px-4 py-2 text-sm font-medium text-dim transition-colors hover:border-accent/40 hover:text-accent"
+      >
+        + Add Source
+      </button>
       {error && <p className="text-sm text-sig-high">{error}</p>}
       <PasteModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <UrlModal open={urlModalOpen} onClose={() => setUrlModalOpen(false)} />
       <SynthesisOverlay active={loading} />
     </div>
   )
