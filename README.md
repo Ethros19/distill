@@ -23,10 +23,10 @@ Your data stays on your infrastructure. There is no hosted service.
                                   │              │
   Email ──→ Resend Webhook ──┐    │              │
                              ├──→ Intake API ────┘
-  Paste ──→ Paste API ───────┘         │
-                                       ▼
-  RSS Feeds ──→ Feed Poller ──→  LLM Structuring
-                                 (summary, themes,
+  Paste ──→ Paste API ───────┤         │
+  Linear ──→ Linear Webhook ─┘         ▼
+                                 LLM Structuring
+  RSS Feeds ──→ Feed Poller ──→  (summary, themes,
                                   urgency, stream)
                                        │
                               ┌────────┴────────┐
@@ -45,7 +45,7 @@ Your data stays on your infrastructure. There is no hosted service.
                     │
                     ▼
               MCP Server ──→ Claude Desktop
-              Linear     ──→ Issue Tracker
+              Linear     ←─→ Issue Tracker
 ```
 
 ## Quick Start
@@ -139,12 +139,30 @@ Lets users send feedback via email and receive daily digest summaries.
 
 ### Linear integration
 
-Adds a "Push to Linear" button on signal detail pages.
+Connect Distill to Linear for issue tracking, two-way status sync, and using Linear as an intake source.
+
+**Push to Linear** — adds a button on signal detail pages to create a Linear issue from any signal.
 
 | Variable | How to get it |
 |----------|---------------|
 | `LINEAR_API_KEY` | Linear > Settings > API > Personal API keys |
 | `LINEAR_TEAM_ID` | Team UUID from URL in Linear team settings |
+
+**Two-way sync** — when an issue status changes in Linear, the linked signal updates automatically in Distill (e.g., issue marked "Done" → signal resolves).
+
+**Linear as intake source** — new issues, comments, customer requests, project updates, initiative updates, and documents flow into Distill as inputs for synthesis.
+
+To enable sync and intake:
+
+1. In Linear, go to Settings > API > Webhooks > New webhook
+2. Set URL to `https://your-app.vercel.app/api/webhooks/linear`
+3. Subscribe to: Issues, Comments, Customer requests, Project updates, Initiative updates, Documents
+4. Copy the signing secret and add these env vars:
+
+| Variable | What it does |
+|----------|-------------|
+| `LINEAR_WEBHOOK_SECRET` | Signing secret from the Linear webhook |
+| `LINEAR_INTAKE_ENABLED` | Set to `true` to ingest Linear events as inputs |
 
 ### MCP Server (Claude Desktop)
 
@@ -208,6 +226,9 @@ Raw data reference layer with paginated list, filtering by status/stream/keyword
 
 ### Sources
 Feed source management: add RSS/Atom feeds, enable/disable, view health status, manual poll, and seed 24+ curated feeds with one button.
+
+### Integrations
+View all connected and available integrations at `/dashboard/integrations`. Shows connection status for Linear (push, two-way sync, intake), Resend (email intake, digest), AI providers, and MCP server. Planned integrations (Slack, GitHub) shown for visibility.
 
 ### Settings
 Stream editor (drag-and-drop reordering, color picker, feed categories), product context editor, and theme switcher (light/dark/system).
