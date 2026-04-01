@@ -73,9 +73,21 @@ npx drizzle-kit push
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and log in with the password you hashed.
+Open [http://localhost:3000](http://localhost:3000) and log in with the password you hashed. A setup checklist will guide you through the remaining configuration.
 
-### 5. Deploy to Vercel
+### 5. In-app setup
+
+After your first login, the dashboard shows a guided checklist:
+
+1. **Configure your streams** -- define your intelligence categories (or keep the defaults)
+2. **Describe your product** -- give the AI context about what you've already built
+3. **Add your first input** -- paste a customer quote, support ticket, or observation
+4. **Set up RSS feeds** -- add news sources or seed 24+ curated feeds with one click
+5. **Run your first synthesis** -- let Distill analyze your inputs and surface signals
+
+Each step links directly to the relevant page. The checklist tracks your progress and disappears once everything is set up.
+
+### 6. Deploy to Vercel
 
 ```bash
 npx vercel deploy --prod
@@ -145,6 +157,7 @@ Feed source management at `/dashboard/sources`:
 - Seed 24+ curated industry feeds with one button
 
 ### Settings
+- **Stream Editor** -- add, remove, reorder (drag-and-drop), and configure intelligence streams with color picker, feed categories, and classification descriptions. Saved to the database so changes persist across deploys.
 - **Product Context** -- tell the LLM what features you've shipped so synthesis skips known capabilities
 - **Theme Switcher** -- light, dark, and system theme modes
 
@@ -256,7 +269,9 @@ Model names are configurable per provider. See `.env.example` for override varia
 
 ## Configuring Streams
 
-Distill's intelligence streams are fully configurable. Edit `distill.config.ts` in the project root to define your own domain taxonomy:
+Distill's intelligence streams are fully configurable. The easiest way is through the **Settings page** in the dashboard -- add, remove, reorder, and customize streams with a visual editor. Changes are saved to the database and take effect on the next page load.
+
+You can also set defaults in `distill.config.ts` in the project root. These are used as the starting configuration for new deployments:
 
 ```typescript
 export const streams: StreamConfig[] = [
