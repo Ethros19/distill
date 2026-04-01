@@ -94,7 +94,7 @@ The Radar page (`/dashboard/radar`) shows AI-synthesized intelligence briefs acr
 - **Event Tech** -- event technology platforms and competition
 - **Event Industry** -- hospitality, venues, seasonal trends
 - **VC/Investment** -- funding rounds, M&A, startup investments
-- **Business Dev** -- AI + events intersection, vertical SaaS
+- **Business Dev** -- AI applications in your vertical, business intelligence
 
 Each stream card includes a synopsis and expandable article list. Cards are drag-to-reorder.
 

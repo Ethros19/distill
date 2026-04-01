@@ -115,7 +115,7 @@ AI-synthesized intelligence briefs across 6 domain streams:
 - **Event Tech** -- event platforms, competition, product launches
 - **Event Industry** -- hospitality, venues, trade shows, seasonal trends
 - **VC/Investment** -- funding rounds, M&A, startup investments
-- **Business Dev** -- AI + events intersection, vertical SaaS
+- **Business Dev** -- AI applications in your vertical, business intelligence
 
 Each stream card shows a "What this means" synopsis with expandable articles. Cards are drag-to-reorder. Synopses are cached in-memory (1hr TTL) to avoid redundant LLM calls.
 
