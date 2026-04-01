@@ -4,9 +4,10 @@ import { db } from '@/lib/db'
 import { syntheses, inputs } from '@/lib/schema'
 import { eq, desc, and, gt, count } from 'drizzle-orm'
 import { DashboardIntelligence } from './components/dashboard-intelligence'
+import { SetupChecklist, getSetupStatus, isSetupComplete } from './components/setup-checklist'
 
 export default async function DashboardPage() {
-  const [[latest], [{ value: unprocessedCount }]] = await Promise.all([
+  const [[latest], [{ value: unprocessedCount }], setupStatus] = await Promise.all([
     db
       .select()
       .from(syntheses)
@@ -16,6 +17,7 @@ export default async function DashboardPage() {
       .select({ value: count() })
       .from(inputs)
       .where(eq(inputs.status, 'unprocessed')),
+    getSetupStatus(),
   ])
 
   const [{ value: unsynthesizedCount }] = latest
@@ -24,6 +26,8 @@ export default async function DashboardPage() {
         .from(inputs)
         .where(and(eq(inputs.status, 'processed'), gt(inputs.createdAt, latest.createdAt)))
     : [{ value: 0 }]
+
+  const setupComplete = isSetupComplete(setupStatus)
 
   return (
     <div className="space-y-8">
@@ -36,7 +40,13 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="animate-fade-up" style={{ animationDelay: '80ms' }}>
+      {!setupComplete && (
+        <div className="animate-fade-up" style={{ animationDelay: '80ms' }}>
+          <SetupChecklist status={setupStatus} />
+        </div>
+      )}
+
+      <div className="animate-fade-up" style={{ animationDelay: setupComplete ? '80ms' : '160ms' }}>
         <DashboardIntelligence
           synthesis={latest ?? null}
           unprocessedCount={unprocessedCount}
