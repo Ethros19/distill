@@ -46,3 +46,5 @@ specs/
 # Misc
 cookies.txt
 tsconfig.tsbuildinfo
+.aidesigner/*
+!.aidesigner/.gitkeep
