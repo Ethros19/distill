@@ -69,22 +69,73 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // --- Linear as intake source: new issues and comments → inputs ---
-    if (isLinearIntakeEnabled()) {
-      // New issue created
-      if (event.type === 'Issue' && event.action === 'create') {
-        const result = await ingestLinearIssue(event.data)
-        if (result) {
-          return NextResponse.json({ handled: true, action: 'intake_issue', inputId: result })
-        }
+    // --- Linear as intake source ---
+    if (isLinearIntakeEnabled() && event.action === 'create') {
+      let result: string | null = null
+
+      switch (event.type) {
+        case 'Issue':
+          result = await ingestLinearContent({
+            content: formatIssue(event.data),
+            source: 'linear',
+            contributor: (event.data.creatorId as string) ?? 'linear',
+            notes: event.data.url as string | undefined,
+          })
+          break
+
+        case 'Comment':
+          result = await ingestLinearContent({
+            content: formatComment(event.data),
+            source: 'linear',
+            contributor: (event.data.userId as string) ?? 'linear',
+            notes: (event.data.url as string) ?? undefined,
+          })
+          break
+
+        case 'CustomerNeed':
+          result = await ingestLinearContent({
+            content: formatCustomerRequest(event.data),
+            source: 'linear-customer-request',
+            contributor: (event.data.customerName as string) ?? 'customer',
+            notes: event.data.url as string | undefined,
+            isFeedback: true,
+          })
+          break
+
+        case 'ProjectUpdate':
+          result = await ingestLinearContent({
+            content: formatProjectUpdate(event.data),
+            source: 'linear-project-update',
+            contributor: (event.data.userId as string) ?? 'linear',
+            notes: event.data.url as string | undefined,
+          })
+          break
+
+        case 'InitiativeUpdate':
+          result = await ingestLinearContent({
+            content: formatInitiativeUpdate(event.data),
+            source: 'linear-initiative',
+            contributor: (event.data.userId as string) ?? 'linear',
+            notes: event.data.url as string | undefined,
+          })
+          break
+
+        case 'Document':
+          result = await ingestLinearContent({
+            content: formatDocument(event.data),
+            source: 'linear-document',
+            contributor: (event.data.creatorId as string) ?? 'linear',
+            notes: event.data.url as string | undefined,
+          })
+          break
       }
 
-      // New comment on an issue
-      if (event.type === 'Comment' && event.action === 'create') {
-        const result = await ingestLinearComment(event.data)
-        if (result) {
-          return NextResponse.json({ handled: true, action: 'intake_comment', inputId: result })
-        }
+      if (result) {
+        return NextResponse.json({
+          handled: true,
+          action: `intake_${event.type.toLowerCase()}`,
+          inputId: result,
+        })
       }
     }
 
@@ -95,74 +146,83 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function ingestLinearIssue(data: Record<string, unknown>): Promise<string | null> {
+// --- Content formatters ---
+
+function formatIssue(data: Record<string, unknown>): string {
+  const identifier = data.identifier as string
   const title = data.title as string
   const description = (data.description as string) || ''
-  const identifier = data.identifier as string
-  const creatorName = (data.creatorId as string) ?? 'linear'
-  const url = data.url as string
-
-  if (!title) return null
-
-  const content = `[${identifier}] ${title}${description ? `\n\n${description}` : ''}`
-  const contentHash = crypto.createHash('sha256').update(content).digest('hex')
-
-  // Dedup
-  const existing = await db.query.inputs.findFirst({
-    where: eq(inputs.contentHash, contentHash),
-  })
-  if (existing) return null
-
-  const [inserted] = await db
-    .insert(inputs)
-    .values({
-      rawContent: content,
-      source: 'linear',
-      contributor: creatorName,
-      contentHash,
-      status: 'unprocessed',
-      isFeedback: false,
-      notes: url ? `Linear: ${url}` : undefined,
-    })
-    .returning()
-
-  // Async structuring
-  const provider = getLLMProvider()
-  structureInput(content, 'linear', creatorName, provider).then(async (structured) => {
-    await db
-      .update(inputs)
-      .set({
-        summary: structured.summary,
-        type: structured.type,
-        themes: structured.themes,
-        urgency: structured.urgency,
-        confidence: structured.confidence,
-        isFeedback: structured.is_feedback,
-        stream: structured.stream ?? null,
-        status: 'processed',
-      })
-      .where(eq(inputs.id, inserted.id))
-  }).catch((error) => {
-    console.error('Structuring failed for Linear issue input', inserted.id, error)
-  })
-
-  return inserted.id
+  if (!title) return ''
+  return `[${identifier}] ${title}${description ? `\n\n${description}` : ''}`
 }
 
-async function ingestLinearComment(data: Record<string, unknown>): Promise<string | null> {
+function formatComment(data: Record<string, unknown>): string {
   const body = data.body as string
-  const issueId = (data.issue as Record<string, unknown>)?.id as string | undefined
-  const issueIdentifier = (data.issue as Record<string, unknown>)?.identifier as string | undefined
-  const userId = (data.userId as string) ?? 'linear'
-  const url = data.url as string
+  const issue = data.issue as Record<string, unknown> | undefined
+  const identifier = issue?.identifier as string | undefined
+  if (!body?.trim()) return ''
+  const prefix = identifier ? `[${identifier}] Comment` : 'Linear comment'
+  return `${prefix}:\n\n${body}`
+}
 
-  if (!body || !body.trim()) return null
+function formatCustomerRequest(data: Record<string, unknown>): string {
+  const title = (data.title as string) || ''
+  const body = (data.body as string) || ''
+  const customerName = (data.customerName as string) || 'Unknown customer'
+  const priority = data.priority as number | undefined
+  if (!title && !body) return ''
+  const parts = [`Customer request from ${customerName}`]
+  if (priority) parts[0] += ` (priority: ${priority})`
+  if (title) parts.push(title)
+  if (body) parts.push(body)
+  return parts.join('\n\n')
+}
 
-  const prefix = issueIdentifier ? `[${issueIdentifier}] Comment` : 'Linear comment'
-  const content = `${prefix}:\n\n${body}`
-  const contentHash = crypto.createHash('sha256').update(content).digest('hex')
+function formatProjectUpdate(data: Record<string, unknown>): string {
+  const body = (data.body as string) || ''
+  const project = data.project as Record<string, unknown> | undefined
+  const projectName = (project?.name as string) || 'Unknown project'
+  const health = data.health as string | undefined
+  if (!body) return ''
+  const header = health
+    ? `Project update: ${projectName} (health: ${health})`
+    : `Project update: ${projectName}`
+  return `${header}\n\n${body}`
+}
 
-  // Dedup
+function formatInitiativeUpdate(data: Record<string, unknown>): string {
+  const body = (data.body as string) || ''
+  const initiative = data.initiative as Record<string, unknown> | undefined
+  const name = (initiative?.name as string) || 'Unknown initiative'
+  if (!body) return ''
+  return `Initiative update: ${name}\n\n${body}`
+}
+
+function formatDocument(data: Record<string, unknown>): string {
+  const title = (data.title as string) || ''
+  const content = (data.content as string) || ''
+  if (!title && !content) return ''
+  const parts: string[] = []
+  if (title) parts.push(`Linear document: ${title}`)
+  if (content) parts.push(content)
+  return parts.join('\n\n')
+}
+
+// --- Shared ingest logic ---
+
+interface IngestParams {
+  content: string
+  source: string
+  contributor: string
+  notes?: string
+  isFeedback?: boolean
+}
+
+async function ingestLinearContent(params: IngestParams): Promise<string | null> {
+  if (!params.content) return null
+
+  const contentHash = crypto.createHash('sha256').update(params.content).digest('hex')
+
   const existing = await db.query.inputs.findFirst({
     where: eq(inputs.contentHash, contentHash),
   })
@@ -171,35 +231,36 @@ async function ingestLinearComment(data: Record<string, unknown>): Promise<strin
   const [inserted] = await db
     .insert(inputs)
     .values({
-      rawContent: content,
-      source: 'linear',
-      contributor: userId,
+      rawContent: params.content,
+      source: params.source,
+      contributor: params.contributor,
       contentHash,
       status: 'unprocessed',
-      isFeedback: false,
-      notes: url ? `Linear: ${url}` : issueId ? `Linear issue: ${issueId}` : undefined,
+      isFeedback: params.isFeedback ?? false,
+      notes: params.notes ? `Linear: ${params.notes}` : undefined,
     })
     .returning()
 
-  // Async structuring
   const provider = getLLMProvider()
-  structureInput(content, 'linear', userId, provider).then(async (structured) => {
-    await db
-      .update(inputs)
-      .set({
-        summary: structured.summary,
-        type: structured.type,
-        themes: structured.themes,
-        urgency: structured.urgency,
-        confidence: structured.confidence,
-        isFeedback: structured.is_feedback,
-        stream: structured.stream ?? null,
-        status: 'processed',
-      })
-      .where(eq(inputs.id, inserted.id))
-  }).catch((error) => {
-    console.error('Structuring failed for Linear comment input', inserted.id, error)
-  })
+  structureInput(params.content, params.source, params.contributor, provider)
+    .then(async (structured) => {
+      await db
+        .update(inputs)
+        .set({
+          summary: structured.summary,
+          type: structured.type,
+          themes: structured.themes,
+          urgency: structured.urgency,
+          confidence: structured.confidence,
+          isFeedback: structured.is_feedback,
+          stream: structured.stream ?? null,
+          status: 'processed',
+        })
+        .where(eq(inputs.id, inserted.id))
+    })
+    .catch((error) => {
+      console.error(`Structuring failed for ${params.source} input`, inserted.id, error)
+    })
 
   return inserted.id
 }
