@@ -1,7 +1,50 @@
+import crypto from 'crypto'
+import type { SignalStatus } from './schema'
+
 const LINEAR_API_URL = 'https://api.linear.app/graphql'
 
 export function isLinearConfigured(): boolean {
   return !!(process.env.LINEAR_API_KEY && process.env.LINEAR_TEAM_ID)
+}
+
+export function isLinearWebhookConfigured(): boolean {
+  return !!process.env.LINEAR_WEBHOOK_SECRET
+}
+
+export function isLinearIntakeEnabled(): boolean {
+  return !!(process.env.LINEAR_INTAKE_ENABLED === 'true' && isLinearConfigured())
+}
+
+/**
+ * Verify Linear webhook signature (HMAC-SHA256).
+ * Linear sends the signature in the `linear-signature` header.
+ */
+export function verifyLinearWebhook(body: string, signature: string): boolean {
+  const secret = process.env.LINEAR_WEBHOOK_SECRET
+  if (!secret) return false
+  const hmac = crypto.createHmac('sha256', secret).update(body).digest('hex')
+  return crypto.timingSafeEqual(Buffer.from(hmac), Buffer.from(signature))
+}
+
+/**
+ * Map Linear workflow state type to Distill signal status.
+ * Linear states: backlog, unstarted, started, completed, cancelled
+ */
+export function mapLinearStateToSignalStatus(
+  stateType: string,
+): SignalStatus | null {
+  switch (stateType) {
+    case 'backlog':
+    case 'unstarted':
+      return 'acknowledged'
+    case 'started':
+      return 'in_progress'
+    case 'completed':
+    case 'cancelled':
+      return 'resolved'
+    default:
+      return null
+  }
 }
 
 interface CreateIssueParams {

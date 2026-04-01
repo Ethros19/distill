@@ -43,6 +43,7 @@ export default async function ThemeDetailPage({
       themes: signals.themes,
       strength: signals.strength,
       status: signals.status,
+      linearIssueId: signals.linearIssueId,
       linearIssueUrl: signals.linearIssueUrl,
       notes: signals.notes,
     })

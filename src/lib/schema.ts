@@ -86,6 +86,7 @@ export const signals = pgTable(
     themes: jsonb('themes').$type<string[]>(),
     strength: smallint('strength').notNull(),
     status: varchar('status', { length: 20 }).notNull().default('new'),
+    linearIssueId: varchar('linear_issue_id', { length: 50 }),
     linearIssueUrl: text('linear_issue_url'),
     notes: text('notes'),
   },
@@ -93,6 +94,7 @@ export const signals = pgTable(
     index('signals_synthesis_id_idx').on(table.synthesisId),
     index('signals_status_idx').on(table.status),
     index('signals_strength_idx').on(table.strength),
+    index('signals_linear_issue_id_idx').on(table.linearIssueId),
   ],
 )
 

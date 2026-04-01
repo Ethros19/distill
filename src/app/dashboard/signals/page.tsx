@@ -50,6 +50,7 @@ export default async function SignalsPage({
         themes: signals.themes,
         strength: signals.strength,
         status: signals.status,
+        linearIssueId: signals.linearIssueId,
         linearIssueUrl: signals.linearIssueUrl,
         notes: signals.notes,
       })

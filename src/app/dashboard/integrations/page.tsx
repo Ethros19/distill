@@ -13,6 +13,8 @@ interface Integration {
 
 function getIntegrations(): Integration[] {
   const hasLinear = !!(process.env.LINEAR_API_KEY && process.env.LINEAR_TEAM_ID)
+  const hasLinearWebhook = !!process.env.LINEAR_WEBHOOK_SECRET
+  const hasLinearIntake = process.env.LINEAR_INTAKE_ENABLED === 'true' && hasLinear
   const hasResend = !!process.env.RESEND_API_KEY
   const hasDigest = !!(process.env.RESEND_API_KEY && process.env.DIGEST_RECIPIENTS)
   const llmProvider = process.env.LLM_PROVIDER || 'anthropic'
@@ -22,11 +24,25 @@ function getIntegrations(): Integration[] {
 
   return [
     {
-      name: 'Linear',
-      description: 'Push signals to Linear as issues. One-way: signal → issue.',
+      name: 'Linear (Push)',
+      description: 'Push signals to Linear as issues. Creates a linked issue from any signal detail page.',
       status: hasLinear ? 'connected' : 'not_configured',
       category: 'delivery',
       configKeys: ['LINEAR_API_KEY', 'LINEAR_TEAM_ID'],
+    },
+    {
+      name: 'Linear (Two-Way Sync)',
+      description: 'Sync issue status changes back to signals via webhook. When an issue moves to "Done" in Linear, the signal resolves in Distill.',
+      status: hasLinearWebhook ? 'connected' : 'not_configured',
+      category: 'delivery',
+      configKeys: ['LINEAR_WEBHOOK_SECRET'],
+    },
+    {
+      name: 'Linear (Intake Source)',
+      description: 'Import new Linear issues and comments as inputs. Surface existing roadmap items alongside feedback signals.',
+      status: hasLinearIntake ? 'connected' : 'not_configured',
+      category: 'intake',
+      configKeys: ['LINEAR_INTAKE_ENABLED'],
     },
     {
       name: 'Resend (Email Intake)',
@@ -68,18 +84,6 @@ function getIntegrations(): Integration[] {
       description: 'Chat with your Distill data from Claude Desktop. Read-only access to signals, themes, and inputs.',
       status: 'connected',
       category: 'tooling',
-    },
-    {
-      name: 'Linear (Two-Way Sync)',
-      description: 'Sync issue status changes back to signals via webhook. Keep both systems in sync.',
-      status: 'planned',
-      category: 'delivery',
-    },
-    {
-      name: 'Linear (Signal Source)',
-      description: 'Import Linear issues and comments as inputs. Surface existing roadmap items alongside new signals.',
-      status: 'planned',
-      category: 'intake',
     },
     {
       name: 'Slack',

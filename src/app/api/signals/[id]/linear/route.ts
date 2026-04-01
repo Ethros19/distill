@@ -82,10 +82,11 @@ export async function POST(
       )
     }
 
-    // Update signal with Linear URL and auto-transition to in_progress
+    // Update signal with Linear issue ID/URL and auto-transition to in_progress
     const [updated] = await db
       .update(signals)
       .set({
+        linearIssueId: result.issueId,
         linearIssueUrl: result.issueUrl,
         status: 'in_progress',
       })
