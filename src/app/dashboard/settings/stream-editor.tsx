@@ -21,6 +21,8 @@ export function StreamEditor({ initialStreams }: { initialStreams: StreamConfig[
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
+  const [dragIdx, setDragIdx] = useState<number | null>(null)
+  const [dropIdx, setDropIdx] = useState<number | null>(null)
 
   const dirty = JSON.stringify(streams) !== JSON.stringify(initialStreams)
 
@@ -43,16 +45,23 @@ export function StreamEditor({ initialStreams }: { initialStreams: StreamConfig[
     setSaved(false)
   }
 
-  function moveStream(idx: number, dir: -1 | 1) {
-    const target = idx + dir
-    if (target < 0 || target >= streams.length) return
-    setStreams((prev) => {
-      const next = [...prev]
-      ;[next[idx], next[target]] = [next[target], next[idx]]
-      return next
-    })
-    setExpandedIdx(target)
-    setSaved(false)
+  function handleDragEnd() {
+    if (dragIdx !== null && dropIdx !== null && dragIdx !== dropIdx) {
+      setStreams((prev) => {
+        const next = [...prev]
+        const [moved] = next.splice(dragIdx, 1)
+        next.splice(dropIdx, 0, moved)
+        return next
+      })
+      if (expandedIdx !== null) {
+        if (expandedIdx === dragIdx) setExpandedIdx(dropIdx)
+        else if (dragIdx < expandedIdx && dropIdx >= expandedIdx) setExpandedIdx(expandedIdx - 1)
+        else if (dragIdx > expandedIdx && dropIdx <= expandedIdx) setExpandedIdx(expandedIdx + 1)
+      }
+      setSaved(false)
+    }
+    setDragIdx(null)
+    setDropIdx(null)
   }
 
   async function save() {
@@ -93,31 +102,62 @@ export function StreamEditor({ initialStreams }: { initialStreams: StreamConfig[
       <div className="space-y-2">
         {streams.map((stream, idx) => {
           const isExpanded = expandedIdx === idx
+          const isDragging = dragIdx === idx
+          const isDropTarget = dropIdx === idx && dragIdx !== idx
           return (
             <div
               key={idx}
-              className="rounded-lg border border-edge bg-canvas"
+              draggable
+              onDragStart={(e) => {
+                setDragIdx(idx)
+                e.dataTransfer.effectAllowed = 'move'
+              }}
+              onDragOver={(e) => {
+                e.preventDefault()
+                e.dataTransfer.dropEffect = 'move'
+                setDropIdx(idx)
+              }}
+              onDragLeave={() => { if (dropIdx === idx) setDropIdx(null) }}
+              onDrop={(e) => { e.preventDefault(); handleDragEnd() }}
+              onDragEnd={handleDragEnd}
+              className={`rounded-lg border bg-canvas transition-all ${
+                isDragging ? 'opacity-40 border-edge' :
+                isDropTarget ? 'border-accent shadow-sm' :
+                'border-edge'
+              }`}
             >
               {/* Collapsed header */}
-              <button
-                onClick={() => setExpandedIdx(isExpanded ? null : idx)}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left"
-              >
-                <span
-                  className="h-3 w-3 shrink-0 rounded-full"
-                  style={{ backgroundColor: stream.hex }}
-                />
-                <span className="flex-1 text-sm font-medium text-ink">
-                  {stream.label || stream.id || 'New stream'}
-                </span>
-                <span className="text-xs text-muted">{stream.id || '...'}</span>
-                <svg
-                  width="12" height="12" viewBox="0 0 12 12"
-                  className={`text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+              <div className="flex w-full items-center gap-1.5 pr-4">
+                <div
+                  className="flex cursor-grab items-center self-stretch px-2 text-muted/50 hover:text-muted active:cursor-grabbing"
+                  title="Drag to reorder"
                 >
-                  <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-                </svg>
-              </button>
+                  <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
+                    <circle cx="3" cy="3" r="1.25" /><circle cx="7" cy="3" r="1.25" />
+                    <circle cx="3" cy="7" r="1.25" /><circle cx="7" cy="7" r="1.25" />
+                    <circle cx="3" cy="11" r="1.25" /><circle cx="7" cy="11" r="1.25" />
+                  </svg>
+                </div>
+                <button
+                  onClick={() => setExpandedIdx(isExpanded ? null : idx)}
+                  className="flex flex-1 items-center gap-3 py-3 text-left"
+                >
+                  <span
+                    className="h-3 w-3 shrink-0 rounded-full"
+                    style={{ backgroundColor: stream.hex }}
+                  />
+                  <span className="flex-1 text-sm font-medium text-ink">
+                    {stream.label || stream.id || 'New stream'}
+                  </span>
+                  <span className="text-xs text-muted">{stream.id || '...'}</span>
+                  <svg
+                    width="12" height="12" viewBox="0 0 12 12"
+                    className={`text-muted transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                  >
+                    <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </div>
 
               {/* Expanded editor */}
               {isExpanded && (
@@ -223,22 +263,7 @@ export function StreamEditor({ initialStreams }: { initialStreams: StreamConfig[
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 pt-1">
-                    <button
-                      onClick={() => moveStream(idx, -1)}
-                      disabled={idx === 0}
-                      className="rounded px-2 py-1 text-xs text-muted hover:bg-panel-alt hover:text-ink disabled:opacity-30"
-                    >
-                      Move up
-                    </button>
-                    <button
-                      onClick={() => moveStream(idx, 1)}
-                      disabled={idx === streams.length - 1}
-                      className="rounded px-2 py-1 text-xs text-muted hover:bg-panel-alt hover:text-ink disabled:opacity-30"
-                    >
-                      Move down
-                    </button>
-                    <div className="flex-1" />
+                  <div className="flex items-center justify-end pt-1">
                     <button
                       onClick={() => removeStream(idx)}
                       className="rounded px-2 py-1 text-xs text-sig-high hover:bg-sig-high/10"
