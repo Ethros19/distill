@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import { getRadarData } from './lib/radar-data'
 import { RadarGrid } from './components/radar-grid'
-import { PINNED_STREAM } from '@/lib/stream-utils'
+import { getStreams } from '@/lib/stream-config'
 import type { SerializedStreamBrief } from './components/stream-briefing'
 import type { Metadata } from 'next'
 
@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 }
 
 /** Pin the configured stream first, then sort remaining by activity */
-function defaultOrder(briefs: SerializedStreamBrief[]): SerializedStreamBrief[] {
-  const pinned = PINNED_STREAM ? briefs.find((b) => b.stream === PINNED_STREAM) : null
+function defaultOrder(briefs: SerializedStreamBrief[], pinnedStream: string | null): SerializedStreamBrief[] {
+  const pinned = pinnedStream ? briefs.find((b) => b.stream === pinnedStream) : null
   const rest = briefs
-    .filter((b) => b.stream !== PINNED_STREAM)
+    .filter((b) => b.stream !== pinnedStream)
     .sort((a, b) => {
       if (b.articles.length !== a.articles.length) return b.articles.length - a.articles.length
       return b.inputCount - a.inputCount
@@ -24,7 +24,8 @@ function defaultOrder(briefs: SerializedStreamBrief[]): SerializedStreamBrief[] 
 }
 
 async function RadarContent() {
-  const briefs = await getRadarData()
+  const [briefs, streams] = await Promise.all([getRadarData(), getStreams()])
+  const pinnedStream = streams.find((s) => s.pinFirst)?.id ?? null
 
   // Serialize for the client component (Date → ISO string)
   const serialized: SerializedStreamBrief[] = briefs.map((b) => ({
@@ -35,7 +36,7 @@ async function RadarContent() {
     })),
   }))
 
-  const ordered = defaultOrder(serialized)
+  const ordered = defaultOrder(serialized, pinnedStream)
 
   return <RadarGrid briefs={ordered} />
 }

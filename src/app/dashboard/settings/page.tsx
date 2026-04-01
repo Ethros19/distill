@@ -3,14 +3,16 @@ export const dynamic = 'force-dynamic'
 import { db } from '@/lib/db'
 import { settings } from '@/lib/schema'
 import { eq } from 'drizzle-orm'
+import { getStreams } from '@/lib/stream-config'
 import { ProductContextEditor } from './product-context-editor'
+import { StreamEditor } from './stream-editor'
 import Link from 'next/link'
 
 export default async function SettingsPage() {
-  const [row] = await db
-    .select()
-    .from(settings)
-    .where(eq(settings.key, 'product_context'))
+  const [[row], streams] = await Promise.all([
+    db.select().from(settings).where(eq(settings.key, 'product_context')),
+    getStreams(),
+  ])
 
   return (
     <div className="space-y-6">
@@ -22,6 +24,19 @@ export default async function SettingsPage() {
         >
           &larr; Back to dashboard
         </Link>
+      </div>
+
+      <div className="rounded-xl border border-edge bg-panel p-6">
+        <h3 className="text-sm font-medium uppercase tracking-wider text-dim">
+          Intelligence Streams
+        </h3>
+        <p className="mt-1 text-xs text-muted">
+          Define your domain streams. Each stream represents a category of intelligence
+          that Distill tracks and synthesizes. The AI uses stream descriptions to classify incoming content.
+        </p>
+        <div className="mt-4">
+          <StreamEditor initialStreams={streams} />
+        </div>
       </div>
 
       <div className="rounded-xl border border-edge bg-panel p-6">

@@ -1,24 +1,24 @@
 import Link from 'next/link'
-import { STREAM_VALUES, STREAM_LABELS } from '@/lib/stream-utils'
 
 interface StreamSwitcherTabsProps {
   current: string
+  streams: { id: string; label: string }[]
 }
 
-export function StreamSwitcherTabs({ current }: StreamSwitcherTabsProps) {
+export function StreamSwitcherTabs({ current, streams }: StreamSwitcherTabsProps) {
   return (
     <div className="flex flex-wrap gap-1 rounded-lg bg-panel-alt p-1">
-      {STREAM_VALUES.map((stream) => (
+      {streams.map((stream) => (
         <Link
-          key={stream}
-          href={`/dashboard/streams/${stream}`}
+          key={stream.id}
+          href={`/dashboard/streams/${stream.id}`}
           className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-            stream === current
+            stream.id === current
               ? 'bg-panel text-ink shadow-sm'
               : 'text-muted hover:text-ink'
           }`}
         >
-          {STREAM_LABELS[stream]}
+          {stream.label}
         </Link>
       ))}
     </div>

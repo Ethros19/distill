@@ -4,9 +4,13 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Input } from '@/lib/schema'
 import { formatTimeAgo, statusBadge, typeBadge, typeLabel, streamBadgeStyle, streamLabel } from './format-utils'
-import { STREAM_VALUES, STREAM_LABELS } from '@/lib/stream-utils'
 
-export function InputRow({ input }: { input: Input }) {
+interface StreamOption {
+  id: string
+  label: string
+}
+
+export function InputRow({ input, streams }: { input: Input; streams?: StreamOption[] }) {
   const [showConfirm, setShowConfirm] = useState(false)
   const [showForceDelete, setShowForceDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -266,9 +270,9 @@ export function InputRow({ input }: { input: Input }) {
             style={currentStream ? streamBadgeStyle(currentStream) : { backgroundColor: 'var(--panel-alt)', color: 'var(--muted)' }}
           >
             <option value="">Set stream...</option>
-            {STREAM_VALUES.map((s) => (
-              <option key={s} value={s}>
-                {STREAM_LABELS[s]}
+            {(streams ?? []).map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
               </option>
             ))}
           </select>

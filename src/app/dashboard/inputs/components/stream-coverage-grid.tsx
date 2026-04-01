@@ -1,14 +1,12 @@
 import { db } from '@/lib/db'
 import { feedSources, inputs } from '@/lib/schema'
 import { eq, count, sql } from 'drizzle-orm'
-import {
-  STREAM_VALUES,
-  STREAM_LABELS,
-  CATEGORY_TO_STREAM,
-  streamHex,
-} from '@/lib/stream-utils'
+import { getStreams, deriveStreamMaps, hexFromStreams } from '@/lib/stream-config'
 
 export async function StreamCoverageGrid() {
+  const streamConfigs = await getStreams()
+  const { values: STREAM_VALUES, labels: STREAM_LABELS, categoryMap: CATEGORY_TO_STREAM } = deriveStreamMaps(streamConfigs)
+
   // Query enabled source counts by category and input counts by stream in parallel
   const [categoryCounts, streamInputCounts] = await Promise.all([
     db
@@ -51,7 +49,7 @@ export async function StreamCoverageGrid() {
       {STREAM_VALUES.map((stream) => {
         const sourceCount = sourcesByStream[stream] || 0
         const inputCount = inputsByStream[stream] || 0
-        const hex = streamHex(stream)
+        const hex = hexFromStreams(streamConfigs, stream)
 
         return (
           <div

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { STREAM_VALUES, STREAM_LABELS } from '@/lib/stream-utils'
+import { STREAM_LABELS } from '@/lib/stream-utils'
 import type { StreamIntelligenceData, TrendDirection } from '../lib/types'
 import { StreamVolumeChart } from './stream-volume-chart'
 import { StreamThemeList } from './stream-theme-list'
@@ -43,9 +43,8 @@ export function StreamIntelligenceGrid({
 
       {/* Per-stream cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {STREAM_VALUES.map((stream) => {
-          const label =
-            STREAM_LABELS[stream as keyof typeof STREAM_LABELS] ?? stream
+        {data.volume.map(({ stream }) => {
+          const label = STREAM_LABELS[stream] ?? stream
           const volume = data.volume.find((v) => v.stream === stream)
           const themes = data.themes.filter((t) => t.stream === stream)
           const maxFreq = themes.reduce(

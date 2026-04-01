@@ -1,7 +1,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { STREAM_LABELS, isValidStream } from '@/lib/stream-utils'
+import { getStreams, deriveStreamMaps } from '@/lib/stream-config'
 import { getStreamDetail } from './lib/stream-detail'
 import { StreamDetailPanel } from './components/stream-detail-panel'
 import { StreamSwitcherTabs } from '../components/stream-switcher-tabs'
@@ -13,15 +13,17 @@ export async function generateMetadata({
   params: Promise<{ stream: string }>
 }): Promise<Metadata> {
   const { stream } = await params
-  if (!isValidStream(stream)) return { title: 'Stream Not Found | Distill' }
-  return { title: `${STREAM_LABELS[stream]} | Distill` }
+  const streams = await getStreams()
+  const { labels } = deriveStreamMaps(streams)
+  if (!labels[stream]) return { title: 'Stream Not Found | Distill' }
+  return { title: `${labels[stream]} | Distill` }
 }
 
 export const dynamic = 'force-dynamic'
 
-async function StreamDetailContent({ stream }: { stream: string }) {
+async function StreamDetailContent({ stream, label }: { stream: string; label: string }) {
   const data = await getStreamDetail(stream)
-  return <StreamDetailPanel label={STREAM_LABELS[stream]} data={data} />
+  return <StreamDetailPanel label={label} data={data} />
 }
 
 function StreamDetailSkeleton() {
@@ -43,7 +45,9 @@ export default async function StreamDetailPage({
   params: Promise<{ stream: string }>
 }) {
   const { stream } = await params
-  if (!isValidStream(stream)) notFound()
+  const streamConfigs = await getStreams()
+  const { labels } = deriveStreamMaps(streamConfigs)
+  if (!labels[stream]) notFound()
 
   return (
     <div className="space-y-6">
@@ -55,13 +59,16 @@ export default async function StreamDetailPage({
           &larr; Streams
         </Link>
         <span className="text-muted">/</span>
-        <span className="font-medium text-ink">{STREAM_LABELS[stream]}</span>
+        <span className="font-medium text-ink">{labels[stream]}</span>
       </div>
 
-      <StreamSwitcherTabs current={stream} />
+      <StreamSwitcherTabs
+        current={stream}
+        streams={streamConfigs.map((s) => ({ id: s.id, label: s.label }))}
+      />
 
       <Suspense fallback={<StreamDetailSkeleton />}>
-        <StreamDetailContent stream={stream} />
+        <StreamDetailContent stream={stream} label={labels[stream]} />
       </Suspense>
     </div>
   )

@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
 import { sql, desc, gte, eq, and } from 'drizzle-orm'
-import { STREAM_VALUES } from '@/lib/stream-utils'
+import { getStreams } from '@/lib/stream-config'
 import type { StreamVolume, StreamTheme, StreamArticle, StreamIntelligenceData, CrossStreamTheme, TrendDirection } from './types'
 
 // ---------------------------------------------------------------------------
@@ -36,13 +36,15 @@ export async function queryStreamVolume(since: Date): Promise<StreamVolume[]> {
     .groupBy(inputs.stream)
     .orderBy(desc(sql`count(*)`))
 
+  const streamConfigs = await getStreams()
+
   // Build a map for O(1) lookup, then ensure every canonical stream appears
   const countMap = new Map<string, number>()
   for (const row of rows) {
     if (row.stream) countMap.set(row.stream, row.count)
   }
 
-  return STREAM_VALUES.map((stream) => ({
+  return streamConfigs.map(({ id: stream }) => ({
     stream,
     count: countMap.get(stream) ?? 0,
   }))
@@ -75,6 +77,8 @@ export async function queryStreamTrend(windowDays: number): Promise<StreamVolume
     GROUP BY stream
   `)
 
+  const streamConfigs = await getStreams()
+
   const countMap = new Map<string, { current: number; prior: number }>()
   for (const row of (rows as unknown as { rows: Array<{ stream: string; current_count: number; prior_count: number }> }).rows) {
     if (row.stream) {
@@ -82,7 +86,7 @@ export async function queryStreamTrend(windowDays: number): Promise<StreamVolume
     }
   }
 
-  return STREAM_VALUES.map((stream) => {
+  return streamConfigs.map(({ id: stream }) => {
     const data = countMap.get(stream)
     const current = data?.current ?? 0
     const prior = data?.prior ?? 0

@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
 import { sql } from 'drizzle-orm'
-import { STREAM_VALUES, STREAM_LABELS } from '@/lib/stream-utils'
+import { getStreams, deriveStreamMaps } from '@/lib/stream-config'
 import { trendDirection } from '../../streams/lib/stream-intelligence'
 import type { TrendDirection } from '../../streams/lib/types'
 
@@ -208,8 +208,13 @@ export async function getRadarData(windowDays = 14): Promise<StreamBrief[]> {
     articleMap.set(row.stream, arr)
   }
 
+  // Load stream config from DB
+  const streams = await getStreams()
+  const { labels } = deriveStreamMaps(streams)
+
   // Build base briefs (without synopsis)
-  const baseBriefs = STREAM_VALUES.map((stream) => {
+  const baseBriefs = streams.map((streamCfg) => {
+    const stream = streamCfg.id
     const vol = volumeMap.get(stream)
     const current = vol?.current ?? 0
     const prior = vol?.prior ?? 0
@@ -217,7 +222,7 @@ export async function getRadarData(windowDays = 14): Promise<StreamBrief[]> {
 
     return {
       stream,
-      label: STREAM_LABELS[stream],
+      label: labels[stream],
       trend: (total < 5 ? 'stable' : trendDirection(current, prior)) as TrendDirection,
       inputCount: total,
       priorCount: prior,

@@ -6,7 +6,8 @@ import { inputs } from '@/lib/schema'
 import { eq, desc, count, and, or, ilike, inArray, sql } from 'drizzle-orm'
 import Link from 'next/link'
 import { InputRow } from '../components/input-row'
-import { STREAM_VALUES, STREAM_LABELS, isValidStream } from '@/lib/stream-utils'
+import { isValidStream } from '@/lib/stream-utils'
+import { getStreams, deriveStreamMaps } from '@/lib/stream-config'
 import { SourceHealthPanel } from './components/source-health-panel'
 import { InputSearch } from './components/input-search'
 
@@ -21,9 +22,12 @@ export default async function InputsPage({
   const pageNum = Math.max(1, parseInt(page || '1', 10) || 1)
   const offset = (pageNum - 1) * PAGE_SIZE
 
+  const streamConfigs = await getStreams()
+  const { values: STREAM_VALUES, labels: STREAM_LABELS } = deriveStreamMaps(streamConfigs)
+
   const validStatus = status === 'unprocessed' || status === 'processed' ? status : undefined
   const isInternal = stream === 'internal'
-  const validStream = !isInternal && isValidStream(stream ?? '') ? stream : undefined
+  const validStream = !isInternal && STREAM_VALUES.includes(stream ?? '') ? stream : undefined
   const searchQuery = q?.trim() || undefined
 
   // Fetch inputs and count in parallel
@@ -197,7 +201,7 @@ export default async function InputsPage({
         <div className="rounded-xl border border-edge bg-panel p-5">
           <ul className="divide-y divide-edge-dim">
             {rows.map((input) => (
-              <InputRow key={input.id} input={input} />
+              <InputRow key={input.id} input={input} streams={streamConfigs.map(s => ({ id: s.id, label: s.label }))} />
             ))}
           </ul>
         </div>
