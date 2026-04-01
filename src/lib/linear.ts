@@ -35,12 +35,12 @@ const CREATE_ISSUE_MUTATION = `
 export async function createLinearIssue(
   params: CreateIssueParams,
 ): Promise<CreateIssueResult> {
-  const apiKey = process.env.LINEAR_API_KEY
+  const apiKey = process.env.LINEAR_API_KEY?.trim()
   if (!apiKey) {
     return { success: false, error: 'LINEAR_API_KEY is not configured' }
   }
 
-  const teamId = params.teamId ?? process.env.LINEAR_TEAM_ID
+  const teamId = (params.teamId ?? process.env.LINEAR_TEAM_ID)?.trim()
   if (!teamId) {
     return { success: false, error: 'LINEAR_TEAM_ID is not configured' }
   }
