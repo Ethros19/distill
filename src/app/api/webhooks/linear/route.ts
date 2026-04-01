@@ -9,7 +9,7 @@ import {
   isLinearIntakeEnabled,
 } from '@/lib/linear'
 import { structureInput } from '@/lib/structurer'
-import { getLLMProvider } from '@/lib/llm/provider-factory'
+import { getLLMProviderAsync } from '@/lib/llm/provider-factory'
 
 export async function POST(request: NextRequest) {
   try {
@@ -241,7 +241,7 @@ async function ingestLinearContent(params: IngestParams): Promise<string | null>
     })
     .returning()
 
-  const provider = getLLMProvider()
+  const provider = await getLLMProviderAsync()
   structureInput(params.content, params.source, params.contributor, provider)
     .then(async (structured) => {
       await db

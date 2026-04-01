@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { inputs } from '@/lib/schema'
 import { structureInput } from '@/lib/structurer'
-import { getLLMProvider } from '@/lib/llm/provider-factory'
+import { getLLMProviderAsync } from '@/lib/llm/provider-factory'
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     const inputId = result[0].id
 
     // Fire async structuring (non-blocking)
-    const provider = getLLMProvider()
+    const provider = await getLLMProviderAsync()
     structureInput(content, source, contributor, provider)
       .then(async (structured) => {
         await db

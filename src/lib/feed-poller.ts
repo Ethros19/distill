@@ -4,7 +4,7 @@ import { eq, inArray } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { feedSources, inputs, type FeedSource } from '@/lib/schema'
 import { structureInput } from '@/lib/structurer'
-import { getLLMProvider } from '@/lib/llm/provider-factory'
+import { getLLMProviderAsync } from '@/lib/llm/provider-factory'
 import { categoryToStream } from '@/lib/stream-utils'
 
 const parser = new Parser()
@@ -91,7 +91,7 @@ export async function pollFeed(feedSource: FeedSource): Promise<number> {
   newCount = inserted.length
 
   // Fire async structuring for all new items (non-blocking)
-  const provider = getLLMProvider()
+  const provider = await getLLMProviderAsync()
   for (const row of inserted) {
     structureInput(row.rawContent, 'rss', feedSource.name, provider)
       .then(async (structured) => {

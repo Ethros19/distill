@@ -80,5 +80,6 @@ export const config = {
     '/api/themes/:path*',
     '/api/digests/:path*',
     '/api/admin/feeds/:path*',
+    '/api/settings/:path*',
   ],
 }

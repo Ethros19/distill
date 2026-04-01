@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
+import { ApiKeyForm } from './api-key-form'
 
 interface Integration {
   name: string
@@ -212,6 +213,13 @@ export default function IntegrationsPage() {
           <h3 className="mb-3 text-xs font-medium uppercase tracking-wider text-dim">
             {group.label}
           </h3>
+
+          {group.category === 'ai' && (
+            <div className="mb-2">
+              <ApiKeyForm envProvider={process.env.LLM_PROVIDER || 'anthropic'} />
+            </div>
+          )}
+
           <div className="space-y-2">
             {group.items.map((integration) => (
               <div

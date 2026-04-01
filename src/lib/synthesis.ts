@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { inputs, syntheses, signals, settings } from '@/lib/schema'
-import { getLLMProvider } from '@/lib/llm/provider-factory'
+import { getLLMProviderAsync } from '@/lib/llm/provider-factory'
 import type { SynthesisInput, LLMSignal, PriorSignal } from '@/lib/llm/types'
 import { and, eq, gte, lt, ne, inArray, desc } from 'drizzle-orm'
 import { STREAM_VALUES, HIGH_VOLUME_STREAMS } from '@/lib/stream-utils'
@@ -145,7 +145,7 @@ export async function runSynthesis(options?: {
   const industryInputIds = industryInputs.map(i => i.id)
 
   // Call LLM provider — pass industry inputs as 4th arg (empty array is fine, not a skip condition)
-  const llmSignals: LLMSignal[] = await getLLMProvider().synthesize(synthesisInputs, priorSignals, productContext, industryInputs)
+  const llmSignals: LLMSignal[] = await (await getLLMProviderAsync()).synthesize(synthesisInputs, priorSignals, productContext, industryInputs)
 
   // Insert synthesis record
   const [synthesisRecord] = await db
@@ -177,7 +177,7 @@ export async function runSynthesis(options?: {
 
   // Generate synthesis narrative (supplementary — failures do not break the run)
   try {
-    const narrative = await getLLMProvider().generateNarrative(llmSignals, industryInputs, productContext)
+    const narrative = await (await getLLMProviderAsync()).generateNarrative(llmSignals, industryInputs, productContext)
     await db
       .update(syntheses)
       .set({ digestMarkdown: narrative })
