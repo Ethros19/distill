@@ -33,10 +33,13 @@ Thumbs.db
 .mcp.local.json
 
 # Drizzle
-migrations/meta/
+migrations/
 
 # Test coverage
 coverage/
+
+# Planning
+specs/
 
 .vbw-planning/
 

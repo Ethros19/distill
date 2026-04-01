@@ -320,9 +320,7 @@ export const streams: StreamConfig[] = [
 ## Database
 
 ```bash
-npm run db:push      # Push schema directly (initial setup)
-npm run db:generate  # Generate migration from schema changes
-npm run db:migrate   # Run pending migrations
+npm run db:push      # Push schema directly (initial setup + updates)
 npm run db:studio    # Open Drizzle Studio GUI
 ```
 
@@ -348,7 +346,6 @@ distill/
 │   └── middleware.ts           # Auth guard (protects dashboard + API routes)
 ├── mcp-server/                 # MCP server for Claude Desktop integration
 ├── distill.config.ts           # Default stream taxonomy
-├── migrations/                 # Drizzle database migrations
 ├── scripts/
 │   └── hash-password.ts        # Generate bcrypt password hash
 ├── tests/                      # Vitest test files
