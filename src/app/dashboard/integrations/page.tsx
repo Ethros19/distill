@@ -7,8 +7,8 @@ interface Integration {
   description: string
   status: 'connected' | 'not_configured' | 'planned'
   category: 'delivery' | 'intake' | 'ai' | 'tooling'
-  docsHref?: string
   configKeys?: string[]
+  setupSteps?: string[]
 }
 
 function getIntegrations(): Integration[] {
@@ -29,6 +29,12 @@ function getIntegrations(): Integration[] {
       status: hasLinear ? 'connected' : 'not_configured',
       category: 'delivery',
       configKeys: ['LINEAR_API_KEY', 'LINEAR_TEAM_ID'],
+      setupSteps: [
+        'Go to Linear \u2192 Settings \u2192 API \u2192 Personal API keys',
+        'Create a new key and copy it',
+        'Find your Team ID in Linear \u2192 Settings \u2192 Teams \u2192 click your team (UUID is in the URL)',
+        'Add LINEAR_API_KEY and LINEAR_TEAM_ID as environment variables',
+      ],
     },
     {
       name: 'Linear (Two-Way Sync)',
@@ -36,13 +42,24 @@ function getIntegrations(): Integration[] {
       status: hasLinearWebhook ? 'connected' : 'not_configured',
       category: 'delivery',
       configKeys: ['LINEAR_WEBHOOK_SECRET'],
+      setupSteps: [
+        'Go to Linear \u2192 Settings \u2192 API \u2192 Webhooks \u2192 New webhook',
+        `Set the URL to ${process.env.NEXT_PUBLIC_APP_URL || 'https://your-app.vercel.app'}/api/webhooks/linear`,
+        'Subscribe to: Issues, Comments, Customer requests, Project updates, Initiative updates, Documents',
+        'Copy the signing secret and add it as LINEAR_WEBHOOK_SECRET',
+      ],
     },
     {
       name: 'Linear (Intake Source)',
-      description: 'Import new Linear issues and comments as inputs. Surface existing roadmap items alongside feedback signals.',
+      description: 'Import new Linear issues, comments, customer requests, project updates, initiative updates, and documents as inputs for synthesis.',
       status: hasLinearIntake ? 'connected' : 'not_configured',
       category: 'intake',
       configKeys: ['LINEAR_INTAKE_ENABLED'],
+      setupSteps: [
+        'First, set up Linear (Push) and Linear (Two-Way Sync) above',
+        'Set LINEAR_INTAKE_ENABLED=true as an environment variable',
+        'New Linear events will be ingested as inputs and AI-structured automatically',
+      ],
     },
     {
       name: 'Resend (Email Intake)',
@@ -50,6 +67,11 @@ function getIntegrations(): Integration[] {
       status: hasResend ? 'connected' : 'not_configured',
       category: 'intake',
       configKeys: ['RESEND_API_KEY', 'RESEND_WEBHOOK_SECRET'],
+      setupSteps: [
+        'Add a domain in Resend (e.g., signals.yourdomain.com)',
+        `Set up an inbound webhook pointing to ${process.env.NEXT_PUBLIC_APP_URL || 'https://your-app.vercel.app'}/api/webhooks/resend`,
+        'Add RESEND_API_KEY and RESEND_WEBHOOK_SECRET as environment variables',
+      ],
     },
     {
       name: 'Resend (Digest)',
@@ -57,6 +79,11 @@ function getIntegrations(): Integration[] {
       status: hasDigest ? 'connected' : 'not_configured',
       category: 'delivery',
       configKeys: ['RESEND_API_KEY', 'RESEND_FROM_ADDRESS', 'DIGEST_RECIPIENTS'],
+      setupSteps: [
+        'First, set up Resend (Email Intake) above for the API key',
+        'Set RESEND_FROM_ADDRESS to a verified sender (e.g., Distill <signals@yourdomain.com>)',
+        'Set DIGEST_RECIPIENTS to comma-separated email addresses',
+      ],
     },
     {
       name: 'Anthropic Claude',
@@ -64,6 +91,11 @@ function getIntegrations(): Integration[] {
       status: hasAnthropic ? 'connected' : 'not_configured',
       category: 'ai',
       configKeys: ['ANTHROPIC_API_KEY'],
+      setupSteps: [
+        'Get an API key from console.anthropic.com',
+        'Add ANTHROPIC_API_KEY as an environment variable',
+        'Set LLM_PROVIDER=anthropic (or leave unset \u2014 Anthropic is the default)',
+      ],
     },
     {
       name: 'OpenAI',
@@ -71,6 +103,11 @@ function getIntegrations(): Integration[] {
       status: hasOpenAI ? 'connected' : 'not_configured',
       category: 'ai',
       configKeys: ['OPENAI_API_KEY'],
+      setupSteps: [
+        'Get an API key from platform.openai.com/api-keys',
+        'Add OPENAI_API_KEY as an environment variable',
+        'Set LLM_PROVIDER=openai to activate',
+      ],
     },
     {
       name: 'Ollama',
@@ -78,12 +115,22 @@ function getIntegrations(): Integration[] {
       status: hasOllama ? 'connected' : 'not_configured',
       category: 'ai',
       configKeys: ['OLLAMA_BASE_URL'],
+      setupSteps: [
+        'Install and run Ollama locally (ollama.com)',
+        'Set OLLAMA_BASE_URL (default: http://localhost:11434)',
+        'Set LLM_PROVIDER=ollama to activate',
+      ],
     },
     {
       name: 'MCP Server',
       description: 'Chat with your Distill data from Claude Desktop. Read-only access to signals, themes, and inputs.',
       status: 'connected',
       category: 'tooling',
+      setupSteps: [
+        'Run: cd mcp-server && npm install && npm run build',
+        'Add to Claude Desktop config (see README for full JSON)',
+        'Provides tools: get_signals, get_signal_detail, get_themes, search_inputs, get_synthesis_summary',
+      ],
     },
     {
       name: 'Slack',
@@ -188,11 +235,37 @@ export default function IntegrationsPage() {
                     <p className="mt-1 text-xs text-muted">
                       {integration.description}
                     </p>
-                    {integration.configKeys && integration.status === 'not_configured' && (
-                      <p className="mt-2 text-xs text-dim">
-                        Requires: {integration.configKeys.map((k) => (
-                          <code key={k} className="mx-0.5 rounded bg-panel-alt px-1 py-0.5 text-[11px]">
-                            {k}
+
+                    {integration.setupSteps && integration.status === 'not_configured' && (
+                      <div className="mt-3 rounded-lg border border-edge-dim bg-canvas p-3">
+                        <p className="mb-2 text-xs font-medium text-dim">Setup</p>
+                        <ol className="space-y-1.5">
+                          {integration.setupSteps.map((step, i) => (
+                            <li key={i} className="flex gap-2 text-xs text-muted">
+                              <span className="mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-panel-alt text-[10px] font-medium text-dim">
+                                {i + 1}
+                              </span>
+                              <span>{step}</span>
+                            </li>
+                          ))}
+                        </ol>
+                        {integration.configKeys && (
+                          <div className="mt-2 flex flex-wrap gap-1 border-t border-edge-dim pt-2">
+                            {integration.configKeys.map((k) => (
+                              <code key={k} className="rounded bg-panel-alt px-1.5 py-0.5 text-[10px] text-dim">
+                                {k}
+                              </code>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {integration.status === 'connected' && integration.setupSteps && (
+                      <p className="mt-2 text-[11px] text-dim">
+                        {integration.configKeys?.map((k) => (
+                          <code key={k} className="mr-1 rounded bg-sig-low/10 px-1 py-0.5 text-sig-low">
+                            {k} ✓
                           </code>
                         ))}
                       </p>
@@ -207,14 +280,14 @@ export default function IntegrationsPage() {
 
       <div className="rounded-xl border border-dashed border-edge-dim bg-panel/50 p-4 text-center">
         <p className="text-xs text-muted">
-          Integrations are configured via environment variables.{' '}
+          All integrations are configured via environment variables.{' '}
           <a
             href="https://github.com/Ethros19/distill#optional-integrations"
             target="_blank"
             rel="noopener noreferrer"
             className="text-accent hover:text-ink"
           >
-            View setup guide
+            View full setup guide
           </a>
         </p>
       </div>
