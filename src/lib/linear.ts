@@ -64,16 +64,18 @@ export async function createLinearIssue(
       }),
     })
 
+    const data = await response.json()
+
     if (!response.ok) {
+      console.error('Linear API error:', response.status, JSON.stringify(data))
       return {
         success: false,
-        error: `Linear API returned ${response.status}: ${response.statusText}`,
+        error: `Linear API returned ${response.status}: ${JSON.stringify(data.errors ?? data)}`,
       }
     }
 
-    const data = await response.json()
-
     if (data.errors?.length) {
+      console.error('Linear GraphQL errors:', JSON.stringify(data.errors))
       return {
         success: false,
         error: data.errors.map((e: { message: string }) => e.message).join(', '),

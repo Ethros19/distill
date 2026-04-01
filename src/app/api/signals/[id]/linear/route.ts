@@ -75,6 +75,7 @@ export async function POST(
     })
 
     if (!result.success) {
+      console.error('Linear push failed:', result.error)
       return NextResponse.json(
         { error: result.error ?? 'Failed to create Linear issue' },
         { status: 502 },
