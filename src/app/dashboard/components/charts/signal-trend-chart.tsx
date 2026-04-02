@@ -24,7 +24,7 @@ export function SignalTrendChart({ data }: { data: TrendPoint[] }) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={160}>
+    <ResponsiveContainer width="100%" height="100%" minHeight={160}>
       <LineChart data={data}>
         <XAxis
           dataKey="date"

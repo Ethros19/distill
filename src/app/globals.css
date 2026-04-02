@@ -13,6 +13,8 @@
   --color-edge-dim: var(--border-subtle);
   --color-accent: var(--accent);
   --color-accent-wash: var(--accent-wash);
+  --color-gold: var(--gold);
+  --color-gold-wash: var(--gold-wash);
   --color-sig-high: var(--signal-high);
   --color-sig-mid: var(--signal-mid);
   --color-sig-low: var(--signal-low);
@@ -20,36 +22,44 @@
   --color-muted: var(--text-muted);
 }
 
+/* Stripe Light */
 :root {
-  --bg: #F7F7FB;
-  --fg: #1A1B2E;
-  --surface: #FFFFFF;
-  --surface-raised: #F0F0F6;
-  --border-main: #DDDCE8;
-  --border-subtle: #EBEBF2;
-  --text-secondary: #6B6A80;
-  --text-muted: #9C9BAA;
-  --accent: #B88A20;
-  --accent-wash: rgba(184, 138, 32, 0.07);
-  --signal-high: #C94234;
-  --signal-mid: #B88A20;
-  --signal-low: #3D8A4A;
+  --bg: #f6f9fc;
+  --fg: #0a2540;
+  --surface: #ffffff;
+  --surface-raised: #f0f3f7;
+  --border-main: #e6ebf1;
+  --border-subtle: #e6ebf1;
+  --text-secondary: #6b7c93;
+  --text-muted: #9ca8b8;
+  --accent: #635bff;
+  --accent-wash: rgba(99, 91, 255, 0.08);
+  --gold: #c9962b;
+  --gold-wash: rgba(201, 150, 43, 0.08);
+  --signal-high: #e11d48;
+  --signal-mid: #c9962b;
+  --signal-low: #059669;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
 }
 
+/* Stripe at Night */
 .dark {
-  --bg: #0A0B14;
-  --fg: #E2E0EC;
-  --surface: #111220;
-  --surface-raised: #191B2A;
-  --border-main: #252740;
-  --border-subtle: #1C1E30;
-  --text-secondary: #7B7A90;
+  --bg: #13111C;
+  --fg: #E8E4F0;
+  --surface: #1C1A28;
+  --surface-raised: #242133;
+  --border-main: rgba(255,255,255,0.06);
+  --border-subtle: rgba(255,255,255,0.05);
+  --text-secondary: #9CA3AF;
   --text-muted: #4E4D62;
-  --accent: #E8A838;
-  --accent-wash: rgba(232, 168, 56, 0.06);
-  --signal-high: #EF5350;
-  --signal-mid: #E8A838;
-  --signal-low: #66BB6A;
+  --accent: #7C6EF6;
+  --accent-wash: rgba(124, 110, 246, 0.2);
+  --gold: #D4A847;
+  --gold-wash: rgba(212, 168, 71, 0.1);
+  --signal-high: #f43f5e;
+  --signal-mid: #D4A847;
+  --signal-low: #10b981;
+  --card-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 20px rgba(0,0,0,0.2);
 }
 
 html {

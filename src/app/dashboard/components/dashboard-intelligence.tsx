@@ -60,8 +60,22 @@ export function DashboardIntelligence({
         <MetricCardsSection />
       </Suspense>
 
-      {/* Row 2: Signal Trend + Stream Distribution */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      {/* Row 2: Live Intel Feed + Top Emergent Themes */}
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
+        <div>
+          <Suspense fallback={<PanelSkeleton />}>
+            <SignalTimelineSection />
+          </Suspense>
+        </div>
+        <div className="lg:col-span-2">
+          <Suspense fallback={<PanelSkeleton />}>
+            <ThemeHeatmapSection />
+          </Suspense>
+        </div>
+      </div>
+
+      {/* Row 3: Signal Volume + Input Distribution */}
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Suspense fallback={<ChartSkeleton />}>
             <SignalTrendSection />
@@ -72,16 +86,6 @@ export function DashboardIntelligence({
             <StreamDistributionSection />
           </Suspense>
         </div>
-      </div>
-
-      {/* Row 3: Theme Landscape + Signal Timeline — scrollable panels */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Suspense fallback={<PanelSkeleton />}>
-          <ThemeHeatmapSection />
-        </Suspense>
-        <Suspense fallback={<PanelSkeleton />}>
-          <SignalTimelineSection />
-        </Suspense>
       </div>
     </section>
   )

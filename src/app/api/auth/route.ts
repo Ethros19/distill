@@ -30,7 +30,6 @@ export async function POST(request: NextRequest) {
   }
 
   await recordLoginAttempt(ip, true)
-  await deleteAllSessions()
   const token = await createSession()
 
   const response = NextResponse.json({ success: true })
