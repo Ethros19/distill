@@ -1,29 +1,23 @@
 export const periodLabels: Record<string, string> = {
-  yesterday: 'Yesterday',
   today: 'Today',
-  week: 'This Week',
-  month: 'This Month',
-  year: 'This Year',
-  total: 'All Time',
+  past_week: 'Past Week',
+  past_month: 'Past Month',
+  past_year: 'Past Year',
+  all: 'All Time',
 }
 
 export function startOfPeriod(period: string): Date | null {
   const now = new Date()
   switch (period) {
-    case 'yesterday':
-      return new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
     case 'today':
       return new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    case 'week': {
-      const day = now.getDay()
-      const diff = now.getDate() - day + (day === 0 ? -6 : 1)
-      return new Date(now.getFullYear(), now.getMonth(), diff)
-    }
-    case 'month':
-      return new Date(now.getFullYear(), now.getMonth(), 1)
-    case 'year':
-      return new Date(now.getFullYear(), 0, 1)
-    case 'total':
+    case 'past_week':
+      return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    case 'past_month':
+      return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    case 'past_year':
+      return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
+    case 'all':
       return null
     default:
       return null
@@ -31,11 +25,5 @@ export function startOfPeriod(period: string): Date | null {
 }
 
 export function endOfPeriod(period: string): Date | null {
-  const now = new Date()
-  switch (period) {
-    case 'yesterday':
-      return new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    default:
-      return null
-  }
+  return null
 }

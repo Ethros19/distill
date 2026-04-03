@@ -1,4 +1,5 @@
 import type { Synthesis } from '@/lib/schema'
+import { TriggerButton } from './trigger-button'
 
 function formatDateRange(start: Date, end: Date): string {
   const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
@@ -23,16 +24,35 @@ function formatRelativeTime(date: Date): string {
   return `${days}d ago`
 }
 
+function NarrativeProse({ markdown }: { markdown: string }) {
+  // Simple markdown→HTML: headings, bold, paragraphs
+  const html = markdown
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/^(?!<[hp])(.+)/gm, '<p>$1</p>')
+    // Clean up empty paragraphs
+    .replace(/<p>\s*<\/p>/g, '')
+    // Remove <p> wrapping around headings
+    .replace(/<p>(<h3>)/g, '$1')
+    .replace(/(<\/h3>)<\/p>/g, '$1')
+
+  return (
+    <div
+      className="narrative-prose"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  )
+}
+
 export function SynthesisHeader({
   synthesis,
   unprocessedCount = 0,
   unsynthesizedCount = 0,
-  action,
 }: {
   synthesis: Synthesis | null
   unprocessedCount?: number
   unsynthesizedCount?: number
-  action?: React.ReactNode
 }) {
   if (!synthesis) {
     return (
@@ -49,19 +69,13 @@ export function SynthesisHeader({
             {(unprocessedCount > 0 || unsynthesizedCount > 0) && (
               <div className="mt-3 flex items-center gap-3 text-sm">
                 {unprocessedCount > 0 && (
-                  <span
-                    className="font-medium text-sig-mid cursor-help"
-                    title="Inputs received but not yet structured by AI. The daily cron or next synthesis will process these."
-                  >
+                  <span className="font-medium text-sig-mid">
                     <strong className="font-mono">{unprocessedCount}</strong>{' '}
                     unprocessed
                   </span>
                 )}
                 {unsynthesizedCount > 0 && (
-                  <span
-                    className="font-medium text-sig-low cursor-help"
-                    title="Inputs structured by AI but not yet included in a synthesis run. Run a synthesis to surface signals from these."
-                  >
+                  <span className="font-medium text-sig-low">
                     <strong className="font-mono">{unsynthesizedCount}</strong>{' '}
                     unsynthesized
                   </span>
@@ -69,7 +83,9 @@ export function SynthesisHeader({
               </div>
             )}
           </div>
-          {action && <div className="ml-4 shrink-0">{action}</div>}
+          <div className="ml-4 shrink-0">
+            <TriggerButton />
+          </div>
         </div>
       </div>
     )
@@ -79,69 +95,62 @@ export function SynthesisHeader({
 
   return (
     <div className="rounded-xl border border-edge bg-panel p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-3">
-            <h2 className="text-sm font-medium uppercase tracking-wider text-dim">
-              Latest Synthesis
-            </h2>
-            <span
-              className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                synthesis.trigger === 'manual'
-                  ? 'bg-accent-wash text-accent'
-                  : 'bg-panel-alt text-dim'
-              }`}
-            >
-              {synthesis.trigger}
-            </span>
-          </div>
-          <p className="mt-2 font-display text-xl text-ink">{dateRange}</p>
-          <div className="mt-3 flex items-center gap-4 text-sm">
-            <span className="text-ink">
-              <strong className="font-mono">
-                {synthesis.signalCount}
-              </strong>{' '}
-              <span className="text-dim">signals</span>
-            </span>
-            <span className="text-muted">&middot;</span>
-            <span className="text-ink">
-              <strong className="font-mono">
-                {synthesis.inputCount}
-              </strong>{' '}
-              <span className="text-dim">inputs</span>
-            </span>
-            {unprocessedCount > 0 && (
-              <>
-                <span className="text-muted">&middot;</span>
-                <span
-                  className="text-sig-mid cursor-help"
-                  title="Inputs received but not yet structured by AI. The daily cron or next synthesis will process these."
-                >
-                  <strong className="font-mono">{unprocessedCount}</strong>{' '}
-                  unprocessed
-                </span>
-              </>
-            )}
-            {unsynthesizedCount > 0 && (
-              <>
-                <span className="text-muted">&middot;</span>
-                <span
-                  className="text-sig-low cursor-help"
-                  title="Inputs structured by AI but not yet included in a synthesis run. Run a synthesis to include these."
-                >
-                  <strong className="font-mono">{unsynthesizedCount}</strong>{' '}
-                  unsynthesized
-                </span>
-              </>
-            )}
-            <span className="text-muted">&middot;</span>
-            <span className="text-xs text-muted">
-              {formatRelativeTime(synthesis.createdAt)}
-            </span>
-          </div>
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <div className="h-2 w-2 rounded-full bg-accent shadow-[0_0_8px_var(--accent)]" />
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-dim">
+            Latest Synthesis
+          </h3>
+          <span className="font-mono text-xs text-muted">{dateRange}</span>
+          <span
+            className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+              synthesis.trigger === 'manual'
+                ? 'bg-accent-wash text-accent'
+                : 'bg-panel-alt text-dim'
+            }`}
+          >
+            {synthesis.trigger}
+          </span>
         </div>
-        {action && <div className="shrink-0">{action}</div>}
+        <TriggerButton />
       </div>
+
+      {/* Narrative prose or fallback stats */}
+      {synthesis.digestMarkdown ? (
+        <NarrativeProse markdown={synthesis.digestMarkdown} />
+      ) : (
+        <div className="flex items-center gap-6 text-sm">
+          <span className="text-ink">
+            <strong className="font-mono">{synthesis.signalCount}</strong>{' '}
+            <span className="text-dim">signals</span>
+          </span>
+          <span className="text-muted">&middot;</span>
+          <span className="text-ink">
+            <strong className="font-mono">{synthesis.inputCount}</strong>{' '}
+            <span className="text-dim">inputs</span>
+          </span>
+        </div>
+      )}
+
+      {/* Pending counts below narrative */}
+      {(unprocessedCount > 0 || unsynthesizedCount > 0) && (
+        <div className="mt-4 flex items-center gap-4 border-t border-edge-dim pt-3 text-sm">
+          {unprocessedCount > 0 && (
+            <span className="text-sig-mid cursor-help" title="Inputs received but not yet structured by AI.">
+              <strong className="font-mono">{unprocessedCount}</strong> unprocessed
+            </span>
+          )}
+          {unsynthesizedCount > 0 && (
+            <span className="text-sig-low cursor-help" title="Inputs structured but not yet included in a synthesis.">
+              <strong className="font-mono">{unsynthesizedCount}</strong> unsynthesized
+            </span>
+          )}
+          <span className="text-xs text-muted" suppressHydrationWarning>
+            {formatRelativeTime(synthesis.createdAt)}
+          </span>
+        </div>
+      )}
     </div>
   )
 }

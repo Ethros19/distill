@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distill | Intelligence Dashboard v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Instrument Serif', 'Georgia', 'serif'],
+                        mono: ['Geist Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        [data-theme="dark"] {
+            --bg: #13111C;
+            --surface: #1C1A28;
+            --surface-raised: #242133;
+            --ink: #ffffff;
+            --text: #E8E4F0;
+            --text-dim: #9CA3AF;
+            --text-muted: #6B6A80;
+            --border: rgba(255,255,255,0.06);
+            --border-light: rgba(255,255,255,0.1);
+            --accent: #7C6EF6;
+            --accent-wash: rgba(124,110,246,0.12);
+            --accent-border: rgba(124,110,246,0.3);
+            --gold: #D4A847;
+            --gold-wash: rgba(212,168,71,0.1);
+            --emerald: #10b981;
+            --emerald-wash: rgba(16,185,129,0.1);
+            --rose: #f43f5e;
+            --rose-wash: rgba(244,63,94,0.1);
+            --card-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+            --header-bg: rgba(28,26,40,0.85);
+            --pill-bg: rgba(255,255,255,0.04);
+            --pill-active: rgba(124,110,246,0.15);
+            --pill-text: #9CA3AF;
+            --pill-active-text: #7C6EF6;
+            --strength-bar: rgba(255,255,255,0.06);
+        }
+
+        [data-theme="light"] {
+            --bg: #f6f9fc;
+            --surface: #ffffff;
+            --surface-raised: #f0f3f7;
+            --ink: #0a2540;
+            --text: #0a2540;
+            --text-dim: #6b7c93;
+            --text-muted: #9ca8b8;
+            --border: #e6ebf1;
+            --border-light: #e6ebf1;
+            --accent: #635bff;
+            --accent-wash: rgba(99,91,255,0.07);
+            --accent-border: rgba(99,91,255,0.2);
+            --gold: #c9962b;
+            --gold-wash: rgba(201,150,43,0.07);
+            --emerald: #059669;
+            --emerald-wash: rgba(5,150,105,0.07);
+            --rose: #e11d48;
+            --rose-wash: rgba(225,29,72,0.07);
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.03);
+            --header-bg: rgba(255,255,255,0.88);
+            --pill-bg: #f0f3f7;
+            --pill-active: rgba(99,91,255,0.1);
+            --pill-text: #6b7c93;
+            --pill-active-text: #635bff;
+            --strength-bar: #e6ebf1;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .narrative-prose h3 {
+            font-family: 'Instrument Serif', serif;
+            font-size: 1.15rem;
+            color: var(--ink);
+            margin: 1.25rem 0 0.5rem 0;
+        }
+        .narrative-prose h3:first-child { margin-top: 0; }
+        .narrative-prose p {
+            color: var(--text);
+            line-height: 1.7;
+            margin: 0 0 0.75rem 0;
+            font-size: 0.9rem;
+        }
+        .narrative-prose strong {
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        .pill {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            background: var(--pill-bg);
+            color: var(--pill-text);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+        }
+        .pill:hover { background: var(--accent-wash); color: var(--accent); }
+        .pill.active {
+            background: var(--pill-active);
+            color: var(--pill-active-text);
+            border-color: var(--accent-border);
+        }
+
+        .strength-bar {
+            height: 4px;
+            border-radius: 2px;
+            background: var(--strength-bar);
+            overflow: hidden;
+        }
+        .strength-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.6s ease;
+        }
+
+        .theme-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .theme-tag:hover {
+            color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent-border);
+        }
+
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up {
+            animation: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .intel-scroll::-webkit-scrollbar { width: 3px; }
+        .intel-scroll::-webkit-scrollbar-track { background: transparent; }
+        .intel-scroll::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- ===== HEADER ===== -->
+    <header style="background: var(--header-bg); border-bottom: 1px solid var(--border);" class="sticky top-0 z-30 backdrop-blur-md">
+        <div class="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
+            <div class="flex items-baseline gap-3">
+                <h1 class="font-display text-2xl tracking-tight" style="color: var(--ink);">Distill</h1>
+                <span class="text-xs tracking-wide" style="color: var(--text-muted);">Signal Intelligence</span>
+            </div>
+            <nav class="flex items-center gap-1">
+                <a href="#" class="px-3 py-1.5 text-sm font-medium rounded-lg" style="background: var(--accent-wash); color: var(--accent);">Dashboard</a>
+                <a href="#" class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors" style="color: var(--text-dim);" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--text-dim)'">Signals</a>
+                <a href="#" class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors" style="color: var(--text-dim);" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--text-dim)'">Radar</a>
+                <a href="#" class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors" style="color: var(--text-dim);" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--text-dim)'">Streams</a>
+                <span class="mx-1.5 h-4 w-px" style="background: var(--border);" aria-hidden="true"></span>
+                <a href="#" class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors" style="color: var(--text-muted);" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--text-muted)'">Inputs</a>
+                <a href="#" class="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors" style="color: var(--text-muted);" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--text-muted)'">Sources</a>
+            </nav>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleTheme()" class="p-2 rounded-lg transition-colors" style="color: var(--text-dim);" onmouseover="this.style.background='var(--surface-raised)'" onmouseout="this.style.background='transparent'">
+                    <svg id="icon-sun" width="16" height="16" viewBox="0 0 16 16" fill="none" style="display:none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.5v1M8 13.5v1M1.5 8h1M13.5 8h1M3.4 3.4l.7.7M11.9 11.9l.7.7M3.4 12.6l.7-.7M11.9 4.1l.7-.7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    <svg id="icon-moon" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13.5 9.5a5.5 5.5 0 01-7-7 5.5 5.5 0 107 7z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="px-3 py-1.5 text-sm rounded-lg transition-colors" style="color: var(--text-dim);" onmouseover="this.style.background='var(--surface-raised)'" onmouseout="this.style.background='transparent'">Sign out</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== MAIN ===== -->
+    <main class="mx-auto w-full max-w-7xl flex-1 px-6 py-8 space-y-6">
+
+        <!-- Page title + Time filter pills -->
+        <div class="flex items-end justify-between fade-up">
+            <div>
+                <h2 class="font-display text-3xl" style="color: var(--ink);">Intelligence Overview</h2>
+                <p class="mt-1 text-sm" style="color: var(--text-dim);">Last synthesis: 2 hours ago &middot; 47 signals active</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <button class="pill">Today</button>
+                <button class="pill active">Past Week</button>
+                <button class="pill">Past Month</button>
+                <button class="pill">Past Year</button>
+                <button class="pill">All Time</button>
+            </div>
+        </div>
+
+        <!-- ===== 1. SYNTHESIS NARRATIVE (Hero) ===== -->
+        <section class="card p-6 fade-up" style="animation-delay: 60ms;">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-2 h-2 rounded-full" style="background: var(--accent); box-shadow: 0 0 8px var(--accent);"></div>
+                    <h3 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-dim);">Latest Synthesis</h3>
+                    <span class="text-xs font-mono" style="color: var(--text-muted);">Mar 28 &ndash; Apr 3, 2026</span>
+                </div>
+                <button class="flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all" style="background: var(--accent); color: white;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Run Synthesis
+                </button>
+            </div>
+            <div class="narrative-prose">
+                <h3>The Story</h3>
+                <p>This week's signals converge on a single theme: <strong>budget transparency is the #1 unmet need</strong> across all customer segments. Three independent signals from support tickets, NPS feedback, and sales calls all point to users being surprised by costs, lacking spending controls, and wanting real-time budget visibility. This has escalated from a "nice to have" to a retention risk.</p>
+
+                <h3>Industry Validation</h3>
+                <p><strong>Spend management platforms</strong> raised $2.1B in Q1 2026, confirming market appetite for budget tooling. Competitors <strong>Brex</strong> and <strong>Ramp</strong> both shipped budget cap features in March. The gap is widening.</p>
+
+                <h3>Cross-Stream Patterns</h3>
+                <p>Budget-related themes appeared in <strong>Support</strong> (ticket volume +34%), <strong>Sales</strong> (objection in 3 of 8 demos), and <strong>NPS</strong> (mentioned in 12% of detractor comments). This cross-stream convergence signals broad organizational pain, not isolated incidents.</p>
+
+                <h3>Watch For</h3>
+                <p>Monitor whether <strong>churn mentions</strong> correlate with budget complaints in the next synthesis cycle. Two enterprise accounts flagged budget concerns alongside renewal hesitation.</p>
+            </div>
+        </section>
+
+        <!-- ===== 2. SIGNALS ===== -->
+        <section class="fade-up" style="animation-delay: 120ms;">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-display text-xl" style="color: var(--ink);">Active Signals</h3>
+                <span class="text-xs font-mono" style="color: var(--text-muted);">7 signals &middot; 3 high strength</span>
+            </div>
+            <div class="space-y-2.5">
+                <!-- Signal 1 - High -->
+                <div class="card px-5 py-4 flex items-start gap-4">
+                    <div class="mt-1 flex flex-col items-center gap-1">
+                        <span class="font-mono text-lg font-bold" style="color: var(--rose);">8</span>
+                        <div class="strength-bar w-8">
+                            <div class="strength-fill" style="width: 80%; background: var(--rose);"></div>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium leading-snug" style="color: var(--ink);">No spending limits causes surprise invoices for mid-market accounts</p>
+                        <p class="mt-1.5 text-xs leading-relaxed" style="color: var(--text-dim);">Users cannot set budget caps or receive alerts. 8 inputs across Support and Sales describe the same workflow gap.</p>
+                        <div class="mt-2 flex items-center gap-2 flex-wrap">
+                            <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-medium" style="background: var(--rose-wash); color: var(--rose);">high priority</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded" style="background: var(--pill-bg); color: var(--text-muted);">budget</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded" style="background: var(--pill-bg); color: var(--text-muted);">billing</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded" style="background: var(--pill-bg); color: var(--text-muted);">enterprise</span>
+                        </div>
+                    </div>
+                    <div class="shrink-0 text-right">
+                        <span class="text-[11px] font-medium" style="color: var(--text-muted);">3 streams</span>
+                        <p class="text-[10px] mt-0.5" style="color: var(--text-muted);">2h ago</p>
+                    </div>
+                </div>
+
+                <!-- Signal 2 - High -->
+                <div class="card px-5 py-4 flex items-start gap-4">
+                    <div class="mt-1 flex flex-col items-center gap-1">
+                        <span class="font-mono text-lg font-bold" style="color: var(--rose);">6</span>
+                        <div class="strength-bar w-8">
+                            <div class="strength-fill" style="width: 60%; background: var(--rose);"></div>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium leading-snug" style="color: var(--ink);">Dashboard load times exceed 5s for teams with 100+ events</p>
+                        <p class="mt-1.5 text-xs leading-relaxed" style="color: var(--text-dim);">Performance degrades at scale. Multiple enterprise accounts reporting sluggish UI. Backend query optimization needed.</p>
+                        <div class="mt-2 flex items-center gap-2 flex-wrap">
+                            <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-medium" style="background: var(--rose-wash); color: var(--rose);">high priority</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded" style="background: var(--pill-bg); color: var(--text-muted);">performance</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded" style="background: var(--pill-bg); color: var(--text-muted);">scale</span>
+                        </div>
+                    </div>
+                    <div class="shrink-0 text-right">
+                        <span class="text-[11px] font-medium" style="color: var(--text-muted);">2 streams</span>
+                        <p class="text-[10px] mt-0.5" style="color: var(--text-muted);">2h ago</p>
+                    </div>
+                </div>
+
+                <!-- Signal 3 - Medium -->
+                <div class="card px-5 py-4 flex items-start gap-4">
+                    <div class="mt-1 flex flex-col items-center gap-1">
+                        <span class="font-mono text-lg font-bold" style="color: var(--gold);">4</span>
+                        <div class="strength-bar w-8">
+                            <div class="strength-fill" style="width: 40%; background: var(--gold);"></div>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium leading-snug" style="color: var(--ink);">Mobile app requested by 40% of surveyed venue managers</p>
+                        <p class="mt-1.5 text-xs leading-relaxed" style="color: var(--text-dim);">Venue managers work on-the-go and need mobile access to approve budgets and view event status.</p>
+                        <div class="mt-2 flex items-center gap-2 flex-wrap">
+                            <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-medium" style="background: var(--gold-wash); color: var(--gold);">medium</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded" style="background: var(--pill-bg); color: var(--text-muted);">mobile</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded" style="background: var(--pill-bg); color: var(--text-muted);">venues</span>
+                        </div>
+                    </div>
+                    <div class="shrink-0 text-right">
+                        <span class="text-[11px] font-medium" style="color: var(--text-muted);">1 stream</span>
+                        <p class="text-[10px] mt-0.5" style="color: var(--text-muted);">2h ago</p>
+                    </div>
+                </div>
+
+                <!-- Signal 4 - Low -->
+                <div class="card px-5 py-4 flex items-start gap-4">
+                    <div class="mt-1 flex flex-col items-center gap-1">
+                        <span class="font-mono text-lg font-bold" style="color: var(--emerald);">2</span>
+                        <div class="strength-bar w-8">
+                            <div class="strength-fill" style="width: 20%; background: var(--emerald);"></div>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium leading-snug" style="color: var(--ink);">Users praising new vendor comparison feature</p>
+                        <p class="mt-1.5 text-xs leading-relaxed" style="color: var(--text-dim);">Positive signal — the recently shipped vendor comparison is resonating with planners.</p>
+                        <div class="mt-2 flex items-center gap-2 flex-wrap">
+                            <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-medium" style="background: var(--emerald-wash); color: var(--emerald);">positive</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded" style="background: var(--pill-bg); color: var(--text-muted);">vendors</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded" style="background: var(--pill-bg); color: var(--text-muted);">praise</span>
+                        </div>
+                    </div>
+                    <div class="shrink-0 text-right">
+                        <span class="text-[11px] font-medium" style="color: var(--text-muted);">1 stream</span>
+                        <p class="text-[10px] mt-0.5" style="color: var(--text-muted);">2h ago</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 3. THEMES + TREND (Side by side) ===== -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-5 fade-up" style="animation-delay: 180ms;">
+            <!-- Theme Landscape (3/5) -->
+            <div class="lg:col-span-3 card p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-dim);">Theme Landscape</h3>
+                    <span class="text-xs font-mono" style="color: var(--text-muted);">24 themes</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <span class="theme-tag text-[15px] font-semibold px-4 py-2.5" style="background: var(--accent-wash);">budget <span class="font-mono text-[11px]" style="color: var(--text-muted);">14</span></span>
+                    <span class="theme-tag text-[15px] font-semibold px-4 py-2.5" style="background: var(--accent-wash);">billing <span class="font-mono text-[11px]" style="color: var(--text-muted);">11</span></span>
+                    <span class="theme-tag text-[14px] font-medium px-3.5 py-2" style="background: var(--accent-wash); opacity: 0.85;">performance <span class="font-mono text-[11px]" style="color: var(--text-muted);">8</span></span>
+                    <span class="theme-tag text-[14px] font-medium px-3.5 py-2" style="background: var(--accent-wash); opacity: 0.85;">enterprise <span class="font-mono text-[11px]" style="color: var(--text-muted);">7</span></span>
+                    <span class="theme-tag text-[13px] px-3 py-1.5" style="background: var(--accent-wash); opacity: 0.7;">mobile <span class="font-mono text-[11px]" style="color: var(--text-muted);">5</span></span>
+                    <span class="theme-tag text-[13px] px-3 py-1.5" style="background: var(--accent-wash); opacity: 0.7;">vendors <span class="font-mono text-[11px]" style="color: var(--text-muted);">4</span></span>
+                    <span class="theme-tag text-[13px] px-3 py-1.5" style="background: var(--accent-wash); opacity: 0.7;">onboarding <span class="font-mono text-[11px]" style="color: var(--text-muted);">4</span></span>
+                    <span class="theme-tag text-xs px-2.5 py-1.5" style="background: var(--accent-wash); opacity: 0.5;">integrations <span class="font-mono text-[10px]" style="color: var(--text-muted);">3</span></span>
+                    <span class="theme-tag text-xs px-2.5 py-1.5" style="background: var(--accent-wash); opacity: 0.5;">reporting <span class="font-mono text-[10px]" style="color: var(--text-muted);">3</span></span>
+                    <span class="theme-tag text-xs px-2.5 py-1.5" style="background: var(--accent-wash); opacity: 0.5;">venues <span class="font-mono text-[10px]" style="color: var(--text-muted);">2</span></span>
+                    <span class="theme-tag text-xs px-2.5 py-1.5" style="background: var(--accent-wash); opacity: 0.5;">permissions <span class="font-mono text-[10px]" style="color: var(--text-muted);">2</span></span>
+                    <span class="theme-tag text-xs px-2.5 py-1.5" style="background: var(--accent-wash); opacity: 0.4;">scale <span class="font-mono text-[10px]" style="color: var(--text-muted);">2</span></span>
+                    <span class="theme-tag text-xs px-2.5 py-1.5" style="background: var(--accent-wash); opacity: 0.4;">UX <span class="font-mono text-[10px]" style="color: var(--text-muted);">1</span></span>
+                    <span class="theme-tag text-xs px-2.5 py-1.5" style="background: var(--accent-wash); opacity: 0.4;">API <span class="font-mono text-[10px]" style="color: var(--text-muted);">1</span></span>
+                </div>
+            </div>
+
+            <!-- Signal Trend (2/5) -->
+            <div class="lg:col-span-2 card p-5 flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-semibold uppercase tracking-wider" style="color: var(--text-dim);">Signal Trend</h3>
+                </div>
+                <div class="flex-1 flex items-end">
+                    <svg viewBox="0 0 300 120" class="w-full" preserveAspectRatio="none">
+                        <defs>
+                            <linearGradient id="area-grad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" style="stop-color: var(--accent); stop-opacity: 0.15;"/>
+                                <stop offset="100%" style="stop-color: var(--accent); stop-opacity: 0;"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- Grid lines -->
+                        <line x1="0" y1="30" x2="300" y2="30" stroke="var(--border)" stroke-width="0.5"/>
+                        <line x1="0" y1="60" x2="300" y2="60" stroke="var(--border)" stroke-width="0.5"/>
+                        <line x1="0" y1="90" x2="300" y2="90" stroke="var(--border)" stroke-width="0.5"/>
+                        <!-- Area -->
+                        <path d="M0,100 L40,85 L80,90 L120,70 L160,60 L200,45 L240,50 L280,30 L300,25 L300,120 L0,120Z" fill="url(#area-grad)"/>
+                        <!-- Line -->
+                        <path d="M0,100 L40,85 L80,90 L120,70 L160,60 L200,45 L240,50 L280,30 L300,25" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <!-- Dot on latest -->
+                        <circle cx="300" cy="25" r="4" fill="var(--accent)"/>
+                        <circle cx="300" cy="25" r="7" fill="var(--accent)" opacity="0.2"/>
+                        <!-- Labels -->
+                        <text x="0" y="115" fill="var(--text-muted)" font-size="9" font-family="Inter">Mar 28</text>
+                        <text x="140" y="115" fill="var(--text-muted)" font-size="9" font-family="Inter" text-anchor="middle">Mar 31</text>
+                        <text x="296" y="115" fill="var(--text-muted)" font-size="9" font-family="Inter" text-anchor="end">Apr 3</text>
+                    </svg>
+                </div>
+                <div class="flex items-center justify-between mt-3 pt-3" style="border-top: 1px solid var(--border);">
+                    <div>
+                        <span class="font-mono text-xl font-bold" style="color: var(--ink);">47</span>
+                        <span class="text-xs ml-1" style="color: var(--text-dim);">signals</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 9V3M6 3L3 6M6 3L9 6" stroke="var(--emerald)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <span class="text-xs font-medium" style="color: var(--emerald);">+12 this week</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 4. CONTEXT METRICS (Small, bottom) ===== -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 fade-up" style="animation-delay: 240ms;">
+            <div class="card px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider" style="color: var(--text-muted);">Inputs This Week</p>
+                <p class="mt-1 font-mono text-lg font-semibold" style="color: var(--ink);">124</p>
+            </div>
+            <div class="card px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider" style="color: var(--text-muted);">Active Themes</p>
+                <p class="mt-1 font-mono text-lg font-semibold" style="color: var(--ink);">24</p>
+            </div>
+            <div class="card px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider" style="color: var(--text-muted);">Top Stream</p>
+                <p class="mt-1 text-lg font-semibold" style="color: var(--ink);">Support</p>
+            </div>
+            <div class="card px-4 py-3">
+                <p class="text-[10px] font-semibold uppercase tracking-wider" style="color: var(--text-muted);">Unprocessed</p>
+                <p class="mt-1 font-mono text-lg font-semibold" style="color: var(--gold);">3</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer style="background: var(--surface); border-top: 1px solid var(--border);" class="backdrop-blur-sm">
+        <div class="mx-auto max-w-7xl px-6 py-3 flex items-center justify-between">
+            <span class="text-xs" style="color: var(--text-muted);">Last synthesis: Apr 3, 2026 at 9:14 AM &middot; 12 inputs &middot; 7 signals &middot; manual trigger</span>
+            <span class="text-xs font-mono" style="color: var(--text-muted);">47 signals total</span>
+        </div>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.dataset.theme === 'dark';
+            html.dataset.theme = isDark ? 'light' : 'dark';
+            document.getElementById('icon-sun').style.display = isDark ? 'inline' : 'none';
+            document.getElementById('icon-moon').style.display = isDark ? 'none' : 'inline';
+            localStorage.setItem('distill-theme', html.dataset.theme);
+        }
+        const saved = localStorage.getItem('distill-theme');
+        if (saved) {
+            document.documentElement.dataset.theme = saved;
+            document.getElementById('icon-sun').style.display = saved === 'light' ? 'inline' : 'none';
+            document.getElementById('icon-moon').style.display = saved === 'light' ? 'none' : 'inline';
+        }
+    </script>
+</body>
+</html>

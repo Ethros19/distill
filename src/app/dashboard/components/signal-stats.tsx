@@ -2,50 +2,31 @@ import { db } from '@/lib/db'
 import { sql } from 'drizzle-orm'
 import { StatsBar } from './stats-bar'
 
-function startOf(period: 'day' | 'week' | 'month' | 'year'): Date {
-  const now = new Date()
-  switch (period) {
-    case 'day':
-      return new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    case 'week': {
-      const day = now.getDay()
-      const diff = now.getDate() - day + (day === 0 ? -6 : 1)
-      return new Date(now.getFullYear(), now.getMonth(), diff)
-    }
-    case 'month':
-      return new Date(now.getFullYear(), now.getMonth(), 1)
-    case 'year':
-      return new Date(now.getFullYear(), 0, 1)
-  }
-}
-
 export async function SignalStats() {
-  const todayStart = startOf('day')
-  const yesterdayStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), todayStart.getDate() - 1)
-  const weekStart = startOf('week')
-  const monthStart = startOf('month')
-  const yearStart = startOf('year')
+  const now = new Date()
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+  const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+  const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
 
   const result = await db.execute(sql`
     SELECT
-      count(*) FILTER (WHERE created_at >= ${yesterdayStart.toISOString()} AND created_at < ${todayStart.toISOString()})::int AS yesterday,
       count(*) FILTER (WHERE created_at >= ${todayStart.toISOString()})::int AS today,
-      count(*) FILTER (WHERE created_at >= ${weekStart.toISOString()})::int AS week,
-      count(*) FILTER (WHERE created_at >= ${monthStart.toISOString()})::int AS month,
-      count(*) FILTER (WHERE created_at >= ${yearStart.toISOString()})::int AS year,
+      count(*) FILTER (WHERE created_at >= ${weekAgo.toISOString()})::int AS past_week,
+      count(*) FILTER (WHERE created_at >= ${monthAgo.toISOString()})::int AS past_month,
+      count(*) FILTER (WHERE created_at >= ${yearAgo.toISOString()})::int AS past_year,
       count(*)::int AS total
     FROM inputs
   `)
 
-  const row = (result as unknown as { rows: Array<{ yesterday: number; today: number; week: number; month: number; year: number; total: number }> }).rows[0]
+  const row = (result as unknown as { rows: Array<{ today: number; past_week: number; past_month: number; past_year: number; total: number }> }).rows[0]
 
   const stats = [
-    { label: 'Yesterday', value: row.yesterday, period: 'yesterday' },
     { label: 'Today', value: row.today, period: 'today' },
-    { label: 'Week', value: row.week, period: 'week' },
-    { label: 'Month', value: row.month, period: 'month' },
-    { label: 'Year', value: row.year, period: 'year' },
-    { label: 'Total', value: row.total, period: 'total', highlight: true },
+    { label: 'Past Week', value: row.past_week, period: 'past_week' },
+    { label: 'Past Month', value: row.past_month, period: 'past_month' },
+    { label: 'Past Year', value: row.past_year, period: 'past_year' },
+    { label: 'All Time', value: row.total, period: 'all', highlight: true },
   ]
 
   return <StatsBar stats={stats} />

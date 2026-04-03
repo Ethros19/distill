@@ -122,6 +122,29 @@ body {
   }
 }
 
+/* Synthesis narrative prose */
+.narrative-prose h3 {
+  font-family: var(--font-instrument-serif), serif;
+  font-size: 1.15rem;
+  color: var(--fg);
+  margin: 1.25rem 0 0.5rem 0;
+}
+.narrative-prose h3:first-child {
+  margin-top: 0;
+}
+.narrative-prose p {
+  color: var(--fg);
+  line-height: 1.7;
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+.narrative-prose strong {
+  color: var(--fg);
+  font-weight: 600;
+  opacity: 1;
+}
+
 /* Scrollable intelligence panels */
 .intel-scroll {
   scrollbar-width: thin;
