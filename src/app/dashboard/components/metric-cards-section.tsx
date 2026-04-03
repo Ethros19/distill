@@ -8,7 +8,7 @@ export async function MetricCardsSection() {
 
   const [
     [{ value: inputVelocity }],
-    [{ value: activeThemes }],
+    themeResult,
     topStreamRow,
     [{ value: unprocessedCount }],
   ] = await Promise.all([
@@ -22,7 +22,7 @@ export async function MetricCardsSection() {
         FROM signals
         WHERE themes IS NOT NULL AND jsonb_array_length(themes) > 0
       ) t
-    `) as unknown as { rows: Array<{ value: number }> } & Array<{ value: number }>,
+    `),
     db
       .select({ stream: inputs.stream, streamCount: count() })
       .from(inputs)
@@ -35,10 +35,7 @@ export async function MetricCardsSection() {
       .where(eq(inputs.status, 'unprocessed')),
   ])
 
-  // Fix: activeThemes comes from raw SQL
-  const themeCount = typeof activeThemes === 'number'
-    ? activeThemes
-    : ((activeThemes as unknown as { rows: Array<{ value: number }> }).rows?.[0]?.value ?? 0)
+  const themeCount = (themeResult as unknown as { rows: Array<{ value: number }> }).rows?.[0]?.value ?? 0
 
   const topStreamRaw = topStreamRow[0]?.stream ?? null
   const topStreamLabel = topStreamRaw
