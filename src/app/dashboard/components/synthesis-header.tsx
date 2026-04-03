@@ -56,7 +56,7 @@ export function SynthesisHeader({
 }) {
   if (!synthesis) {
     return (
-      <div className="rounded-xl border border-edge bg-panel p-6">
+      <div className="card-elevated rounded-xl border border-edge bg-panel p-6">
         <div className="flex items-start justify-between">
           <div>
             <h2 className="font-display text-lg italic text-ink">
@@ -94,7 +94,7 @@ export function SynthesisHeader({
   const dateRange = formatDateRange(synthesis.periodStart, synthesis.periodEnd)
 
   return (
-    <div className="rounded-xl border border-edge bg-panel p-6">
+    <div className="card-elevated rounded-xl border border-edge bg-panel p-6">
       {/* Header row */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">

@@ -19,7 +19,7 @@ export async function StreamDistributionSection() {
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-xl border border-edge bg-panel p-5">
+      <div className="card-elevated rounded-xl border border-edge bg-panel p-5">
         <h3 className="mb-3 text-sm font-semibold text-dim">Input Streams</h3>
         <p className="py-8 text-center text-sm italic text-muted">
           No inputs recorded yet.
@@ -36,7 +36,7 @@ export async function StreamDistributionSection() {
   const total = segments.reduce((sum, s) => sum + s.count, 0)
 
   return (
-    <div className="h-full rounded-xl border border-edge bg-panel p-5">
+    <div className="h-full card-elevated rounded-xl border border-edge bg-panel p-5">
       <h3 className="mb-3 text-sm font-semibold text-dim">Input Streams</h3>
 
       {/* Stacked bar */}

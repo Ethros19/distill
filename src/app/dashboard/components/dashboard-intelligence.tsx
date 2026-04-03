@@ -13,6 +13,19 @@ function ChartSkeleton() {
 
 function PanelSkeleton() {
   return (
+    <div className="space-y-2.5">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div
+          key={i}
+          className="h-28 animate-pulse rounded-xl border border-edge bg-panel"
+        />
+      ))}
+    </div>
+  )
+}
+
+function CardSkeleton() {
+  return (
     <div className="h-80 animate-pulse rounded-xl border border-edge bg-panel" />
   )
 }
@@ -39,9 +52,9 @@ export function DashboardIntelligence() {
       </Suspense>
 
       {/* Row 2: Theme Landscape + Signal Trend */}
-      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-5">
+      <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-5">
         <div className="lg:col-span-3">
-          <Suspense fallback={<PanelSkeleton />}>
+          <Suspense fallback={<CardSkeleton />}>
             <ThemeHeatmapSection />
           </Suspense>
         </div>

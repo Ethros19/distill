@@ -52,7 +52,7 @@ export async function MetricCardsSection() {
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {metrics.map((m) => (
-        <div key={m.label} className="rounded-xl border border-edge bg-panel px-4 py-3">
+        <div key={m.label} className="card-elevated rounded-xl border border-edge bg-panel px-4 py-3">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted">
             {m.label}
           </p>

@@ -163,3 +163,42 @@ body {
 .intel-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+/* Card shadow utility */
+.card-elevated {
+  box-shadow: var(--card-shadow);
+}
+
+/* Strength bar */
+.strength-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-main);
+  overflow: hidden;
+}
+.strength-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+/* Filter pill */
+.filter-pill {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+.filter-pill:hover {
+  background: var(--accent-wash);
+  color: var(--accent);
+}
+.filter-pill.active {
+  background: var(--accent-wash);
+  color: var(--accent);
+  border-color: rgba(var(--accent), 0.3);
+}

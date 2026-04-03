@@ -34,7 +34,7 @@ export async function ThemeHeatmapSection() {
   }
 
   return (
-    <div className="flex flex-col rounded-xl border border-edge bg-panel">
+    <div className="card-elevated flex flex-col rounded-xl border border-edge bg-panel">
       {/* Fixed header */}
       <div className="flex items-center justify-between border-b border-edge-dim px-5 py-3">
         <h3 className="text-sm font-semibold text-dim">Theme Landscape</h3>
