@@ -7,7 +7,7 @@ import { buildStreamPromptList, STREAM_VALUES } from '../stream-utils'
 
 const STRUCTURE_MODEL = process.env.ANTHROPIC_STRUCTURE_MODEL || 'claude-haiku-4-5-20251001'
 const SYNTHESIZE_MODEL = process.env.ANTHROPIC_SYNTHESIZE_MODEL || 'claude-sonnet-4-6'
-const NARRATIVE_MODEL = process.env.ANTHROPIC_NARRATIVE_MODEL || 'claude-sonnet-4-6'
+const NARRATIVE_MODEL = process.env.ANTHROPIC_NARRATIVE_MODEL || 'claude-opus-4-6'
 
 const STRUCTURE_SYSTEM_PROMPT = `You are a product feedback analyst. Given raw feedback content, its source channel, and contributor, extract structured fields.
 
