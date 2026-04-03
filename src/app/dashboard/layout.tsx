@@ -3,6 +3,7 @@ import { LogoutButton } from './components/logout-button'
 import { HelpButton } from './components/help-modal'
 import { ThemeSwitcher } from './components/theme-switcher'
 import { SettingsDropdown } from './components/settings-dropdown'
+import { TextSizeControl } from './components/text-size-control'
 import { SignalStats } from './components/signal-stats'
 import NavLink from './components/NavLink'
 
@@ -46,6 +47,7 @@ export default function DashboardLayout({
             </NavLink>
           </nav>
           <div className="flex items-center gap-1">
+            <TextSizeControl />
             <HelpButton />
             <ThemeSwitcher />
             <SettingsDropdown />
