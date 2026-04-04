@@ -10,6 +10,7 @@ import { strengthColor } from '../../components/signal-card'
 import { StatusControls } from './components/status-controls'
 import { LinearPushButton } from './components/linear-push-button'
 import { SignalNotes } from './components/signal-notes'
+import { CopyContextButton } from './components/copy-context-button'
 import { isLinearConfigured } from '@/lib/linear'
 import type { Metadata } from 'next'
 
@@ -64,15 +65,49 @@ export default async function SignalDetailPage({
           .where(inArray(inputs.id, evidenceIds))
       : []
 
+  // Build prompt-ready context block
+  const contextLines: string[] = [
+    `# Signal: ${signal.statement}`,
+    '',
+    `**Strength:** ${signal.strength}/10`,
+    `**Status:** ${signalStatusLabel(signal.status)}`,
+  ]
+  if (signal.themes && signal.themes.length > 0) {
+    contextLines.push(`**Themes:** ${signal.themes.join(', ')}`)
+  }
+  contextLines.push('', '## Reasoning', signal.reasoning)
+  if (signal.suggestedAction) {
+    contextLines.push('', '## Suggested Action', signal.suggestedAction)
+  }
+  if (signal.notes) {
+    contextLines.push('', '## Notes', signal.notes)
+  }
+  if (evidenceInputs.length > 0) {
+    contextLines.push('', `## Supporting Evidence (${evidenceInputs.length} inputs)`)
+    evidenceInputs.forEach((input, i) => {
+      contextLines.push('')
+      contextLines.push(`### Input ${i + 1}${input.source ? ` (${input.source})` : ''}`)
+      if (input.stream) contextLines.push(`- Stream: ${streamLabel(input.stream)}`)
+      if (input.contributor) contextLines.push(`- Contributor: ${input.contributor}`)
+      if (input.type) contextLines.push(`- Type: ${input.type}`)
+      contextLines.push('')
+      contextLines.push(input.summary ?? input.rawContent)
+    })
+  }
+  const contextText = contextLines.join('\n')
+
   return (
     <div className="space-y-6">
-      {/* Back link */}
-      <Link
-        href="/dashboard/signals"
-        className="inline-flex items-center gap-1.5 text-sm text-dim transition-colors hover:text-accent"
-      >
-        &larr; Back
-      </Link>
+      {/* Back link + Copy */}
+      <div className="flex items-center justify-between">
+        <Link
+          href="/dashboard/signals"
+          className="inline-flex items-center gap-1.5 text-sm text-dim transition-colors hover:text-accent"
+        >
+          &larr; Back
+        </Link>
+        <CopyContextButton context={contextText} />
+      </div>
 
       {/* Signal header */}
       <div className="animate-fade-up">
