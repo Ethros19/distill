@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
-const SIZES = [14, 15, 16, 17, 18] as const
+const SIZES = [13, 14, 15, 16, 17, 18, 19, 20, 22] as const
 const DEFAULT = 16
 
 export function TextSizeControl() {
