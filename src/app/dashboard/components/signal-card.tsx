@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Signal } from '@/lib/schema'
 import { SignalStatusDropdown } from './signal-status-dropdown'
 import { CopyContextButton } from '../signals/[id]/components/copy-context-button'
+import { InlineNotes } from './inline-notes'
 import { signalStatusLabel } from './format-utils'
 
 export function strengthColor(strength: number): string {
@@ -94,6 +95,8 @@ export function SignalCard({ signal }: { signal: Signal }) {
         )}
         <CopyContextButton context={buildContext(signal)} />
       </div>
+
+      <InlineNotes signalId={signal.id} initialNotes={signal.notes} />
     </div>
   )
 }

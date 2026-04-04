@@ -69,7 +69,7 @@ export const syntheses = pgTable('syntheses', {
 // ---------------------------------------------------------------------------
 // signals — named patterns extracted from a synthesis run
 // ---------------------------------------------------------------------------
-export const SIGNAL_STATUSES = ['new', 'acknowledged', 'in_progress', 'resolved'] as const
+export const SIGNAL_STATUSES = ['new', 'acknowledged', 'in_progress', 'resolved', 'dismissed'] as const
 export type SignalStatus = (typeof SIGNAL_STATUSES)[number]
 
 export const signals = pgTable(

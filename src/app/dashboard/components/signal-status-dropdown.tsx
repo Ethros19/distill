@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { signalStatusBadge, signalStatusLabel } from './format-utils'
 
-const STATUSES = ['new', 'acknowledged', 'in_progress', 'resolved'] as const
+const STATUSES = ['new', 'acknowledged', 'in_progress', 'resolved', 'dismissed'] as const
 
 export function SignalStatusDropdown({
   signalId,

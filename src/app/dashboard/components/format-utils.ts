@@ -45,6 +45,8 @@ export function signalStatusBadge(status: string): string {
       return 'bg-sig-mid/10 text-sig-mid'
     case 'resolved':
       return 'bg-sig-low/10 text-sig-low'
+    case 'dismissed':
+      return 'bg-panel-alt text-muted'
     default:
       return 'bg-panel-alt text-dim'
   }
@@ -94,6 +96,8 @@ export function signalStatusLabel(status: string): string {
       return 'In Progress'
     case 'resolved':
       return 'Resolved'
+    case 'dismissed':
+      return 'Dismissed'
     default:
       return status
   }
