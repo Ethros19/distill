@@ -1,0 +1,536 @@
+<!-- AIDesigner: Dashboard Draggable Widgets — "Stripe at Night" -->
+<!-- Layout: Drag-and-drop reorderable sections with localStorage persistence -->
+<!-- aesthetic_dna: "Stripe at Night" | ui_paradigm: Modular Draggable Bento Matrix | palette_choice: Deep Violet, Gold, Surface Indigo -->
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distill | Intelligence Overview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    },
+                    colors: {
+                        base: '#13111C',
+                        surface: '#1C1A28',
+                        surfaceLight: '#242133',
+                        violet: '#7C6EF6',
+                        gold: '#D4A847',
+                        text: '#E8E4F0',
+                        textMuted: '#9CA3AF',
+                    },
+                    boxShadow: {
+                        'glow-violet': '0 0 15px rgba(124, 110, 246, 0.4)',
+                        'glow-gold': '0 0 15px rgba(212, 168, 71, 0.4)',
+                        'inset-top': 'inset 0 1px 0 rgba(255,255,255,0.05)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #13111C; color: #E8E4F0; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+
+        /* Original Scrollbar & Stylings */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(124,110,246,0.5); }
+        .ambient-orb { position: fixed; border-radius: 50%; filter: blur(120px); z-index: 0; pointer-events: none; animation: pulse-slow 8s infinite alternate ease-in-out; }
+        @keyframes pulse-slow { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.05); } }
+        @keyframes scanline { 0% { transform: translateY(-100%); opacity: 0; } 50% { opacity: 0.1; } 100% { transform: translateY(100vh); opacity: 0; } }
+
+        /* Load Animations */
+        .fade-up { opacity: 0; transform: translateY(12px); animation: fadeUpAnim 0.6s cubic-bezier(0.16,1,0.3,1) forwards; }
+        @keyframes fadeUpAnim { to { opacity: 1; transform: translateY(0); } }
+        .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; } .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
+
+        .card-panel { background-color: #1C1A28; border: 1px solid rgba(255,255,255,0.06); border-top-color: rgba(255,255,255,0.1); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 20px rgba(0,0,0,0.2); border-radius: 12px; position: relative; overflow: hidden; }
+        .svg-chart-line { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawLine 2s ease-out 0.5s forwards; }
+        @keyframes drawLine { to { stroke-dashoffset: 0; } }
+        .timeline-line::before { content: ''; position: absolute; top: 24px; bottom: 0; left: 19px; width: 1px; background: rgba(255,255,255,0.1); }
+
+        /* Drag & Drop System */
+        body.is-dragging-state {
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: grabbing !important;
+        }
+
+        .draggable-widget {
+            touch-action: none;
+            will-change: transform;
+        }
+
+        .draggable-widget.is-dragging {
+            position: fixed;
+            z-index: 9999;
+            opacity: 0.85;
+            pointer-events: none;
+            transform-origin: center center;
+        }
+
+        /* Violet Glow on Drag */
+        .draggable-widget.is-dragging::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border: 2px solid #7C6EF6;
+            border-radius: 14px;
+            box-shadow: 0 0 20px rgba(124, 110, 246, 0.4), inset 0 0 10px rgba(124, 110, 246, 0.2);
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .placeholder-widget {
+            background-color: rgba(124, 110, 246, 0.05);
+            border: 2px dashed rgba(124, 110, 246, 0.6);
+            border-radius: 14px;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 0 15px rgba(124, 110, 246, 0.1);
+        }
+
+        .drag-handle {
+            color: #9CA3AF;
+        }
+    </style>
+</head>
+<body class="pt-20 pb-16 flex flex-col min-h-screen relative">
+
+    <!-- Ambient Layers -->
+    <div class="ambient-orb w-[600px] h-[600px] bg-violet/20 -top-[200px] -left-[100px]"></div>
+    <div class="ambient-orb w-[500px] h-[500px] bg-gold/10 top-[40%] -right-[150px]" style="animation-delay:-4s;"></div>
+    <div class="fixed top-0 left-0 w-full h-[2px] bg-violet pointer-events-none z-[-1]" style="animation: scanline 8s linear infinite;"></div>
+
+    <!-- HEADER (Fixed, Non-Draggable) -->
+    <header class="fixed top-0 inset-x-0 h-16 bg-surface/80 backdrop-blur-md border-b border-white/5 flex items-center px-6 z-40 justify-between">
+        <div class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 32 32" style="filter: drop-shadow(0 0 6px rgba(212,168,71,0.3));">
+                <circle cx="16" cy="16" r="14" fill="none" stroke="#D4A847" stroke-width="1.5" opacity="0.6"/>
+                <circle cx="16" cy="16" r="8" fill="none" stroke="#D4A847" stroke-width="1" opacity="0.35"/>
+                <circle cx="16" cy="16" r="2.5" fill="#D4A847"/>
+                <circle cx="16" cy="2" r="1.5" fill="#D4A847" opacity="0.6"/>
+                <circle cx="28.5" cy="20" r="1.5" fill="#D4A847" opacity="0.45"/>
+                <circle cx="5" cy="23" r="1.5" fill="#D4A847" opacity="0.35"/>
+            </svg>
+            <div class="flex items-baseline gap-2">
+                <span class="font-bold text-lg tracking-wide text-text">Distill</span>
+                <span class="text-xs uppercase tracking-[0.15em] text-gold/70 font-semibold hidden sm:inline-block">Signal Intelligence</span>
+            </div>
+        </div>
+        <nav class="hidden md:flex items-center p-1 bg-surfaceLight/50 rounded-full border border-white/5 shadow-inner">
+            <a href="#" class="px-5 py-1.5 rounded-full bg-violet/20 text-text text-sm font-medium border border-violet/30">Dashboard</a>
+            <a href="#" class="px-5 py-1.5 rounded-full text-textMuted text-sm font-medium hover:text-text hover:bg-white/5 transition-colors">Signals</a>
+            <a href="#" class="px-5 py-1.5 rounded-full text-textMuted text-sm font-medium hover:text-text hover:bg-white/5 transition-colors">Radar</a>
+            <a href="#" class="px-5 py-1.5 rounded-full text-textMuted text-sm font-medium hover:text-text hover:bg-white/5 transition-colors">Streams</a>
+            <div class="w-px h-4 bg-white/10 mx-2"></div>
+            <a href="#" class="px-4 py-1.5 rounded-full text-textMuted text-sm font-medium hover:text-text hover:bg-white/5 transition-colors">Inputs</a>
+            <a href="#" class="px-4 py-1.5 rounded-full text-textMuted text-sm font-medium hover:text-text hover:bg-white/5 transition-colors">Sources</a>
+        </nav>
+        <div class="flex items-center gap-4">
+            <button class="relative text-textMuted hover:text-text transition-colors"><i class="ph ph-bell text-xl"></i><span class="absolute top-0 right-0 w-2 h-2 bg-gold rounded-full border-2 border-surface animate-pulse"></span></button>
+            <button class="text-textMuted hover:text-text transition-colors"><i class="ph ph-magnifying-glass text-xl"></i></button>
+            <button class="text-textMuted hover:text-text transition-colors hidden sm:block"><i class="ph ph-gear text-xl"></i></button>
+            <div class="w-8 h-8 rounded-full bg-surfaceLight border border-white/10 flex items-center justify-center text-xs font-semibold text-text ml-2">ER</div>
+        </div>
+    </header>
+
+    <!-- MAIN DASHBOARD (Draggable Widgets) -->
+    <main id="drag-container" class="flex-1 w-full max-w-[1600px] mx-auto px-6 flex flex-col gap-6 relative z-10">
+
+        <!-- SECTION 1: SYNTHESIS COMMAND BAR -->
+        <div class="draggable-widget group relative fade-up w-full" data-id="synthesis">
+            <button class="drag-handle absolute -top-2.5 -left-2.5 w-7 h-7 bg-surfaceLight border border-white/20 rounded-md flex justify-center items-center opacity-0 group-hover:opacity-100 transition-all shadow-xl hover:text-violet hover:border-violet/50 hover:bg-violet/10 cursor-grab z-50">
+                <i class="ph ph-dots-six-vertical text-lg"></i>
+            </button>
+
+            <section class="card-panel flex flex-col md:flex-row md:items-center justify-between p-4">
+                <div class="flex items-center gap-4 mb-4 md:mb-0">
+                    <div class="w-10 h-10 rounded-lg bg-surfaceLight border border-white/5 flex items-center justify-center shadow-lg"><i class="ph-duotone ph-graph text-2xl text-violet"></i></div>
+                    <div>
+                        <h1 class="text-xl font-semibold tracking-tight text-white leading-tight">Intelligence Overview</h1>
+                        <p class="text-sm text-textMuted mt-0.5">Real-time telemetry and thematic synthesis across 14 input streams.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="hidden lg:flex flex-col text-right">
+                        <span class="text-[10px] uppercase tracking-wider text-textMuted font-semibold">Last Synthesis</span>
+                        <span class="font-mono text-xs text-text opacity-90">14:22:09 UTC</span>
+                    </div>
+                    <div class="h-8 w-px bg-white/10 hidden lg:block"></div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex flex-col text-right">
+                            <span class="text-[10px] uppercase tracking-wider text-textMuted font-semibold">Queue</span>
+                            <div class="flex items-center justify-end gap-1.5 mt-0.5">
+                                <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-40"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-gold"></span></span>
+                                <span class="font-mono text-sm text-gold font-bold">1,402</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="bg-violet hover:bg-violet/90 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-glow-violet flex items-center gap-2 active:scale-95"><i class="ph-fill ph-lightning text-white/80"></i> Run Synthesis</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- SECTION 2: KPI CARDS -->
+        <div class="draggable-widget group relative fade-up delay-1 w-full" data-id="kpis">
+            <button class="drag-handle absolute -top-2.5 -left-2.5 w-7 h-7 bg-surfaceLight border border-white/20 rounded-md flex justify-center items-center opacity-0 group-hover:opacity-100 transition-all shadow-xl hover:text-violet hover:border-violet/50 hover:bg-violet/10 cursor-grab z-50">
+                <i class="ph ph-dots-six-vertical text-lg"></i>
+            </button>
+
+            <section class="w-full relative">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <div class="card-panel p-5 group/card flex flex-col justify-between h-[120px]">
+                        <div class="flex justify-between items-start"><span class="text-sm text-textMuted font-medium flex items-center gap-2"><i class="ph ph-broadcast text-violet"></i> Total Signals</span><span class="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-mono rounded">+12.4%</span></div>
+                        <div class="font-mono text-3xl font-bold tracking-tight text-white" style="text-shadow: 0 0 12px rgba(255,255,255,0.2);">84,291</div>
+                    </div>
+                    <div class="card-panel p-5 group/card flex flex-col justify-between h-[120px]">
+                        <div class="flex justify-between items-start"><span class="text-sm text-textMuted font-medium flex items-center gap-2"><i class="ph ph-intersect text-violet"></i> Active Themes</span></div>
+                        <div class="font-mono text-3xl font-bold tracking-tight text-white" style="text-shadow: 0 0 12px rgba(255,255,255,0.2);">146</div>
+                    </div>
+                    <div class="card-panel p-5 group/card flex flex-col justify-between h-[120px] relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gold/5 opacity-0 group-hover/card:opacity-100 transition-opacity"></div>
+                        <div class="flex justify-between items-start relative z-10"><span class="text-sm text-textMuted font-medium flex items-center gap-2"><i class="ph ph-wind text-gold"></i> Input Velocity</span><span class="text-[10px] uppercase text-textMuted">Per Hour</span></div>
+                        <div class="font-mono text-3xl font-bold tracking-tight text-gold relative z-10" style="text-shadow: 0 0 12px rgba(212,168,71,0.3);">3.2k</div>
+                        <svg class="absolute bottom-0 left-0 w-full h-12 opacity-20 pointer-events-none" preserveAspectRatio="none" viewBox="0 0 100 20"><path d="M0,20 L10,15 L20,18 L30,5 L40,10 L50,2 L60,8 L70,4 L80,12 L90,2 L100,5 L100,20 Z" fill="#D4A847"></path></svg>
+                    </div>
+                    <div class="card-panel p-5 group/card flex flex-col justify-between h-[120px]">
+                        <div class="flex justify-between items-start"><span class="text-sm text-textMuted font-medium flex items-center gap-2"><i class="ph ph-share-network text-violet"></i> Top Stream</span></div>
+                        <div><div class="text-lg font-semibold tracking-tight text-white leading-snug truncate">Dev API Telemetry</div><div class="text-xs text-textMuted font-mono">42% of total volume</div></div>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center gap-2 px-1">
+                    <span class="text-[10px] uppercase tracking-widest text-textMuted font-semibold w-24 shrink-0">Confidence</span>
+                    <div class="flex-1 flex h-1.5 rounded-full overflow-hidden opacity-80">
+                        <div class="bg-violet w-1/2"></div><div class="bg-[#9c91f8] w-1/4"></div><div class="bg-[#bbb3fa] w-[15%]"></div><div class="bg-surfaceLight w-[10%]"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- SECTION 3: LIVE INTEL FEED -->
+        <div class="draggable-widget group relative w-full" data-id="livefeed">
+            <button class="drag-handle absolute -top-2.5 -left-2.5 w-7 h-7 bg-surfaceLight border border-white/20 rounded-md flex justify-center items-center opacity-0 group-hover:opacity-100 transition-all shadow-xl hover:text-violet hover:border-violet/50 hover:bg-violet/10 cursor-grab z-50">
+                <i class="ph ph-dots-six-vertical text-lg"></i>
+            </button>
+
+            <div class="card-panel fade-up delay-2 flex flex-col h-[400px]">
+                <div class="p-4 border-b border-white/5 flex justify-between items-center shrink-0">
+                    <div class="flex items-center gap-2"><i class="ph ph-activity text-textMuted"></i><h2 class="font-medium text-sm text-white">Live Intel Feed</h2></div>
+                    <div class="flex items-center gap-2 px-2 py-1 bg-emerald-500/10 rounded-full border border-emerald-500/20"><span class="relative flex h-1.5 w-1.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span></span><span class="text-[10px] uppercase font-bold text-emerald-500 tracking-wider">Live</span></div>
+                </div>
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-5 timeline-line relative">
+                    <div class="relative pl-7 mb-6 group/timeline"><div class="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] border border-surface z-10"></div><div class="font-mono text-[10px] text-textMuted mb-1">14:21:44 UTC</div><div class="text-sm text-white font-medium mb-1 leading-snug">Authentication spike on US-East cluster.</div><div class="flex gap-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-mono border border-white/10 text-white/60 bg-white/5">src: Okta</span><span class="px-1.5 py-0.5 rounded text-[9px] font-mono border border-rose-500/30 text-rose-400 bg-rose-500/10">Critical</span></div></div>
+                    <div class="relative pl-7 mb-6 group/timeline"><div class="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-gold shadow-[0_0_8px_rgba(212,168,71,0.6)] border border-surface z-10"></div><div class="font-mono text-[10px] text-textMuted mb-1">14:18:02 UTC</div><div class="text-sm text-white font-medium mb-1 leading-snug">Checkout webhook completions dropping.</div><div class="flex gap-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-mono border border-white/10 text-white/60 bg-white/5">src: Stripe API</span></div></div>
+                    <div class="relative pl-7 mb-6 group/timeline"><div class="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-violet shadow-[0_0_8px_rgba(124,110,246,0.6)] border border-surface z-10"></div><div class="font-mono text-[10px] text-textMuted mb-1">14:12:59 UTC</div><div class="text-sm text-white/80 leading-snug">New theme: "iOS App Crash Sequence" linked to 42 crash logs.</div></div>
+                    <div class="relative pl-7 mb-2 group/timeline opacity-60"><div class="absolute left-0 top-1.5 w-2 h-2 rounded-full bg-white/30 border border-surface z-10"></div><div class="font-mono text-[10px] text-textMuted mb-1">14:05:10 UTC</div><div class="text-sm text-white/80 leading-snug truncate">Batch extraction completed for Zendesk dump.</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: SIGNAL VOLUME & ANOMALY DETECTION -->
+        <div class="draggable-widget group relative w-full" data-id="chart">
+            <button class="drag-handle absolute -top-2.5 -left-2.5 w-7 h-7 bg-surfaceLight border border-white/20 rounded-md flex justify-center items-center opacity-0 group-hover:opacity-100 transition-all shadow-xl hover:text-violet hover:border-violet/50 hover:bg-violet/10 cursor-grab z-50">
+                <i class="ph ph-dots-six-vertical text-lg"></i>
+            </button>
+
+            <div class="card-panel fade-up delay-3 flex flex-col h-[350px] relative overflow-hidden">
+                <div class="absolute top-0 inset-x-0 p-4 flex justify-between items-start z-10 pointer-events-none">
+                    <div><h2 class="font-medium text-sm text-white flex items-center gap-2"><i class="ph-duotone ph-chart-line-up text-violet"></i> Signal Volume & Anomaly Detection</h2><span class="text-xs text-textMuted mt-1 block">Tracking anomalies across all normalized feeds (7d)</span></div>
+                    <div class="flex gap-3 text-[11px] font-mono text-textMuted"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-violet"></span> Volume</span><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-gold"></span> Anomaly</span></div>
+                </div>
+                <div class="flex-1 w-full flex items-end pt-16 pr-4 pb-2 pointer-events-none">
+                    <svg viewBox="0 0 800 250" class="w-full h-full" preserveAspectRatio="none">
+                        <defs><pattern id="grid" width="80" height="40" patternUnits="userSpaceOnUse"><line x1="80" y1="0" x2="80" y2="40" stroke="rgba(255,255,255,0.03)" stroke-width="1"/><line x1="0" y1="40" x2="80" y2="40" stroke="rgba(255,255,255,0.03)" stroke-width="1"/></pattern><linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#7C6EF6" /><stop offset="60%" stop-color="#7C6EF6" /><stop offset="100%" stop-color="#D4A847" /></linearGradient><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7C6EF6" stop-opacity="0.2" /><stop offset="100%" stop-color="#7C6EF6" stop-opacity="0" /></linearGradient></defs>
+                        <rect width="800" height="230" fill="url(#grid)" />
+                        <path d="M0,200 C100,200 150,150 250,160 C320,165 350,80 450,100 C550,120 600,180 700,130 C750,105 780,50 800,40 L800,230 L0,230 Z" fill="url(#areaGrad)" />
+                        <path d="M0,200 C100,200 150,150 250,160 C320,165 350,80 450,100 C550,120 600,180 700,130 C750,105 780,50 800,40" fill="none" stroke="url(#lineGrad)" stroke-width="2.5" class="svg-chart-line" />
+                        <circle cx="370" cy="85" r="16" fill="none" stroke="#D4A847" stroke-width="1" opacity="0.3" class="animate-pulse" style="animation-duration:3s;" />
+                        <circle cx="370" cy="85" r="4" fill="#1C1A28" stroke="#D4A847" stroke-width="2" />
+                        <text x="375" y="70" fill="#D4A847" font-family="Roboto Mono" font-size="10" opacity="0.8">Anomaly</text>
+                        <circle cx="800" cy="40" r="4" fill="#D4A847" stroke="#1C1A28" stroke-width="1.5" />
+                        <g font-family="Roboto Mono" font-size="9" fill="#9CA3AF" opacity="0.6"><text x="80" y="245">Mon</text><text x="240" y="245">Tue</text><text x="400" y="245">Wed</text><text x="560" y="245">Thu</text><text x="720" y="245">Fri</text></g>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 5: TOP EMERGENT THEMES -->
+        <div class="draggable-widget group relative w-full" data-id="themes">
+            <button class="drag-handle absolute -top-2.5 -left-2.5 w-7 h-7 bg-surfaceLight border border-white/20 rounded-md flex justify-center items-center opacity-0 group-hover:opacity-100 transition-all shadow-xl hover:text-violet hover:border-violet/50 hover:bg-violet/10 cursor-grab z-50">
+                <i class="ph ph-dots-six-vertical text-lg"></i>
+            </button>
+
+            <div class="card-panel fade-up delay-4 flex flex-col p-4 min-h-[280px]">
+                <div class="flex justify-between items-center mb-4"><h2 class="font-medium text-sm text-white flex items-center gap-2"><i class="ph-duotone ph-squares-four text-violet"></i> Top Emergent Themes</h2><span class="text-xs text-violet font-mono hover:underline cursor-pointer">Expand Landscape</span></div>
+                <div class="flex-1 grid grid-cols-4 grid-rows-2 gap-2">
+                    <div class="col-span-2 row-span-2 bg-violet/10 border border-violet/30 rounded-lg p-3 relative group/box overflow-hidden hover:bg-violet/20 transition-colors cursor-pointer"><div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-violet/20 to-transparent opacity-50"></div><span class="block text-violet font-semibold text-lg leading-tight relative z-10">Authentication Friction (SAML)</span><div class="absolute bottom-3 left-3 text-xs font-mono text-violet/70 z-10">Vol: High</div><i class="ph ph-shield-warning absolute top-3 right-3 text-xl text-violet/50 group-hover/box:text-violet transition-colors"></i></div>
+                    <div class="col-span-1 row-span-2 bg-gold/10 border border-gold/30 rounded-lg p-3 relative group/box overflow-hidden hover:bg-gold/20 transition-colors cursor-pointer"><span class="block text-gold font-medium leading-tight text-sm">Mobile App Perf. Drop</span><div class="absolute bottom-3 left-3 flex items-center gap-1"><i class="ph-fill ph-trend-up text-gold"></i><span class="text-[10px] font-mono text-gold/80">Spiking</span></div></div>
+                    <div class="col-span-1 row-span-1 bg-surfaceLight/50 border border-white/5 rounded-lg p-2.5 hover:border-white/20 transition-colors cursor-pointer flex flex-col justify-between"><span class="text-text text-xs leading-tight opacity-90 truncate">Billing API Latency</span><span class="text-[9px] font-mono text-textMuted mt-1">12 signals</span></div>
+                    <div class="col-span-1 row-span-1 bg-surfaceLight/50 border border-white/5 rounded-lg p-2.5 hover:border-white/20 transition-colors cursor-pointer flex flex-col justify-between"><span class="text-text text-xs leading-tight opacity-90 truncate">Onboarding Dropoff</span><span class="text-[9px] font-mono text-textMuted mt-1">8 signals</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 6: INPUT DISTRIBUTION -->
+        <div class="draggable-widget group relative w-full" data-id="distribution">
+            <button class="drag-handle absolute -top-2.5 -left-2.5 w-7 h-7 bg-surfaceLight border border-white/20 rounded-md flex justify-center items-center opacity-0 group-hover:opacity-100 transition-all shadow-xl hover:text-violet hover:border-violet/50 hover:bg-violet/10 cursor-grab z-50">
+                <i class="ph ph-dots-six-vertical text-lg"></i>
+            </button>
+
+            <div class="card-panel fade-up delay-4 flex flex-col p-4 min-h-[250px]">
+                <h2 class="font-medium text-sm text-white flex items-center gap-2 mb-4"><i class="ph-duotone ph-funnel text-violet"></i> Input Distribution</h2>
+                <div class="flex-1 flex flex-col justify-around">
+                    <div class="group/dist"><div class="flex justify-between text-xs mb-1.5"><span class="text-white/80 flex items-center gap-1.5"><i class="ph-fill ph-github-logo text-white/50"></i> GitHub</span><span class="font-mono text-textMuted">42%</span></div><div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden"><div class="bg-violet h-1.5 rounded-full" style="width:42%"></div></div></div>
+                    <div class="group/dist"><div class="flex justify-between text-xs mb-1.5"><span class="text-white/80 flex items-center gap-1.5"><i class="ph-fill ph-headset text-white/50"></i> Zendesk</span><span class="font-mono text-textMuted">28%</span></div><div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden"><div class="bg-white/40 h-1.5 rounded-full" style="width:28%"></div></div></div>
+                    <div class="group/dist"><div class="flex justify-between text-xs mb-1.5"><span class="text-white/80 flex items-center gap-1.5"><i class="ph-fill ph-twitter-logo text-white/50"></i> X/Social</span><span class="font-mono text-textMuted">18%</span></div><div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden"><div class="bg-gold/60 h-1.5 rounded-full" style="width:18%"></div></div></div>
+                    <div class="group/dist"><div class="flex justify-between text-xs mb-1.5"><span class="text-white/80 flex items-center gap-1.5"><i class="ph-fill ph-terminal-window text-white/50"></i> System Logs</span><span class="font-mono text-textMuted">12%</span></div><div class="w-full bg-white/5 rounded-full h-1.5 overflow-hidden"><div class="bg-white/10 h-1.5 rounded-full" style="width:12%"></div></div></div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-white/5 text-center"><button class="text-xs text-violet hover:text-white transition-colors font-medium">View All Streams &rarr;</button></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER (Fixed, Non-Draggable) -->
+    <footer class="fixed bottom-0 inset-x-0 h-10 bg-[#13111C]/90 backdrop-blur-md border-t border-white/5 flex justify-between items-center px-6 z-40">
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span><span class="text-[11px] font-mono text-textMuted">Distill Engine Nominal</span></div>
+            <div class="w-px h-3 bg-white/10"></div>
+            <span class="text-[11px] font-mono text-textMuted/70 flex items-center gap-1"><i class="ph ph-cpu"></i> 3 Workers</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="flex items-center bg-surfaceLight/50 p-0.5 rounded border border-white/5">
+                <button class="px-3 py-1 text-[10px] font-mono text-textMuted rounded transition-colors hover:text-white">24H</button>
+                <button class="px-3 py-1 text-[10px] font-mono bg-white/10 text-white rounded shadow-sm">7D</button>
+                <button class="px-3 py-1 text-[10px] font-mono text-textMuted rounded transition-colors hover:text-white">30D</button>
+                <button class="px-3 py-1 text-[10px] font-mono text-textMuted rounded transition-colors hover:text-white">90D</button>
+            </div>
+            <!-- Reset Layout Button -->
+            <button id="reset-layout-btn" class="hidden px-2 py-1 text-[10px] font-mono text-violet bg-violet/10 hover:bg-violet/20 border border-violet/20 rounded shadow-sm transition-colors cursor-pointer">
+                Reset Layout
+            </button>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('drag-container');
+            const originalOrder = Array.from(document.querySelectorAll('.draggable-widget')).map(w => w.dataset.id);
+            const resetBtn = document.getElementById('reset-layout-btn');
+            const LOCAL_STORAGE_KEY = 'distill_dashboard_layout_order';
+
+            // Clean residual animations after load to prevent transform conflicts during drag
+            setTimeout(() => {
+                document.querySelectorAll('.fade-up').forEach(el => {
+                    el.classList.remove('fade-up', 'delay-1', 'delay-2', 'delay-3', 'delay-4');
+                });
+            }, 1200);
+
+            // Layout Persistence
+            function saveLayout() {
+                const currentOrder = Array.from(document.querySelectorAll('.draggable-widget')).map(w => w.dataset.id);
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(currentOrder));
+                evalResetVisibility(currentOrder);
+            }
+
+            function evalResetVisibility(currentOrder) {
+                if (JSON.stringify(currentOrder) !== JSON.stringify(originalOrder)) {
+                    resetBtn.classList.remove('hidden');
+                } else {
+                    resetBtn.classList.add('hidden');
+                }
+            }
+
+            function restoreLayout() {
+                const savedOrderStr = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (savedOrderStr) {
+                    try {
+                        const savedOrder = JSON.parse(savedOrderStr);
+                        if (savedOrder.length === originalOrder.length) {
+                            savedOrder.forEach(id => {
+                                const widget = document.querySelector(`.draggable-widget[data-id="${id}"]`);
+                                if (widget) container.appendChild(widget);
+                            });
+                            evalResetVisibility(savedOrder);
+                        }
+                    } catch (e) {
+                         console.error("Layout parse error", e);
+                    }
+                }
+            }
+
+            // Reset
+            resetBtn.addEventListener('click', () => {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+                originalOrder.forEach(id => {
+                    const widget = document.querySelector(`.draggable-widget[data-id="${id}"]`);
+                    if (widget) container.appendChild(widget);
+                });
+                evalResetVisibility(originalOrder);
+            });
+
+            // Initialize
+            restoreLayout();
+
+            // Drag & Drop Engine
+            let dragEl = null;
+            let placeholder = null;
+            let startX = 0, startY = 0;
+            let startRect = null;
+            let isCleaning = false;
+
+            document.addEventListener('pointerdown', (e) => {
+                if (e.button !== 0) return;
+                const handle = e.target.closest('.drag-handle');
+                if (!handle) return;
+                e.preventDefault();
+
+                dragEl = handle.closest('.draggable-widget');
+                startRect = dragEl.getBoundingClientRect();
+                startX = e.clientX;
+                startY = e.clientY;
+
+                // Create placeholder
+                placeholder = document.createElement('div');
+                placeholder.className = 'placeholder-widget w-full';
+                placeholder.style.height = `${startRect.height}px`;
+                dragEl.parentNode.insertBefore(placeholder, dragEl);
+
+                // Configure dragged element
+                dragEl.style.width = `${startRect.width}px`;
+                dragEl.style.height = `${startRect.height}px`;
+                dragEl.style.left = `${startRect.left}px`;
+                dragEl.style.top = `${startRect.top}px`;
+
+                dragEl.classList.add('is-dragging');
+                document.body.classList.add('is-dragging-state');
+
+                document.addEventListener('pointermove', onPointerMove, { passive: false });
+                document.addEventListener('pointerup', onPointerUp);
+            });
+
+            function onPointerMove(e) {
+                if (!dragEl) return;
+                e.preventDefault();
+
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                dragEl.style.transform = `translate(${dx}px, ${dy}px) scale(1.02)`;
+
+                // Hit detection
+                const siblings = Array.from(document.querySelectorAll('.draggable-widget:not(.is-dragging)'));
+                let targetSibling = null;
+                let insertAfter = false;
+
+                for (let i = 0; i < siblings.length; i++) {
+                    const rect = siblings[i].getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+
+                    if (e.clientY >= rect.top && e.clientY <= rect.bottom) {
+                        targetSibling = siblings[i];
+                        insertAfter = e.clientY > midY;
+                        break;
+                    }
+                }
+
+                if (targetSibling) {
+                    performFLIPReorder(targetSibling, insertAfter, siblings);
+                }
+            }
+
+            function performFLIPReorder(targetSibling, insertAfter, siblings) {
+                const elements = [placeholder, ...siblings];
+
+                // FLIP: Record positions
+                const firstPositions = new Map();
+                elements.forEach(el => firstPositions.set(el, el.getBoundingClientRect().top));
+
+                // Mutate DOM
+                if (insertAfter) {
+                    targetSibling.parentNode.insertBefore(placeholder, targetSibling.nextSibling);
+                } else {
+                    targetSibling.parentNode.insertBefore(placeholder, targetSibling);
+                }
+
+                // FLIP: Animate
+                elements.forEach(el => {
+                    const firstY = firstPositions.get(el);
+                    const lastY = el.getBoundingClientRect().top;
+                    const deltaY = firstY - lastY;
+
+                    if (deltaY !== 0) {
+                        el.style.transform = `translateY(${deltaY}px)`;
+                        el.style.transition = 'none';
+                        el.offsetTop;
+                        requestAnimationFrame(() => {
+                            el.style.transform = '';
+                            el.style.transition = 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)';
+                        });
+                    }
+                });
+            }
+
+            function onPointerUp(e) {
+                if (!dragEl) return;
+                document.removeEventListener('pointermove', onPointerMove);
+                document.removeEventListener('pointerup', onPointerUp);
+
+                // Animate back to placeholder position
+                const pRect = placeholder.getBoundingClientRect();
+                const dx = pRect.left - startRect.left;
+                const dy = pRect.top - startRect.top;
+
+                dragEl.style.transition = 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)';
+                dragEl.style.transform = `translate(${dx}px, ${dy}px) scale(1)`;
+
+                dragEl.addEventListener('transitionend', function finalizeLayout() {
+                    dragEl.removeEventListener('transitionend', finalizeLayout);
+                    cleanupDragState();
+                }, { once: true });
+
+                setTimeout(cleanupDragState, 300);
+            }
+
+            function cleanupDragState() {
+                if (isCleaning || !dragEl) return;
+                isCleaning = true;
+
+                dragEl.classList.remove('is-dragging');
+                document.body.classList.remove('is-dragging-state');
+
+                dragEl.style.width = '';
+                dragEl.style.height = '';
+                dragEl.style.left = '';
+                dragEl.style.top = '';
+                dragEl.style.transform = '';
+                dragEl.style.transition = '';
+
+                if (placeholder && placeholder.parentNode) {
+                    placeholder.parentNode.insertBefore(dragEl, placeholder);
+                    placeholder.remove();
+                }
+
+                document.querySelectorAll('.draggable-widget').forEach(w => w.style.transition = '');
+
+                dragEl = null;
+                placeholder = null;
+                isCleaning = false;
+
+                saveLayout();
+            }
+        });
+    </script>
+</body>
+</html>

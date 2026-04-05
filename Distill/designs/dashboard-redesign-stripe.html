@@ -1,0 +1,439 @@
+<!-- AIDesigner: Dashboard Redesign — Stripe Aesthetic -->
+<!-- aesthetic_dna: Stripe-Inspired Enterprise FinTech/SaaS -->
+<!-- palette: White (#ffffff), Interface Gray (#f6f9fc), Slate Dark (#0a2540), Primary Blurple (#635bff), Accent Teal (#00d4aa) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distill | Signal Intelligence</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    },
+                    colors: {
+                        stripe: {
+                            bg: '#f6f9fc',
+                            surface: '#ffffff',
+                            slate: '#0a2540',
+                            text: '#425466',
+                            muted: '#687385',
+                            border: '#e6ebf1',
+                            primary: '#635bff',
+                            primaryHover: '#534be8',
+                            success: '#00d4aa',
+                            danger: '#fb1169',
+                            warning: '#ffb224'
+                        }
+                    },
+                    boxShadow: {
+                        'stripe-card': '0 2px 5px rgba(10, 37, 64, 0.04), 0 1px 1px rgba(10, 37, 64, 0.02)',
+                        'stripe-hover': '0 6px 12px rgba(10, 37, 64, 0.06), 0 2px 4px rgba(10, 37, 64, 0.04)',
+                        'stripe-button': '0 2px 4px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.12)',
+                        'stripe-bottom-nav': '0 -2px 10px rgba(10, 37, 64, 0.05), 0 -1px 3px rgba(10, 37, 64, 0.02)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f6f9fc;
+            color: #425466;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .mesh-bg {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 60vh;
+            z-index: 0;
+            background-image:
+                radial-gradient(at 15% 0%, hsla(253, 16%, 65%, 0.06) 0, transparent 40%),
+                radial-gradient(at 80% 0%, hsla(244, 100%, 75%, 0.05) 0, transparent 50%),
+                radial-gradient(at 50% -20%, hsla(200, 100%, 65%, 0.04) 0, transparent 50%);
+            mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e6ebf1; border-radius: 10px; }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb { background-color: #687385; }
+
+        @keyframes drawPath {
+            to { stroke-dashoffset: 0; }
+        }
+        .animate-path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawPath 1.5s ease-out forwards;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up-1 { animation: fadeUp 0.4s ease-out 0.1s forwards; opacity: 0; }
+        .fade-up-2 { animation: fadeUp 0.4s ease-out 0.2s forwards; opacity: 0; }
+        .fade-up-3 { animation: fadeUp 0.4s ease-out 0.3s forwards; opacity: 0; }
+        .fade-up-4 { animation: fadeUp 0.4s ease-out 0.4s forwards; opacity: 0; }
+
+        .crisp-border { border: 1px solid #e6ebf1; }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); opacity: 0; }
+            50% { opacity: 0.08; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+    </style>
+</head>
+<body class="relative min-h-screen flex flex-col pb-20">
+
+    <div class="mesh-bg"></div>
+    <div class="fixed top-0 left-0 w-full h-[2px] bg-stripe-primary pointer-events-none z-[-1]" style="animation: scanline 8s linear infinite;"></div>
+
+    <!-- Header -->
+    <header class="relative z-50 bg-white/90 backdrop-blur-md border-b border-stripe-border sticky top-0">
+        <div class="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-10">
+                <div class="flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 32 32">
+                        <circle cx="16" cy="16" r="14" fill="none" stroke="#D4A847" stroke-width="1.5" opacity="0.6"/>
+                        <circle cx="16" cy="16" r="8" fill="none" stroke="#D4A847" stroke-width="1" opacity="0.35"/>
+                        <circle cx="16" cy="16" r="2.5" fill="#D4A847"/>
+                        <circle cx="16" cy="2" r="1.5" fill="#D4A847" opacity="0.6"/>
+                        <circle cx="28.5" cy="20" r="1.5" fill="#D4A847" opacity="0.45"/>
+                        <circle cx="5" cy="23" r="1.5" fill="#D4A847" opacity="0.35"/>
+                    </svg>
+                    <div class="flex items-baseline gap-2">
+                        <span class="font-semibold text-stripe-slate text-lg tracking-tight">Distill</span>
+                        <span class="text-xs text-stripe-muted font-medium tracking-wide uppercase">Signal Intelligence</span>
+                    </div>
+                </div>
+                <nav class="hidden md:flex items-center gap-1">
+                    <a href="#" class="px-3 py-1.5 text-sm font-medium text-stripe-primary bg-stripe-primary/5 rounded-md transition-colors">Dashboard</a>
+                    <a href="#" class="px-3 py-1.5 text-sm font-medium text-stripe-text hover:text-stripe-slate transition-colors">Signals</a>
+                    <a href="#" class="px-3 py-1.5 text-sm font-medium text-stripe-text hover:text-stripe-slate transition-colors">Radar</a>
+                    <div class="w-[1px] h-4 bg-stripe-border mx-2"></div>
+                    <a href="#" class="px-3 py-1.5 text-sm font-medium text-stripe-text hover:text-stripe-slate transition-colors">Streams</a>
+                    <a href="#" class="px-3 py-1.5 text-sm font-medium text-stripe-text hover:text-stripe-slate transition-colors">Sources</a>
+                </nav>
+            </div>
+            <div class="flex items-center gap-4 text-stripe-muted">
+                <button class="hover:text-stripe-slate transition-colors"><i class="ph ph-question text-[20px]"></i></button>
+                <button class="hover:text-stripe-slate transition-colors"><i class="ph ph-gear text-[20px]"></i></button>
+                <div class="w-8 h-8 rounded-full bg-stripe-primary/10 flex items-center justify-center text-stripe-primary font-mono text-xs font-semibold crisp-border cursor-pointer">ER</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="relative z-10 flex-1 max-w-[1400px] mx-auto w-full px-6 pt-10 pb-12 flex flex-col gap-8">
+
+        <!-- Title + Synthesis Status -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 fade-up-1">
+            <div>
+                <h1 class="text-[28px] font-semibold text-stripe-slate tracking-tight leading-tight mb-2">Intelligence Overview</h1>
+                <p class="text-sm text-stripe-muted">Real-time synthesis of signals, themes, and input streams from 14 active sources.</p>
+            </div>
+            <div class="flex items-center gap-4 bg-white crisp-border rounded-lg p-2 pr-2.5 shadow-stripe-card">
+                <div class="flex flex-col px-3">
+                    <span class="text-[10px] font-semibold text-stripe-muted uppercase tracking-widest">Last Synthesis</span>
+                    <span class="font-mono text-xs text-stripe-slate mt-0.5">Today, 08:14:22 UTC</span>
+                </div>
+                <div class="w-[1px] h-8 bg-stripe-border"></div>
+                <div class="flex flex-col px-3">
+                    <span class="text-[10px] font-semibold text-stripe-muted uppercase tracking-widest">Queue</span>
+                    <span class="font-mono text-xs text-stripe-slate mt-0.5"><span class="text-[#ffb224]">142</span> Unprocessed</span>
+                </div>
+                <button class="ml-2 bg-stripe-primary hover:bg-stripe-primaryHover text-white text-sm font-medium px-4 py-2 rounded-[6px] shadow-stripe-button transition-all flex items-center gap-2">
+                    <i class="ph ph-arrows-clockwise text-[16px]"></i> Run Synthesis
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <section class="fade-up-2 flex flex-col gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white rounded-lg crisp-border shadow-stripe-card p-6 flex flex-col transition-shadow hover:shadow-stripe-hover cursor-default group">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-xs font-semibold text-stripe-muted uppercase tracking-widest">Total Signals</span>
+                        <i class="ph ph-wave-sine text-stripe-primary text-[20px] opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="font-mono text-3xl font-semibold text-stripe-slate">8,492</span>
+                        <span class="text-xs font-medium text-stripe-success flex items-center"><i class="ph ph-trend-up mr-1 text-[10px]"></i>12%</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg crisp-border shadow-stripe-card p-6 flex flex-col transition-shadow hover:shadow-stripe-hover cursor-default group">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-xs font-semibold text-stripe-muted uppercase tracking-widest">Active Themes</span>
+                        <i class="ph ph-intersect text-stripe-primary text-[20px] opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="font-mono text-3xl font-semibold text-stripe-slate">47</span>
+                        <span class="text-xs font-medium text-stripe-muted">Isolated</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg crisp-border shadow-stripe-card p-6 flex flex-col transition-shadow hover:shadow-stripe-hover cursor-default group">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-xs font-semibold text-stripe-muted uppercase tracking-widest">Input Velocity</span>
+                        <i class="ph ph-activity text-stripe-primary text-[20px] opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="font-mono text-3xl font-semibold text-stripe-slate">12.4</span>
+                        <span class="font-mono text-xs text-stripe-muted">/sec</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg crisp-border shadow-stripe-card p-6 flex flex-col transition-shadow hover:shadow-stripe-hover cursor-default group">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-xs font-semibold text-stripe-muted uppercase tracking-widest">Top Stream</span>
+                        <i class="ph ph-funnel text-stripe-primary text-[20px] opacity-70 group-hover:opacity-100 transition-opacity"></i>
+                    </div>
+                    <div class="flex items-baseline gap-2 mt-auto">
+                        <span class="font-sans text-lg font-medium text-stripe-slate truncate">Zendesk Tickets</span>
+                    </div>
+                    <span class="text-xs text-stripe-muted mt-1 font-mono">42% of vol</span>
+                </div>
+            </div>
+
+            <!-- Signal Strength Distribution Bar -->
+            <div class="w-full bg-white crisp-border shadow-stripe-card rounded-[4px] h-[10px] flex overflow-hidden">
+                <div class="bg-[#241c88] h-full" style="width: 15%;"></div>
+                <div class="bg-stripe-primary h-full" style="width: 45%; border-left: 1px solid white;"></div>
+                <div class="bg-[#a6a0fc] h-full" style="width: 30%; border-left: 1px solid white;"></div>
+                <div class="bg-stripe-border h-full" style="width: 10%; border-left: 1px solid white;"></div>
+            </div>
+            <div class="flex justify-between px-1 text-[10px] font-mono text-stripe-muted">
+                <span>Severe</span><span>Anomalous</span><span>Routine</span><span>Noise</span>
+            </div>
+        </section>
+
+        <!-- Charts Row -->
+        <section class="fade-up-3 grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Signal Trend -->
+            <div class="lg:col-span-8 bg-white rounded-lg crisp-border shadow-stripe-card p-6 flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-sm font-semibold text-stripe-slate">Signal Trajectory</h2>
+                        <span class="text-xs text-stripe-muted">Volume over rolling 7-day window</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-stripe-slate">
+                            <span class="w-2 h-2 rounded-full bg-stripe-primary"></span> Synthesized
+                        </span>
+                        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-stripe-muted">
+                            <span class="w-2 h-2 rounded-full bg-stripe-border"></span> Raw Input
+                        </span>
+                    </div>
+                </div>
+                <div class="relative w-full h-[240px] mt-auto">
+                    <div class="absolute inset-0 flex flex-col justify-between pt-2 pb-6">
+                        <div class="w-full border-t border-dashed border-stripe-border/60 h-0"></div>
+                        <div class="w-full border-t border-dashed border-stripe-border/60 h-0"></div>
+                        <div class="w-full border-t border-dashed border-stripe-border/60 h-0"></div>
+                        <div class="w-full border-t border-dashed border-stripe-border/60 h-0"></div>
+                        <div class="w-full border-t border-stripe-border h-0"></div>
+                    </div>
+                    <svg class="absolute inset-0 w-full h-full pb-6 overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
+                        <defs>
+                            <linearGradient id="lineGrad" x1="0" y1="1" x2="0" y2="0">
+                                <stop offset="0%" stop-color="#635bff" stop-opacity="0.05" />
+                                <stop offset="100%" stop-color="#635bff" stop-opacity="0.2" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M0,100 L0,70 C15,70 25,40 40,55 C55,70 65,30 80,45 C90,55 95,20 100,25 L100,100 Z" fill="url(#lineGrad)" />
+                        <path class="animate-path" d="M0,70 C15,70 25,40 40,55 C55,70 65,30 80,45 C90,55 95,20 100,25" fill="none" stroke="#635bff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M0,80 C15,85 25,50 40,65 C55,80 65,40 80,55 C90,65 95,30 100,35" fill="none" stroke="#e6ebf1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <div class="absolute bottom-0 w-full flex justify-between text-[10px] font-mono text-stripe-muted px-2">
+                        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stream Distribution -->
+            <div class="lg:col-span-4 bg-white rounded-lg crisp-border shadow-stripe-card p-6 flex flex-col">
+                <div class="mb-6">
+                    <h2 class="text-sm font-semibold text-stripe-slate">Stream Distribution</h2>
+                    <span class="text-xs text-stripe-muted">Volume by ingest pipeline</span>
+                </div>
+                <div class="flex flex-col gap-5 mt-2">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="font-medium text-stripe-slate">Zendesk</span>
+                            <span class="font-mono text-stripe-muted">4,190 <span class="text-[10px] ml-1">42%</span></span>
+                        </div>
+                        <div class="w-full bg-stripe-bg rounded-sm h-1.5 overflow-hidden"><div class="bg-stripe-slate h-full rounded-sm" style="width: 42%;"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="font-medium text-stripe-slate">GitHub Issues</span>
+                            <span class="font-mono text-stripe-muted">2,841 <span class="text-[10px] ml-1">28%</span></span>
+                        </div>
+                        <div class="w-full bg-stripe-bg rounded-sm h-1.5 overflow-hidden"><div class="bg-stripe-primary h-full rounded-sm" style="width: 28%;"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="font-medium text-stripe-slate">Slack App</span>
+                            <span class="font-mono text-stripe-muted">1,502 <span class="text-[10px] ml-1">15%</span></span>
+                        </div>
+                        <div class="w-full bg-stripe-bg rounded-sm h-1.5 overflow-hidden"><div class="bg-[#a6a0fc] h-full rounded-sm" style="width: 15%;"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="font-medium text-stripe-slate">NPS Surveys</span>
+                            <span class="font-mono text-stripe-muted">959 <span class="text-[10px] ml-1">9.5%</span></span>
+                        </div>
+                        <div class="w-full bg-stripe-bg rounded-sm h-1.5 overflow-hidden"><div class="bg-stripe-success h-full rounded-sm" style="width: 9.5%;"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1.5">
+                            <span class="font-medium text-stripe-slate">Other</span>
+                            <span class="font-mono text-stripe-muted">554 <span class="text-[10px] ml-1">5.5%</span></span>
+                        </div>
+                        <div class="w-full bg-stripe-bg rounded-sm h-1.5 overflow-hidden"><div class="bg-stripe-border h-full rounded-sm" style="width: 5.5%;"></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom Panels -->
+        <section class="fade-up-4 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <!-- Theme Landscape -->
+            <div class="bg-white rounded-lg crisp-border shadow-stripe-card p-6 h-[480px] flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-sm font-semibold text-stripe-slate">Theme Landscape</h2>
+                        <span class="text-xs text-stripe-muted">Synthesized topics by density and velocity</span>
+                    </div>
+                    <button class="text-xs font-medium text-stripe-primary hover:text-stripe-primaryHover transition-colors flex items-center gap-1">
+                        View Matrix <i class="ph ph-arrow-right"></i>
+                    </button>
+                </div>
+                <div class="flex-1 grid grid-cols-4 grid-rows-4 gap-2 rounded-md overflow-hidden">
+                    <div class="col-span-2 row-span-2 bg-[#f0efff] crisp-border border-stripe-primary/20 p-4 flex flex-col justify-between hover:bg-[#e4e2fd] transition-colors cursor-pointer group">
+                        <span class="text-sm font-semibold text-stripe-primary leading-tight">API Latency<br>Degradation</span>
+                        <div class="flex justify-between items-end">
+                            <span class="text-[10px] font-mono text-stripe-primary/70">id_84X</span>
+                            <i class="ph ph-trend-up text-stripe-primary opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                        </div>
+                    </div>
+                    <div class="col-span-2 row-span-1 bg-white crisp-border p-3 flex justify-between items-center hover:bg-stripe-bg transition-colors cursor-pointer">
+                        <span class="text-xs font-medium text-stripe-slate truncate">Pricing Confusion EU</span>
+                        <span class="text-[10px] font-mono text-stripe-muted">1.2k</span>
+                    </div>
+                    <div class="col-span-1 row-span-2 bg-stripe-bg crisp-border p-3 flex flex-col justify-between hover:bg-slate-100 transition-colors cursor-pointer">
+                        <span class="text-xs font-medium text-stripe-slate">Webhook<br>Retries</span>
+                        <div class="w-full h-1 bg-white mt-2 rounded-sm overflow-hidden"><div class="bg-stripe-muted w-1/2 h-full"></div></div>
+                    </div>
+                    <div class="col-span-1 row-span-1 bg-white crisp-border p-3 flex flex-col justify-center hover:bg-stripe-bg transition-colors cursor-pointer text-center">
+                        <span class="text-[10px] font-medium text-stripe-slate">Dashboard UX</span>
+                    </div>
+                    <div class="col-span-1 row-span-1 bg-[#fff8eb] crisp-border border-[#ffb224]/30 p-3 flex items-center justify-center hover:bg-[#ffefd6] transition-colors cursor-pointer">
+                        <span class="text-[10px] font-semibold text-[#ffb224] text-center">MFA Issues</span>
+                    </div>
+                    <div class="col-span-2 row-span-1 bg-white crisp-border p-3 flex justify-between items-center hover:bg-stripe-bg transition-colors cursor-pointer">
+                        <span class="text-xs font-medium text-stripe-slate">React Native SDK</span>
+                        <span class="text-[10px] font-mono text-stripe-muted">842</span>
+                    </div>
+                    <div class="col-span-1 row-span-1 bg-white crisp-border p-3 flex justify-center items-center hover:bg-stripe-bg transition-colors cursor-pointer">
+                        <span class="text-[10px] text-stripe-muted">+14 More</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signal Timeline -->
+            <div class="bg-white rounded-lg crisp-border shadow-stripe-card p-0 h-[480px] flex flex-col overflow-hidden">
+                <div class="p-6 pb-4 border-b border-stripe-border flex justify-between items-center bg-white z-10 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                    <div>
+                        <h2 class="text-sm font-semibold text-stripe-slate">Live Signal Feed</h2>
+                        <span class="text-xs text-stripe-muted">Real-time extracted entities</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-stripe-success opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-stripe-success"></span>
+                        </span>
+                        <span class="text-[10px] font-mono text-stripe-slate uppercase tracking-wider">Live</span>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-6 pt-2">
+                    <div class="relative border-l border-stripe-border ml-2 md:ml-3 space-y-6 pb-4">
+                        <div class="relative pl-6 group">
+                            <div class="absolute -left-[5px] top-1.5 w-[9px] h-[9px] rounded-full bg-white border-2 border-stripe-primary group-hover:bg-stripe-primary transition-colors"></div>
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-xs font-semibold text-stripe-slate">Latency Spike detected</span>
+                                <span class="text-[10px] font-mono text-stripe-muted">Just now</span>
+                            </div>
+                            <p class="text-sm text-stripe-text mb-2 leading-relaxed">System identified anomalous cluster of "timeout" mentions correlated with eu-west-1 routing.</p>
+                            <div class="flex gap-2">
+                                <span class="px-2 py-0.5 bg-stripe-bg crisp-border text-[10px] font-medium text-stripe-slate rounded-sm">GitHub</span>
+                                <span class="px-2 py-0.5 bg-[#f0efff] text-[10px] font-medium text-stripe-primary rounded-sm border border-stripe-primary/20">Critical</span>
+                            </div>
+                        </div>
+                        <div class="relative pl-6 group">
+                            <div class="absolute -left-[5px] top-1.5 w-[9px] h-[9px] rounded-full bg-white border-2 border-stripe-border group-hover:border-stripe-slate transition-colors"></div>
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-xs font-semibold text-stripe-slate">New Theme Originated</span>
+                                <span class="text-[10px] font-mono text-stripe-muted">2m ago</span>
+                            </div>
+                            <p class="text-sm text-stripe-text mb-2 leading-relaxed">"Export to CSV header formatting" crossed significance threshold.</p>
+                            <div class="flex gap-2">
+                                <span class="px-2 py-0.5 bg-stripe-bg crisp-border text-[10px] font-medium text-stripe-slate rounded-sm">Zendesk</span>
+                            </div>
+                        </div>
+                        <div class="relative pl-6 group">
+                            <div class="absolute -left-[5px] top-1.5 w-[9px] h-[9px] rounded-full bg-white border-2 border-stripe-border group-hover:border-stripe-slate transition-colors"></div>
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-xs font-semibold text-stripe-slate">Sentiment Shift: Webhooks</span>
+                                <span class="text-[10px] font-mono text-stripe-muted">14m ago</span>
+                            </div>
+                            <p class="text-sm text-stripe-text mb-2 leading-relaxed">Negative sentiment velocity increased 3x surrounding v2/webhook/retry documentation.</p>
+                            <div class="flex gap-2">
+                                <span class="px-2 py-0.5 bg-stripe-bg crisp-border text-[10px] font-medium text-stripe-slate rounded-sm">Twitter</span>
+                                <span class="px-2 py-0.5 bg-[#fff8eb] border border-[#ffb224]/30 text-[10px] font-medium text-[#ffb224] rounded-sm">Warning</span>
+                            </div>
+                        </div>
+                        <div class="relative pl-6 group">
+                            <div class="absolute -left-[5px] top-1.5 w-[9px] h-[9px] rounded-full bg-white border-2 border-stripe-border group-hover:border-stripe-slate transition-colors"></div>
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-xs font-semibold text-stripe-slate">Stream Source Connected</span>
+                                <span class="text-[10px] font-mono text-stripe-muted">1h ago</span>
+                            </div>
+                            <p class="text-sm text-stripe-text">Salesforce integration pipeline established. Backfilling 30 days.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Stats Bar -->
+    <footer class="fixed bottom-0 w-full bg-white/95 backdrop-blur-md border-t border-stripe-border shadow-stripe-bottom-nav z-50">
+        <div class="max-w-[1400px] mx-auto px-6 h-12 flex items-center justify-between">
+            <div class="text-[11px] font-mono text-stripe-muted tracking-wide uppercase">Global View</div>
+            <div class="flex bg-stripe-bg p-0.5 rounded-md crisp-border">
+                <button class="px-3 py-1 text-xs font-medium text-stripe-slate bg-white shadow-sm rounded-[4px] cursor-default">24h</button>
+                <button class="px-3 py-1 text-xs font-medium text-stripe-muted hover:text-stripe-slate transition-colors rounded-[4px]">7d</button>
+                <button class="px-3 py-1 text-xs font-medium text-stripe-muted hover:text-stripe-slate transition-colors rounded-[4px]">30d</button>
+                <button class="px-3 py-1 text-xs font-medium text-stripe-muted hover:text-stripe-slate transition-colors rounded-[4px]">90d</button>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

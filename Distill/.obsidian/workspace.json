@@ -184,5 +184,14 @@
     }
   },
   "active": "d831ed5937e3de39",
-  "lastOpenFiles": []
+  "lastOpenFiles": [
+    "designs/dashboard-grid.html",
+    "designs/dashboard-draggable.html",
+    "designs/dashboard-reorg.html",
+    "designs/dashboard-unified.html",
+    "designs/dashboard-redesign-hybrid.html",
+    "designs/dashboard-redesign-stripe.html",
+    "designs/dashboard-redesign-v1.html",
+    "designs"
+  ]
 }
