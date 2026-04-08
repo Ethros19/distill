@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import { signals, inputs } from '@/lib/schema'
-import { eq, inArray } from 'drizzle-orm'
+import { eq, inArray, desc } from 'drizzle-orm'
 import { signalStatusBadge, signalStatusLabel, streamBadgeStyle, streamLabel } from '../../components/format-utils'
 import { strengthColor } from '../../components/signal-card'
 import { StatusControls } from './components/status-controls'
@@ -55,6 +55,17 @@ export default async function SignalDetailPage({
 
   const linearConfigured = isLinearConfigured()
 
+  // Find prev/next signals (same synthesis, ordered by strength desc then id)
+  const siblings = await db
+    .select({ id: signals.id })
+    .from(signals)
+    .where(eq(signals.synthesisId, signal.synthesisId))
+    .orderBy(desc(signals.strength), signals.id)
+
+  const currentIdx = siblings.findIndex((s) => s.id === signal.id)
+  const prevSignalId = currentIdx > 0 ? siblings[currentIdx - 1].id : null
+  const nextSignalId = currentIdx < siblings.length - 1 ? siblings[currentIdx + 1].id : null
+
   // Resolve evidence inputs
   const evidenceIds = signal.evidence ?? []
   const evidenceInputs =
@@ -98,14 +109,37 @@ export default async function SignalDetailPage({
 
   return (
     <div className="space-y-6">
-      {/* Back link + Copy */}
+      {/* Navigation */}
       <div className="flex items-center justify-between">
-        <Link
-          href="/dashboard/signals"
-          className="inline-flex items-center gap-1.5 text-sm text-dim transition-colors hover:text-accent"
-        >
-          &larr; Back
-        </Link>
+        <div className="flex items-center gap-2">
+          {prevSignalId ? (
+            <Link
+              href={`/dashboard/signals/${prevSignalId}`}
+              className="inline-flex items-center gap-1 rounded-lg border border-edge px-3 py-1.5 text-xs font-medium text-dim transition-colors hover:bg-panel-alt hover:text-ink"
+            >
+              &larr; Prev
+            </Link>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-lg border border-edge px-3 py-1.5 text-xs font-medium text-muted/40">
+              &larr; Prev
+            </span>
+          )}
+          {nextSignalId ? (
+            <Link
+              href={`/dashboard/signals/${nextSignalId}`}
+              className="inline-flex items-center gap-1 rounded-lg border border-edge px-3 py-1.5 text-xs font-medium text-dim transition-colors hover:bg-panel-alt hover:text-ink"
+            >
+              Next &rarr;
+            </Link>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-lg border border-edge px-3 py-1.5 text-xs font-medium text-muted/40">
+              Next &rarr;
+            </span>
+          )}
+          <span className="ml-1 text-[11px] tabular-nums text-muted">
+            {currentIdx + 1} / {siblings.length}
+          </span>
+        </div>
         <CopyContextButton context={contextText} />
       </div>
 
