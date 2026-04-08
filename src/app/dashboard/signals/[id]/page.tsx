@@ -149,7 +149,7 @@ export default async function SignalDetailPage({
           className={`rounded-xl border border-edge border-l-[3px] bg-panel p-6 ${strengthColor(signal.strength)}`}
         >
           <div className="flex items-start justify-between gap-3">
-            <h1 className="font-display text-xl leading-snug text-ink">
+            <h1 className="text-lg font-semibold leading-relaxed text-ink">
               {signal.statement}
             </h1>
             <div className="flex shrink-0 items-center gap-2">
