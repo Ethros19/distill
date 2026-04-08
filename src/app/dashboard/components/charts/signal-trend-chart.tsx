@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import {
-  AreaChart,
-  Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -11,21 +11,17 @@ import {
   CartesianGrid,
 } from 'recharts'
 
-interface TrendPoint {
-  date: string
-  high: number
-  mid: number
-  low: number
-}
-
-const BANDS = [
-  { key: 'high', label: 'High', color: 'var(--signal-high)', opacity: 0.55 },
-  { key: 'mid', label: 'Medium', color: 'var(--signal-mid)', opacity: 0.4 },
-  { key: 'low', label: 'Low', color: 'var(--signal-low)', opacity: 0.35 },
-] as const
-
-// Render order: low at bottom, high on top (most important = most visible)
-const RENDER_ORDER = [...BANDS].reverse()
+// Distinct, colorblind-friendly palette for up to 8 theme lines
+const PALETTE = [
+  '#635bff', // accent purple
+  '#e11d48', // rose
+  '#059669', // emerald
+  '#d97706', // amber
+  '#0ea5e9', // sky
+  '#8b5cf6', // violet
+  '#ec4899', // pink
+  '#14b8a6', // teal
+]
 
 function CustomTooltip({
   active,
@@ -38,42 +34,45 @@ function CustomTooltip({
 }) {
   if (!active || !payload?.length) return null
 
-  const total = payload.reduce((sum, p) => sum + p.value, 0)
+  // Sort by value descending in tooltip
+  const sorted = [...payload].sort((a, b) => b.value - a.value)
 
   return (
     <div
       className="rounded-lg border border-edge bg-panel px-3.5 py-2.5 shadow-lg"
-      style={{ minWidth: 140 }}
+      style={{ minWidth: 180 }}
     >
       <p className="mb-1.5 text-[11px] font-medium tracking-wide text-muted">
         {label}
       </p>
-      {payload.map((entry) => (
-        <div key={entry.dataKey} className="flex items-center justify-between gap-4 py-0.5">
-          <span className="flex items-center gap-1.5 text-xs text-dim">
-            <span
-              className="inline-block h-2 w-2 rounded-full"
-              style={{ background: entry.color }}
-            />
-            {BANDS.find((b) => b.key === entry.dataKey)?.label}
-          </span>
-          <span className="font-mono text-xs tabular-nums text-ink">
-            {entry.value}
-          </span>
-        </div>
-      ))}
-      <div className="mt-1.5 flex items-center justify-between border-t border-edge-dim pt-1.5">
-        <span className="text-[11px] text-muted">Total</span>
-        <span className="font-mono text-xs font-semibold tabular-nums text-ink">
-          {total}
-        </span>
-      </div>
+      {sorted.map((entry) =>
+        entry.value > 0 ? (
+          <div key={entry.dataKey} className="flex items-center justify-between gap-4 py-0.5">
+            <span className="flex items-center gap-1.5 text-xs text-dim">
+              <span
+                className="inline-block h-2 w-2 rounded-full"
+                style={{ background: entry.color }}
+              />
+              <span className="max-w-[140px] truncate">{entry.dataKey}</span>
+            </span>
+            <span className="font-mono text-xs tabular-nums text-ink">
+              {entry.value}
+            </span>
+          </div>
+        ) : null,
+      )}
     </div>
   )
 }
 
-export function SignalTrendChart({ data }: { data: TrendPoint[] }) {
-  const [hiddenBands, setHiddenBands] = useState<Set<string>>(new Set())
+export function SignalTrendChart({
+  data,
+  themes,
+}: {
+  data: Array<Record<string, string | number>>
+  themes: string[]
+}) {
+  const [hiddenThemes, setHiddenThemes] = useState<Set<string>>(new Set())
 
   if (data.length < 2) {
     return (
@@ -83,11 +82,11 @@ export function SignalTrendChart({ data }: { data: TrendPoint[] }) {
     )
   }
 
-  function toggleBand(key: string) {
-    setHiddenBands((prev) => {
+  function toggleTheme(theme: string) {
+    setHiddenThemes((prev) => {
       const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
+      if (next.has(theme)) next.delete(theme)
+      else next.add(theme)
       return next
     })
   }
@@ -95,25 +94,23 @@ export function SignalTrendChart({ data }: { data: TrendPoint[] }) {
   return (
     <div className="flex h-full flex-col">
       {/* Legend */}
-      <div className="mb-3 flex items-center gap-4">
-        {BANDS.map((band) => {
-          const hidden = hiddenBands.has(band.key)
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        {themes.map((theme, i) => {
+          const color = PALETTE[i % PALETTE.length]
+          const hidden = hiddenThemes.has(theme)
           return (
             <button
-              key={band.key}
-              onClick={() => toggleBand(band.key)}
+              key={theme}
+              onClick={() => toggleTheme(theme)}
               className="group flex items-center gap-1.5 transition-opacity"
-              style={{ opacity: hidden ? 0.35 : 1 }}
+              style={{ opacity: hidden ? 0.3 : 1 }}
             >
               <span
-                className="inline-block h-2.5 w-2.5 rounded-[3px] transition-all group-hover:scale-110"
-                style={{
-                  background: band.color,
-                  opacity: hidden ? 0.3 : 1,
-                }}
+                className="inline-block h-2 w-2 rounded-full transition-all group-hover:scale-125"
+                style={{ background: color }}
               />
-              <span className="text-[11px] font-medium text-dim transition-colors group-hover:text-ink">
-                {band.label}
+              <span className="max-w-[120px] truncate text-[11px] font-medium text-dim transition-colors group-hover:text-ink">
+                {theme}
               </span>
             </button>
           )
@@ -122,16 +119,8 @@ export function SignalTrendChart({ data }: { data: TrendPoint[] }) {
 
       {/* Chart */}
       <div className="min-h-0 flex-1">
-        <ResponsiveContainer width="100%" height="100%" minHeight={160}>
-          <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -12 }}>
-            <defs>
-              {BANDS.map((band) => (
-                <linearGradient key={band.key} id={`grad-${band.key}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={band.color} stopOpacity={band.opacity} />
-                  <stop offset="100%" stopColor={band.color} stopOpacity={0.05} />
-                </linearGradient>
-              ))}
-            </defs>
+        <ResponsiveContainer width="100%" height="100%" minHeight={180}>
+          <LineChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -12 }}>
             <CartesianGrid
               strokeDasharray="3 3"
               stroke="var(--border-subtle)"
@@ -158,31 +147,34 @@ export function SignalTrendChart({ data }: { data: TrendPoint[] }) {
                 stroke: 'var(--accent)',
                 strokeWidth: 1,
                 strokeDasharray: '4 4',
-                strokeOpacity: 0.4,
+                strokeOpacity: 0.3,
               }}
             />
-            {RENDER_ORDER.map((band) => (
-              <Area
-                key={band.key}
-                type="monotone"
-                dataKey={band.key}
-                stackId="1"
-                stroke={hiddenBands.has(band.key) ? 'transparent' : band.color}
-                fill={hiddenBands.has(band.key) ? 'transparent' : `url(#grad-${band.key})`}
-                strokeWidth={2}
-                activeDot={
-                  hiddenBands.has(band.key)
-                    ? false
-                    : {
-                        r: 4,
-                        fill: band.color,
-                        stroke: 'var(--surface)',
-                        strokeWidth: 2,
-                      }
-                }
-              />
-            ))}
-          </AreaChart>
+            {themes.map((theme, i) => {
+              const color = PALETTE[i % PALETTE.length]
+              const hidden = hiddenThemes.has(theme)
+              return (
+                <Line
+                  key={theme}
+                  type="monotone"
+                  dataKey={theme}
+                  stroke={hidden ? 'transparent' : color}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={
+                    hidden
+                      ? false
+                      : {
+                          r: 4,
+                          fill: color,
+                          stroke: 'var(--surface)',
+                          strokeWidth: 2,
+                        }
+                  }
+                />
+              )
+            })}
+          </LineChart>
         </ResponsiveContainer>
       </div>
     </div>
