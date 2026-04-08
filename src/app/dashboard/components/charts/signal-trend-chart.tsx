@@ -1,80 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from 'recharts'
-
-// Distinct, colorblind-friendly palette for up to 8 theme lines
-const PALETTE = [
-  '#635bff', // accent purple
-  '#e11d48', // rose
-  '#059669', // emerald
-  '#d97706', // amber
-  '#0ea5e9', // sky
-  '#8b5cf6', // violet
-  '#ec4899', // pink
-  '#14b8a6', // teal
-]
-
-function CustomTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean
-  payload?: Array<{ dataKey: string; value: number; color: string }>
-  label?: string
-}) {
-  if (!active || !payload?.length) return null
-
-  // Sort by value descending in tooltip
-  const sorted = [...payload].sort((a, b) => b.value - a.value)
-
-  return (
-    <div
-      className="rounded-lg border border-edge bg-panel px-3.5 py-2.5 shadow-lg"
-      style={{ minWidth: 180 }}
-    >
-      <p className="mb-1.5 text-[11px] font-medium tracking-wide text-muted">
-        {label}
-      </p>
-      {sorted.map((entry) =>
-        entry.value > 0 ? (
-          <div key={entry.dataKey} className="flex items-center justify-between gap-4 py-0.5">
-            <span className="flex items-center gap-1.5 text-xs text-dim">
-              <span
-                className="inline-block h-2 w-2 rounded-full"
-                style={{ background: entry.color }}
-              />
-              <span className="max-w-[140px] truncate">{entry.dataKey}</span>
-            </span>
-            <span className="font-mono text-xs tabular-nums text-ink">
-              {entry.value}
-            </span>
-          </div>
-        ) : null,
-      )}
-    </div>
-  )
-}
-
-export function SignalTrendChart({
-  data,
-  themes,
-}: {
+interface HeatmapProps {
   data: Array<Record<string, string | number>>
   themes: string[]
-}) {
-  const [hiddenThemes, setHiddenThemes] = useState<Set<string>>(new Set())
+}
 
-  if (data.length < 2) {
+export function SignalTrendChart({ data, themes }: HeatmapProps) {
+  if (data.length < 2 || themes.length === 0) {
     return (
       <p className="py-8 text-center text-sm italic text-muted">
         Trend data will appear after multiple synthesis runs.
@@ -82,100 +14,97 @@ export function SignalTrendChart({
     )
   }
 
-  function toggleTheme(theme: string) {
-    setHiddenThemes((prev) => {
-      const next = new Set(prev)
-      if (next.has(theme)) next.delete(theme)
-      else next.add(theme)
-      return next
-    })
+  // Find the max count across all cells for color scaling
+  let maxCount = 0
+  for (const point of data) {
+    for (const theme of themes) {
+      const val = (point[theme] as number) ?? 0
+      if (val > maxCount) maxCount = val
+    }
+  }
+
+  function cellColor(count: number): string {
+    if (count === 0) return 'var(--surface-raised)'
+    const ratio = maxCount > 0 ? count / maxCount : 0
+    // Map to accent opacity: low counts = faint wash, high counts = vivid
+    const opacity = 0.15 + ratio * 0.7
+    return `color-mix(in srgb, var(--accent) ${Math.round(opacity * 100)}%, var(--surface-raised))`
+  }
+
+  function cellTextColor(count: number): string {
+    if (count === 0) return 'var(--text-muted)'
+    const ratio = maxCount > 0 ? count / maxCount : 0
+    return ratio > 0.5 ? '#fff' : 'var(--fg)'
   }
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Legend */}
-      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
-        {themes.map((theme, i) => {
-          const color = PALETTE[i % PALETTE.length]
-          const hidden = hiddenThemes.has(theme)
-          return (
-            <button
-              key={theme}
-              onClick={() => toggleTheme(theme)}
-              className="group flex items-center gap-1.5 transition-opacity"
-              style={{ opacity: hidden ? 0.3 : 1 }}
-            >
-              <span
-                className="inline-block h-2 w-2 rounded-full transition-all group-hover:scale-125"
-                style={{ background: color }}
-              />
-              <span className="max-w-[120px] truncate text-[11px] font-medium text-dim transition-colors group-hover:text-ink">
-                {theme}
-              </span>
-            </button>
-          )
-        })}
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* Grid */}
+      <div className="intel-scroll min-h-0 flex-1 overflow-x-auto">
+        <table className="w-full border-collapse" style={{ minWidth: data.length * 52 + 140 }}>
+          <thead>
+            <tr>
+              <th className="sticky left-0 z-10 bg-panel px-3 py-1.5 text-left text-[11px] font-medium text-muted" />
+              {data.map((point, i) => (
+                <th
+                  key={i}
+                  className="px-1 py-1.5 text-center text-[10px] font-normal text-muted"
+                  style={{ minWidth: 48 }}
+                >
+                  {point.date as string}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {themes.map((theme) => (
+              <tr key={theme} className="group">
+                <td className="sticky left-0 z-10 bg-panel pr-3 py-0.5 text-right text-[11px] font-medium text-dim transition-colors group-hover:text-ink">
+                  <span className="inline-block max-w-[130px] truncate">
+                    {theme.replace(/_/g, ' ')}
+                  </span>
+                </td>
+                {data.map((point, i) => {
+                  const count = (point[theme] as number) ?? 0
+                  return (
+                    <td key={i} className="px-0.5 py-0.5">
+                      <div
+                        className="flex h-7 items-center justify-center rounded-[5px] text-[11px] font-medium tabular-nums transition-all hover:ring-1 hover:ring-accent/40"
+                        style={{
+                          background: cellColor(count),
+                          color: cellTextColor(count),
+                        }}
+                        title={`${theme.replace(/_/g, ' ')}: ${count} signal${count !== 1 ? 's' : ''} (${point.date})`}
+                      >
+                        {count > 0 ? count : ''}
+                      </div>
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* Chart */}
-      <div className="min-h-0 flex-1">
-        <ResponsiveContainer width="100%" height="100%" minHeight={180}>
-          <LineChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -12 }}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="var(--border-subtle)"
-              strokeOpacity={0.5}
-              vertical={false}
-            />
-            <XAxis
-              dataKey="date"
-              tick={{ fontSize: 11, fill: 'var(--text-muted)' }}
-              axisLine={false}
-              tickLine={false}
-              dy={4}
-            />
-            <YAxis
-              tick={{ fontSize: 11, fill: 'var(--text-muted)' }}
-              axisLine={false}
-              tickLine={false}
-              allowDecimals={false}
-              width={32}
-            />
-            <Tooltip
-              content={<CustomTooltip />}
-              cursor={{
-                stroke: 'var(--accent)',
-                strokeWidth: 1,
-                strokeDasharray: '4 4',
-                strokeOpacity: 0.3,
+      {/* Scale legend */}
+      <div className="mt-2 flex items-center gap-2 text-[10px] text-muted">
+        <span>Fewer</span>
+        <div className="flex gap-0.5">
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio) => (
+            <div
+              key={ratio}
+              className="h-3 w-5 rounded-sm"
+              style={{
+                background:
+                  ratio === 0
+                    ? 'var(--surface-raised)'
+                    : `color-mix(in srgb, var(--accent) ${Math.round((0.15 + ratio * 0.7) * 100)}%, var(--surface-raised))`,
               }}
             />
-            {themes.map((theme, i) => {
-              const color = PALETTE[i % PALETTE.length]
-              const hidden = hiddenThemes.has(theme)
-              return (
-                <Line
-                  key={theme}
-                  type="monotone"
-                  dataKey={theme}
-                  stroke={hidden ? 'transparent' : color}
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={
-                    hidden
-                      ? false
-                      : {
-                          r: 4,
-                          fill: color,
-                          stroke: 'var(--surface)',
-                          strokeWidth: 2,
-                        }
-                  }
-                />
-              )
-            })}
-          </LineChart>
-        </ResponsiveContainer>
+          ))}
+        </div>
+        <span>More signals</span>
       </div>
     </div>
   )
