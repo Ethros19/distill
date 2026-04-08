@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { Synthesis } from '@/lib/schema'
 import { TriggerButton } from './trigger-button'
 
@@ -47,10 +48,12 @@ function NarrativeProse({ markdown }: { markdown: string }) {
 
 export function SynthesisHeader({
   synthesis,
+  synthesisCount = 0,
   unprocessedCount = 0,
   unsynthesizedCount = 0,
 }: {
   synthesis: Synthesis | null
+  synthesisCount?: number
   unprocessedCount?: number
   unsynthesizedCount?: number
 }) {
@@ -113,7 +116,18 @@ export function SynthesisHeader({
             {synthesis.trigger}
           </span>
         </div>
-        <TriggerButton />
+        <div className="flex items-center gap-2">
+          {synthesisCount > 1 && (
+            <Link
+              href="/dashboard/synthesis"
+              className="rounded-lg border border-edge px-3 py-1.5 text-xs font-medium text-dim transition-colors hover:bg-panel-alt hover:text-ink"
+            >
+              History
+              <span className="ml-1 font-mono text-muted">{synthesisCount}</span>
+            </Link>
+          )}
+          <TriggerButton />
+        </div>
       </div>
 
       {/* Narrative prose or fallback stats */}

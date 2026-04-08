@@ -9,7 +9,7 @@ import { SynthesisHeader } from './components/synthesis-header'
 import { formatRelativeTime } from './components/synthesis-header'
 
 export default async function DashboardPage() {
-  const [[latest], [{ value: unprocessedCount }], [{ value: totalSignals }], setupStatus] = await Promise.all([
+  const [[latest], [{ value: unprocessedCount }], [{ value: totalSignals }], [{ value: synthesisCount }], setupStatus] = await Promise.all([
     db
       .select()
       .from(syntheses)
@@ -22,6 +22,9 @@ export default async function DashboardPage() {
     db
       .select({ value: count() })
       .from(signals),
+    db
+      .select({ value: count() })
+      .from(syntheses),
     getSetupStatus(),
   ])
 
@@ -67,6 +70,7 @@ export default async function DashboardPage() {
       <div className="animate-fade-up" style={{ animationDelay: setupComplete ? '60ms' : '140ms' }}>
         <SynthesisHeader
           synthesis={latest ?? null}
+          synthesisCount={synthesisCount}
           unprocessedCount={unprocessedCount}
           unsynthesizedCount={unsynthesizedCount}
         />
