@@ -51,19 +51,15 @@ export function DashboardIntelligence() {
         <SignalTimelineSection />
       </Suspense>
 
-      {/* Row 2: Theme Landscape + Signal Trend */}
-      <div className="grid grid-cols-1 items-stretch gap-5 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <Suspense fallback={<CardSkeleton />}>
-            <ThemeHeatmapSection />
-          </Suspense>
-        </div>
-        <div className="lg:col-span-2">
-          <Suspense fallback={<ChartSkeleton />}>
-            <SignalTrendSection />
-          </Suspense>
-        </div>
-      </div>
+      {/* Row 2: Signal Strength Over Time (full width) */}
+      <Suspense fallback={<ChartSkeleton />}>
+        <SignalTrendSection />
+      </Suspense>
+
+      {/* Row 3: Theme Landscape */}
+      <Suspense fallback={<CardSkeleton />}>
+        <ThemeHeatmapSection />
+      </Suspense>
 
       {/* Row 3: Context metrics (small cards) */}
       <Suspense fallback={<MetricSkeleton />}>

@@ -67,9 +67,9 @@ export async function SignalTrendSection() {
   })
 
   return (
-    <div className="card-elevated flex h-full flex-col rounded-xl border border-edge bg-panel p-5">
+    <div className="card-elevated flex flex-col rounded-xl border border-edge bg-panel p-5">
       <h3 className="mb-3 text-sm font-semibold text-dim">Signal Strength Over Time</h3>
-      <div className="min-h-0 flex-1">
+      <div className="h-64">
         <SignalTrendChart data={data} />
       </div>
     </div>
