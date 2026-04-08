@@ -24,6 +24,9 @@ const BANDS = [
   { key: 'low', label: 'Low', color: 'var(--signal-low)', opacity: 0.35 },
 ] as const
 
+// Render order: low at bottom, high on top (most important = most visible)
+const RENDER_ORDER = [...BANDS].reverse()
+
 function CustomTooltip({
   active,
   payload,
@@ -158,7 +161,7 @@ export function SignalTrendChart({ data }: { data: TrendPoint[] }) {
                 strokeOpacity: 0.4,
               }}
             />
-            {BANDS.map((band) => (
+            {RENDER_ORDER.map((band) => (
               <Area
                 key={band.key}
                 type="monotone"

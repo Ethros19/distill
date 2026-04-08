@@ -53,18 +53,31 @@ export async function SignalTrendSection() {
     else b.low += row.count
   }
 
+  // Deduplicate date labels — append run index when multiple per day
+  const dateCounts = new Map<string, number>()
   const data = runs.map((run) => {
     const b = buckets.get(run.id) ?? { high: 0, mid: 0, low: 0 }
+    const dayLabel = new Date(run.createdAt).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    })
+    const idx = (dateCounts.get(dayLabel) ?? 0) + 1
+    dateCounts.set(dayLabel, idx)
     return {
-      date: new Date(run.createdAt).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-      }),
+      date: idx > 1 ? `${dayLabel} #${idx}` : dayLabel,
       high: b.high,
       mid: b.mid,
       low: b.low,
     }
   })
+
+  // Back-patch first occurrence when a day has multiple runs
+  for (const entry of data) {
+    const base = entry.date.replace(/ #\d+$/, '')
+    if ((dateCounts.get(base) ?? 0) > 1 && !entry.date.includes('#')) {
+      entry.date = `${base} #1`
+    }
+  }
 
   return (
     <div className="card-elevated flex flex-col rounded-xl border border-edge bg-panel p-5">
