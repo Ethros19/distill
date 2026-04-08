@@ -18,11 +18,10 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { name, url, category, pollingInterval, enabled } = body as {
+    const { name, url, category, enabled } = body as {
       name?: string
       url?: string
       category?: string | null
-      pollingInterval?: number
       enabled?: boolean
     }
 
@@ -31,7 +30,6 @@ export async function PATCH(
       name === undefined &&
       url === undefined &&
       category === undefined &&
-      pollingInterval === undefined &&
       enabled === undefined
     ) {
       return NextResponse.json(
@@ -56,11 +54,6 @@ export async function PATCH(
     }
     if (category !== undefined && category !== null && typeof category !== 'string') {
       return NextResponse.json({ error: 'category must be a string or null' }, { status: 400 })
-    }
-    if (pollingInterval !== undefined) {
-      if (typeof pollingInterval !== 'number' || pollingInterval < 1) {
-        return NextResponse.json({ error: 'pollingInterval must be a positive integer' }, { status: 400 })
-      }
     }
     if (enabled !== undefined && typeof enabled !== 'boolean') {
       return NextResponse.json({ error: 'enabled must be a boolean' }, { status: 400 })
@@ -96,7 +89,6 @@ export async function PATCH(
     if (name !== undefined) updateObj.name = name.trim()
     if (url !== undefined) updateObj.url = url.trim()
     if (category !== undefined) updateObj.category = category?.trim() || null
-    if (pollingInterval !== undefined) updateObj.pollingInterval = pollingInterval
     if (enabled !== undefined) updateObj.enabled = enabled
 
     const [updated] = await db

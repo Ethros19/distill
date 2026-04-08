@@ -1,8 +1,8 @@
 'use client'
 
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
@@ -11,7 +11,9 @@ import {
 
 interface TrendPoint {
   date: string
-  count: number
+  high: number
+  mid: number
+  low: number
 }
 
 export function SignalTrendChart({ data }: { data: TrendPoint[] }) {
@@ -25,7 +27,7 @@ export function SignalTrendChart({ data }: { data: TrendPoint[] }) {
 
   return (
     <ResponsiveContainer width="100%" height="100%" minHeight={160}>
-      <LineChart data={data}>
+      <AreaChart data={data}>
         <XAxis
           dataKey="date"
           tick={{ fontSize: 11, fill: 'var(--text-muted)' }}
@@ -48,14 +50,34 @@ export function SignalTrendChart({ data }: { data: TrendPoint[] }) {
             color: 'var(--fg)',
           }}
         />
-        <Line
+        <Area
           type="monotone"
-          dataKey="count"
-          stroke="var(--accent)"
-          strokeWidth={2}
-          dot={false}
+          dataKey="high"
+          stackId="1"
+          stroke="var(--signal-high)"
+          fill="var(--signal-high)"
+          fillOpacity={0.6}
+          name="High"
         />
-      </LineChart>
+        <Area
+          type="monotone"
+          dataKey="mid"
+          stackId="1"
+          stroke="var(--signal-mid)"
+          fill="var(--signal-mid)"
+          fillOpacity={0.4}
+          name="Medium"
+        />
+        <Area
+          type="monotone"
+          dataKey="low"
+          stackId="1"
+          stroke="var(--signal-low)"
+          fill="var(--signal-low)"
+          fillOpacity={0.3}
+          name="Low"
+        />
+      </AreaChart>
     </ResponsiveContainer>
   )
 }

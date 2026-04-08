@@ -127,8 +127,6 @@ export function SourceRow({
             <span>{feed.lastPolledAt ? formatTimeAgo(feed.lastPolledAt) : 'Never polled'}</span>
             <span>&middot;</span>
             <span>{feed.inputCount} input{feed.inputCount === 1 ? '' : 's'}</span>
-            <span>&middot;</span>
-            <span>{feed.pollingInterval}m interval</span>
           </div>
           {feed.lastError && (
             <button

@@ -14,7 +14,6 @@ export default async function SourcesPage() {
       name: feedSources.name,
       url: feedSources.url,
       category: feedSources.category,
-      pollingInterval: feedSources.pollingInterval,
       enabled: feedSources.enabled,
       lastPolledAt: feedSources.lastPolledAt,
       lastError: feedSources.lastError,

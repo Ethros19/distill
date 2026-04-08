@@ -152,7 +152,6 @@ export const feedSources = pgTable(
     name: varchar('name', { length: 100 }).notNull(),
     url: text('url').notNull(),
     category: varchar('category', { length: 50 }),
-    pollingInterval: integer('polling_interval').notNull().default(60), // minutes
     enabled: boolean('enabled').notNull().default(true),
     lastPolledAt: timestamp('last_polled_at', { withTimezone: true }),
     lastError: text('last_error'),

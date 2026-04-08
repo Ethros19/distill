@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { getStreamIntelligence } from './lib/stream-intelligence'
 import { getSynthesisScopeData } from './lib/synthesis-scope'
 import { StreamIntelligenceGrid } from './components/stream-intelligence-grid'
-import { SynthesisNarrativePanel } from './components/synthesis-narrative-panel'
+
 import { MarketValidationSection } from './components/market-validation-section'
 import { PerStreamSynthesisCard } from './components/per-stream-synthesis-card'
 import { CrossStreamHighlights } from './components/cross-stream-highlights'
@@ -39,14 +39,6 @@ async function SynthesisContent() {
 
   return (
     <div className="space-y-8">
-      {/* AI Synthesis Narrative */}
-      <SynthesisNarrativePanel
-        digestMarkdown={synthesisData.synthesis?.digestMarkdown ?? null}
-        synthesisDate={synthesisData.synthesis?.createdAt ?? null}
-        signalCount={synthesisData.signals.length}
-        industryInputCount={synthesisData.industryInputs.length}
-      />
-
       {/* Market Validation */}
       <MarketValidationSection validations={synthesisData.marketValidations} />
 

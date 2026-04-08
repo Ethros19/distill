@@ -21,7 +21,6 @@ export function FeedFormModal({
   const [url, setUrl] = useState('')
   const [name, setName] = useState('')
   const [category, setCategory] = useState('')
-  const [pollingInterval, setPollingInterval] = useState(60)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -31,13 +30,11 @@ export function FeedFormModal({
       setUrl(feed.url)
       setName(feed.name)
       setCategory(feed.category ?? '')
-      setPollingInterval(feed.pollingInterval)
       setErrors({})
     } else if (open && mode === 'add') {
       setUrl('')
       setName('')
       setCategory('')
-      setPollingInterval(60)
       setErrors({})
     }
   }, [open, mode, feed])
@@ -80,7 +77,6 @@ export function FeedFormModal({
             url: url.trim(),
             name: name.trim(),
             category: category.trim() || undefined,
-            pollingInterval,
           }),
         })
 
@@ -99,7 +95,6 @@ export function FeedFormModal({
         if (name.trim() !== feed.name) changes.name = name.trim()
         const newCat = category.trim() || null
         if (newCat !== feed.category) changes.category = newCat
-        if (pollingInterval !== feed.pollingInterval) changes.pollingInterval = pollingInterval
 
         if (Object.keys(changes).length === 0) {
           onClose()
@@ -206,20 +201,6 @@ export function FeedFormModal({
             />
           </div>
 
-          <div>
-            <label htmlFor="feed-interval" className="block text-xs text-dim">
-              Poll every N minutes
-            </label>
-            <input
-              id="feed-interval"
-              type="number"
-              min={1}
-              required
-              value={pollingInterval}
-              onChange={(e) => setPollingInterval(Math.max(1, parseInt(e.target.value, 10) || 1))}
-              className="mt-1 block w-full rounded-lg border border-edge bg-canvas px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-            />
-          </div>
         </div>
 
         {errors.form && (

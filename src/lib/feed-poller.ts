@@ -117,7 +117,7 @@ export async function pollFeed(feedSource: FeedSource): Promise<number> {
 }
 
 /**
- * Poll all enabled feed sources that are due based on their polling interval.
+ * Poll all enabled feed sources. Called by the daily 5am cron.
  * Returns a summary of feeds polled and new items inserted.
  */
 export async function pollAllDueFeeds(): Promise<{
@@ -127,21 +127,14 @@ export async function pollAllDueFeeds(): Promise<{
 }> {
   const now = new Date()
 
-  // Find enabled feeds where lastPolledAt is null or interval has elapsed
-  const allEnabled = await db
+  const enabledFeeds = await db
     .select()
     .from(feedSources)
     .where(eq(feedSources.enabled, true))
 
-  const dueFeeds = allEnabled.filter((feed) => {
-    if (!feed.lastPolledAt) return true
-    const elapsed = now.getTime() - feed.lastPolledAt.getTime()
-    return elapsed >= feed.pollingInterval * 60_000
-  })
-
   const summary = { feedsPolled: 0, newItems: 0, errors: [] as string[] }
 
-  for (const feed of dueFeeds) {
+  for (const feed of enabledFeeds) {
     try {
       const count = await pollFeed(feed)
       summary.newItems += count

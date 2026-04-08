@@ -13,7 +13,6 @@ export async function GET() {
         name: feedSources.name,
         url: feedSources.url,
         category: feedSources.category,
-        pollingInterval: feedSources.pollingInterval,
         enabled: feedSources.enabled,
         lastPolledAt: feedSources.lastPolledAt,
         lastError: feedSources.lastError,
@@ -36,11 +35,10 @@ const URL_REGEX = /^https?:\/\/.+/i
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { url, name, category, pollingInterval } = body as {
+    const { url, name, category } = body as {
       url?: string
       name?: string
       category?: string
-      pollingInterval?: number
     }
 
     // Validate required fields
@@ -61,12 +59,6 @@ export async function POST(request: NextRequest) {
     if (category !== undefined && typeof category !== 'string') {
       return NextResponse.json({ error: 'category must be a string' }, { status: 400 })
     }
-    if (pollingInterval !== undefined) {
-      if (typeof pollingInterval !== 'number' || pollingInterval < 1) {
-        return NextResponse.json({ error: 'pollingInterval must be a positive integer' }, { status: 400 })
-      }
-    }
-
     // Check URL uniqueness
     const [existing] = await db
       .select({ id: feedSources.id })
@@ -87,7 +79,6 @@ export async function POST(request: NextRequest) {
         url: url.trim(),
         name: name.trim(),
         category: category?.trim() || null,
-        pollingInterval: pollingInterval ?? 60,
         enabled: true,
       })
       .returning()

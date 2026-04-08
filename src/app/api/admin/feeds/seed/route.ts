@@ -16,7 +16,6 @@ export async function POST() {
           url: feed.url,
           category: feed.category,
           enabled: true,
-          pollingInterval: 60,
         })
         .onConflictDoNothing({ target: feedSources.url })
         .returning({ id: feedSources.id })
