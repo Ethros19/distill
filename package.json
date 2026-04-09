@@ -19,7 +19,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@vercel/blob": "^2.3.1",
     "bcryptjs": "^3.0.3",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "^0.45.2",
     "isomorphic-dompurify": "^3.7.1",
     "marked": "^17.0.5",
     "next": "16.2.1",
