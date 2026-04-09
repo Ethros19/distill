@@ -1,4 +1,8 @@
 import { Suspense } from 'react'
+import Image from 'next/image'
+import { db } from '@/lib/db'
+import { settings } from '@/lib/schema'
+import { inArray } from 'drizzle-orm'
 import { LogoutButton } from './components/logout-button'
 import { HelpButton } from './components/help-modal'
 import { ThemeSwitcher } from './components/theme-switcher'
@@ -7,21 +11,37 @@ import { TextSizeControl } from './components/text-size-control'
 import { SignalStats } from './components/signal-stats'
 import NavLink from './components/NavLink'
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const brandingRows = await db
+    .select()
+    .from(settings)
+    .where(inArray(settings.key, ['company_name', 'company_logo_url']))
+  const branding = Object.fromEntries(brandingRows.map((r) => [r.key, r.value]))
+  const companyName = branding.company_name || ''
+  const companyLogoUrl = branding.company_logo_url || ''
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
       <header className="sticky top-0 z-30 border-b border-edge-dim bg-canvas/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <div className="flex items-baseline gap-3">
+          <div className="flex items-center gap-3">
+            {companyLogoUrl && (
+              <Image
+                src={companyLogoUrl}
+                alt={companyName || 'Company logo'}
+                width={28}
+                height={28}
+                className="rounded-md"
+              />
+            )}
             <h1 className="font-display text-2xl tracking-tight text-ink">
-              Distill
+              {companyName || 'Distill'}
             </h1>
             <span className="hidden text-sm text-muted sm:inline">
-              Signal Intelligence
+              {companyName ? 'Signal Intelligence' : 'Signal Intelligence'}
             </span>
           </div>
           <nav className="flex items-center gap-1">
