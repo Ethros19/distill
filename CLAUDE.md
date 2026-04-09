@@ -32,8 +32,9 @@ Open-source signal intelligence system for product teams. Self-hosted web app.
 1. Foundation — Intake, Structuring & Synthesis + Digest
 2. Dashboard Redesign
 3. Signal Actions & Intelligence Feeds (login hardening, signal status, MCP server, Linear, input management, RSS feeds, signal sources UI, cross-stream tagging, dashboard upgrades)
+4. Dashboard IA & Synthesis Visibility (4 phases, 11 plans, 29 commits)
 
-**Current milestone:** Dashboard IA & Synthesis Visibility (4 phases)
+**Current milestone:** None — post-launch iteration (branding, UX polish, community feedback)
 
 ## VBW Rules
 

@@ -3,6 +3,7 @@
 Open-source signal intelligence for product teams. Collects feedback from email, paste, URLs, RSS feeds, and Linear, structures it with AI, and synthesizes recurring patterns into actionable signals. Inspired by [WorldMonitor](https://www.worldmonitor.app/).
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FEthros19%2Fdistill&env=DATABASE_URL,AUTH_PASSWORD_HASH,ANTHROPIC_API_KEY&envDescription=Required%20environment%20variables&envLink=https%3A%2F%2Fgithub.com%2FEthros19%2Fdistill%23quick-start&project-name=distill&repository-name=distill)
 
 ## What It Does
 
@@ -195,7 +196,7 @@ Default is Anthropic. Switch by setting `LLM_PROVIDER`:
 
 | Provider | `LLM_PROVIDER` | Required Env Var | Structure Model | Synthesis Model |
 |----------|----------------|------------------|-----------------|-----------------|
-| **Anthropic** (default) | `anthropic` | `ANTHROPIC_API_KEY` | Claude Haiku 4.5 | Claude Sonnet 4.6 |
+| **Anthropic** (default) | `anthropic` | `ANTHROPIC_API_KEY` | Claude Haiku 4.5 | Claude Sonnet 4.6 / Opus 4.6 |
 | **OpenAI** | `openai` | `OPENAI_API_KEY` | GPT-4o Mini | GPT-4o |
 | **Ollama** | `ollama` | `OLLAMA_BASE_URL` | Llama 3.2 | Llama 3.2 |
 
@@ -203,7 +204,9 @@ Model names are configurable per provider. See `.env.example` for override varia
 
 ### Company branding
 
-Set `COMPANY_NAME` and `COMPANY_DESCRIPTION` to personalize the Intelligence Radar analysis (e.g., "What this means for Acme Corp"). Without these, prompts use generic phrasing.
+Set `COMPANY_NAME` and `COMPANY_DESCRIPTION` env vars to personalize the Intelligence Radar analysis (e.g., "What this means for Acme Corp"). Without these, prompts use generic phrasing.
+
+You can also set a company name and upload a logo from **Settings** in the dashboard -- these override the env vars and appear in the header.
 
 ## Features
 
@@ -364,7 +367,7 @@ npx vitest        # Run tests
 
 ## Development History
 
-Built across 265+ commits in 4 milestones:
+Built across 310+ commits in 4 milestones:
 
 **Milestone 1: Foundation** -- Intake, structuring, synthesis pipeline, digest email, basic dashboard with signal cards and theme sidebar.
 
@@ -375,6 +378,14 @@ Built across 265+ commits in 4 milestones:
 **Milestone 4: Dashboard IA & Synthesis Visibility** -- Dashboard restructure, dedicated signals page, streams synthesis view with AI narrative, input reference layer, URL article intake with paste fallback, in-app AI provider configuration, and integrations hub with inline setup guides.
 
 Built with [Claude Code](https://claude.ai/code) using the [VBW](https://github.com/swt-labs/vibe-better-with-claude-code-vbw) agentic development workflow.
+
+## Powered by Distill
+
+Using Distill? Add your instance here by [opening a PR](https://github.com/Ethros19/distill/edit/main/README.md) or [filing an issue](https://github.com/Ethros19/distill/issues/new?title=Add+my+instance+to+Powered+by+Distill&body=Name:%0AURL%20(optional):%0AHow%20you%20use%20it:).
+
+<!-- Add your instance below this line -->
+
+*Be the first to add yours!*
 
 ## License
 
