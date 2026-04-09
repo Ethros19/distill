@@ -37,6 +37,8 @@ function NarrativeProse({ markdown }: { markdown: string }) {
     // Remove <p> wrapping around headings
     .replace(/<p>(<h3>)/g, '$1')
     .replace(/(<\/h3>)<\/p>/g, '$1')
+    // Add line break after bold titles at start of paragraphs
+    .replace(/<p><strong>(.+?)<\/strong>\s*/g, '<p><strong>$1</strong><br />')
 
   return (
     <div

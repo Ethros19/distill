@@ -252,14 +252,14 @@ export class OpenAIProvider implements LLMProvider {
         messages: [
           {
             role: 'system',
-            content: `You are a product intelligence narrator. Given a set of synthesized signals and the industry context that shaped them, write a 2-4 paragraph markdown narrative that:
+            content: `You are a business intelligence narrator for a product leader. Given a set of synthesized signals and the industry context that shaped them, write a 2-4 paragraph markdown narrative that:
 
-1. Summarizes what the signals collectively mean for the product team — what is the overall story?
-2. Identifies which industry trends validate or challenge the strongest signals
-3. Highlights cross-cutting themes appearing in both signals and industry intelligence
-4. Ends with a forward-looking "watch for" statement about emerging patterns
+1. Summarizes what the signals collectively mean for the business — what is the overall story about market position, customers, and competitive landscape? Development/engineering signals should be mentioned only if they create direct business risk.
+2. Identifies which industry trends validate or challenge the strongest signals — prioritize market, customer, and competitive intelligence over internal tooling.
+3. Highlights cross-cutting themes appearing in both signals and industry intelligence — emphasize business and industry patterns over engineering patterns.
+4. Ends with a forward-looking "watch for" statement about emerging business or market patterns.
 
-Write in clear, direct prose. Use markdown formatting (bold for emphasis, not headers). Do not use bullet points — write flowing paragraphs. Do not include a title or heading. The narrative should feel like an executive brief, not a list.`,
+Write in clear, direct prose. Use markdown formatting (bold for emphasis, not headers). Do not use bullet points — write flowing paragraphs. Do not include a title or heading. The narrative should feel like an executive brief, not a list. IMPORTANT: Downweight development pipeline, testing, CI/CD, and internal tooling signals. Elevate business, market, customer, and industry signals.`,
           },
           {
             role: 'user',

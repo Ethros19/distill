@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { LLMProvider } from '../llm/provider'
 import type { RawInput, StructuredInput, SynthesisInput, LLMSignal, PriorSignal } from '../llm/types'
 import { StructuredInputSchema, SynthesisResultSchema } from '../llm/types'
-import { LLMError, LLMRateLimitError } from '../llm/errors'
+import { LLMError, LLMRateLimitError, LLMOverloadedError } from '../llm/errors'
 import { buildStreamPromptList, STREAM_VALUES } from '../stream-utils'
 
 const STRUCTURE_MODEL = process.env.ANTHROPIC_STRUCTURE_MODEL || 'claude-haiku-4-5-20251001'
@@ -115,6 +115,9 @@ export class AnthropicProvider implements LLMProvider {
       if (error instanceof Anthropic.RateLimitError) {
         throw new LLMRateLimitError('anthropic', 'structure')
       }
+      if (error instanceof Anthropic.APIError && error.status === 529) {
+        throw new LLMOverloadedError('anthropic', 'structure')
+      }
       throw new LLMError(
         error instanceof Error ? error.message : 'Unknown error during structuring',
         'anthropic',
@@ -178,6 +181,9 @@ export class AnthropicProvider implements LLMProvider {
       if (error instanceof Anthropic.RateLimitError) {
         throw new LLMRateLimitError('anthropic', 'synthesize')
       }
+      if (error instanceof Anthropic.APIError && error.status === 529) {
+        throw new LLMOverloadedError('anthropic', 'synthesize')
+      }
       throw new LLMError(
         error instanceof Error ? error.message : 'Unknown error during synthesis',
         'anthropic',
@@ -206,10 +212,15 @@ export class AnthropicProvider implements LLMProvider {
       const response = await this.client.messages.create({
         model: NARRATIVE_MODEL,
         max_tokens: 2048,
-        system: `You are a product intelligence narrator. Given synthesized signals and industry context, write a scannable markdown narrative with these sections:
+        system: `You are a business intelligence narrator for a product leader. Your job is to surface what the team DOESN'T already know — market shifts, competitive moves, customer behavior changes, and industry trends.
+
+CRITICAL FRAMING RULE: Internal engineering signals (bugs, test gaps, migrations, technical debt, backlog items) are already known and tracked by the team — restating them adds no value. Focus on what the team doesn't already know: industry movements, competitive shifts, customer sentiment patterns, and market timing. Only reference internal signals when connecting them to an external trend (e.g., "the industry is moving toward X, which makes our current gap in Y more urgent").
 
 ### The Story
-2-3 short sentences: what do these signals collectively mean? Lead with the headline insight.
+2-3 short sentences: what is the most important EXTERNAL insight this cycle? Lead with market shifts, competitive moves, customer behavior changes, or industry trends. Internal signals are already tracked and triaged — do NOT restate them. If the only strong signals are internal/engineering, say so briefly in one sentence and focus the rest on industry context and what it means for positioning.
+
+### Technical Update
+1-2 sentences only. Summarize the dominant internal engineering themes this cycle at a high level (e.g., "financial correctness and design system migration remain the top internal themes"). Do NOT restate individual tickets or bugs — the team already knows their backlog.
 
 ### Industry Validation
 Which industry trends confirm or challenge the strongest signals? Use **bold** for trend names. Keep each point to 1-2 sentences max.
@@ -218,14 +229,16 @@ Which industry trends confirm or challenge the strongest signals? Use **bold** f
 What themes appear in both internal signals and external intelligence? Name specific streams and sources.
 
 ### Watch For
-1-2 sentences on emerging patterns to monitor.
+1-2 sentences on emerging business or market patterns to monitor.
 
 Rules:
 - Keep paragraphs to 2-3 sentences maximum — readers need to scan quickly
 - Use **bold** for key terms and signal names
 - Use the ### headers exactly as shown above
 - Be specific: cite streams, sources, and data points
-- No filler — every sentence should carry insight`,
+- No filler — every sentence should carry insight
+- The reader already knows their own backlog. Never restate known issues as if they're discoveries. The narrative should feel like a market briefing, not a sprint retrospective.
+- When internal signals dominate the input, extract the business context around them rather than describing them. Ask: "what external pressure makes this matter NOW?"`,
         messages: [
           {
             role: 'user',
@@ -244,6 +257,9 @@ Rules:
       if (error instanceof LLMError) throw error
       if (error instanceof Anthropic.RateLimitError) {
         throw new LLMRateLimitError('anthropic', 'generateNarrative')
+      }
+      if (error instanceof Anthropic.APIError && error.status === 529) {
+        throw new LLMOverloadedError('anthropic', 'generateNarrative')
       }
       throw new LLMError(
         error instanceof Error ? error.message : 'Unknown error during narrative generation',
