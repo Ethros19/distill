@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { put } from '@vercel/blob'
 import { db } from '@/lib/db'
 import { settings } from '@/lib/schema'
 import { eq, inArray } from 'drizzle-orm'
 
 const KEYS = ['company_name', 'company_logo_url'] as const
+const MAX_LOGO_SIZE = 512 * 1024 // 512KB
 
 export async function GET() {
   const rows = await db
@@ -39,17 +39,19 @@ export async function PUT(request: NextRequest) {
     }
 
     if (file && file.size > 0) {
-      const blob = await put(`branding/logo-${Date.now()}.${file.name.split('.').pop()}`, file, {
-        access: 'public',
-        addRandomSuffix: false,
-      })
+      if (file.size > MAX_LOGO_SIZE) {
+        return NextResponse.json({ error: 'Logo must be under 512KB' }, { status: 422 })
+      }
+
+      const buffer = Buffer.from(await file.arrayBuffer())
+      const dataUrl = `data:${file.type};base64,${buffer.toString('base64')}`
 
       await db
         .insert(settings)
-        .values({ key: 'company_logo_url', value: blob.url })
+        .values({ key: 'company_logo_url', value: dataUrl })
         .onConflictDoUpdate({
           target: settings.key,
-          set: { value: blob.url, updatedAt: new Date() },
+          set: { value: dataUrl, updatedAt: new Date() },
         })
     }
 
@@ -65,16 +67,6 @@ export async function PUT(request: NextRequest) {
       .onConflictDoUpdate({
         target: settings.key,
         set: { value: body.companyName, updatedAt: new Date() },
-      })
-  }
-
-  if (body.companyLogoUrl !== undefined) {
-    await db
-      .insert(settings)
-      .values({ key: 'company_logo_url', value: body.companyLogoUrl })
-      .onConflictDoUpdate({
-        target: settings.key,
-        set: { value: body.companyLogoUrl, updatedAt: new Date() },
       })
   }
 

@@ -101,7 +101,7 @@ export function BrandingEditor({
                 alt="Company logo"
                 fill
                 className="object-contain p-1"
-                unoptimized={!!preview}
+                unoptimized
               />
             </div>
           )}

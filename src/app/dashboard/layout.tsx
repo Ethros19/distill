@@ -1,5 +1,4 @@
 import { Suspense } from 'react'
-import Image from 'next/image'
 import { db } from '@/lib/db'
 import { settings } from '@/lib/schema'
 import { inArray } from 'drizzle-orm'
@@ -29,7 +28,8 @@ export default async function DashboardLayout({
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <div className="flex items-center gap-3">
             {companyLogoUrl && (
-              <Image
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
                 src={companyLogoUrl}
                 alt={companyName || 'Company logo'}
                 width={28}
