@@ -25,9 +25,7 @@ export function FeedFormModal({
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Populate fields when opening in edit mode
-  const [prevDeps, setPrevDeps] = useState<[boolean, typeof mode, typeof feed]>([open, mode, feed])
-  if (open !== prevDeps[0] || mode !== prevDeps[1] || feed !== prevDeps[2]) {
-    setPrevDeps([open, mode, feed])
+  useEffect(() => {
     if (open && mode === 'edit' && feed) {
       setUrl(feed.url)
       setName(feed.name)
@@ -39,7 +37,7 @@ export function FeedFormModal({
       setCategory('')
       setErrors({})
     }
-  }
+  }, [open, mode, feed])
 
   useEffect(() => {
     const dialog = dialogRef.current

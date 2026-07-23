@@ -83,17 +83,10 @@ function CaptureModal({
   const [result, setResult] = useState<'success' | 'duplicate' | 'error' | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const [prevOpen, setPrevOpen] = useState(state.open)
-  if (state.open !== prevOpen) {
-    setPrevOpen(state.open)
+  useEffect(() => {
     if (state.open) {
       setNote('')
       setResult(null)
-    }
-  }
-
-  useEffect(() => {
-    if (state.open) {
       setTimeout(() => textareaRef.current?.focus(), 50)
     }
   }, [state.open])

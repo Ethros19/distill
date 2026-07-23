@@ -9,9 +9,6 @@ export function HelpButton() {
 
   useEffect(() => {
     if (!localStorage.getItem(STORAGE_KEY)) {
-      // localStorage is unavailable during SSR, so this can only be read post-mount;
-      // deriving `open` during render would cause a hydration mismatch.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setOpen(true)
       localStorage.setItem(STORAGE_KEY, '1')
     }

@@ -21,11 +21,9 @@ export function SettingsDropdown() {
   }, [open])
 
   // Close on navigation
-  const [prevPathname, setPrevPathname] = useState(pathname)
-  if (pathname !== prevPathname) {
-    setPrevPathname(pathname)
+  useEffect(() => {
     setOpen(false)
-  }
+  }, [pathname])
 
   return (
     <div ref={ref} className="relative">
