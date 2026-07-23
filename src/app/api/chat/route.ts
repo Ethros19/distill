@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse, type NextRequest } from 'next/server'
-import { chatTools, executeChatTool, buildSignalContext } from '@/lib/chat/tools'
+import { chatTools, executeChatTool, buildSignalContext, getWorkspaceProfile } from '@/lib/chat/tools'
 import { getChatClient, buildSystemPrompt, ChatUnavailableError } from '@/lib/chat/anthropic-chat'
 
 export const runtime = 'nodejs'
@@ -67,8 +67,8 @@ export async function POST(request: NextRequest) {
     const resolved = await getChatClient()
     client = resolved.client
     model = resolved.model
-    const signalContext = await buildSignalContext()
-    system = buildSystemPrompt(signalContext)
+    const [signalContext, profile] = await Promise.all([buildSignalContext(), getWorkspaceProfile()])
+    system = buildSystemPrompt(signalContext, profile)
   } catch (error) {
     if (error instanceof ChatUnavailableError) {
       return NextResponse.json({ error: error.message }, { status: error.status })
