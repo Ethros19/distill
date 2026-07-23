@@ -74,6 +74,7 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/api/auth',
+    '/api/chat/:path*',
     '/api/intake/:path*',
     '/api/inputs/:path*',
     '/api/synthesis/:path*',

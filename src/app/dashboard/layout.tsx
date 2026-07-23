@@ -57,6 +57,9 @@ export default async function DashboardLayout({
             <NavLink href="/dashboard/streams">
               Streams
             </NavLink>
+            <NavLink href="/dashboard/chat">
+              Chat
+            </NavLink>
             <span className="mx-1 hidden h-4 w-px bg-edge-dim sm:inline-block" aria-hidden="true" />
             <span className="hidden text-[10px] uppercase tracking-wider text-muted sm:inline">Data</span>
             <NavLink href="/dashboard/inputs">
