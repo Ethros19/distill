@@ -4,8 +4,6 @@ import { count, gte, eq, desc, sql } from 'drizzle-orm'
 import { STREAM_LABELS } from '@/lib/stream-utils'
 
 export async function MetricCardsSection() {
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-
   const [
     [{ value: inputVelocity }],
     themeResult,
@@ -15,7 +13,7 @@ export async function MetricCardsSection() {
     db
       .select({ value: count() })
       .from(inputs)
-      .where(gte(inputs.createdAt, sevenDaysAgo)),
+      .where(gte(inputs.createdAt, sql`now() - interval '7 days'`)),
     db.execute(sql`
       SELECT count(*)::int AS value FROM (
         SELECT DISTINCT jsonb_array_elements_text(themes) AS theme

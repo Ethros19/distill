@@ -14,11 +14,14 @@ const phases = [
 export function SynthesisOverlay({ active }: { active: boolean }) {
   const [phase, setPhase] = useState(0)
 
+  const [prevActive, setPrevActive] = useState(active)
+  if (active !== prevActive) {
+    setPrevActive(active)
+    if (!active) setPhase(0)
+  }
+
   useEffect(() => {
-    if (!active) {
-      setPhase(0)
-      return
-    }
+    if (!active) return
     const interval = setInterval(() => {
       setPhase((p) => (p + 1) % phases.length)
     }, 2400)

@@ -45,6 +45,9 @@ export function RadarGrid({ briefs }: { briefs: SerializedStreamBrief[] }) {
         // Validate: must contain same streams
         const briefStreams = new Set(briefs.map((b) => b.stream))
         if (parsed.length === briefStreams.size && parsed.every((s) => briefStreams.has(s))) {
+          // localStorage is unavailable during SSR, so this can only be read post-mount;
+          // deriving `order` during render would cause a hydration mismatch.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setOrder(parsed)
         }
       }

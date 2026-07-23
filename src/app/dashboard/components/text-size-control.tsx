@@ -13,6 +13,9 @@ export function TextSizeControl() {
     if (saved) {
       const n = Number(saved)
       if (SIZES.includes(n as (typeof SIZES)[number])) {
+        // localStorage is unavailable during SSR, so this can only be read post-mount;
+        // deriving `size` during render would cause a hydration mismatch.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSize(n)
         document.documentElement.style.fontSize = `${n}px`
       }

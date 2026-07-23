@@ -21,6 +21,9 @@ export function ThemeSwitcher() {
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
     if (stored && ['light', 'dark', 'system'].includes(stored)) {
+      // localStorage is unavailable during SSR, so this can only be read post-mount;
+      // deriving `theme` during render would cause a hydration mismatch.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTheme(stored)
       applyTheme(stored)
     } else {
