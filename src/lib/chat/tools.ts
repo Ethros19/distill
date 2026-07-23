@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
-import { signals, syntheses, inputs } from '@/lib/schema'
-import { eq, and, desc, gte, or, ilike, inArray } from 'drizzle-orm'
+import { signals, syntheses, inputs, settings } from '@/lib/schema'
+import { eq, and, desc, gte, or, ilike, inArray, count } from 'drizzle-orm'
 
 /**
  * Provider-agnostic chat tool.
@@ -94,6 +94,69 @@ export const chatTools: ChatTool[] = [
           strength: s.strength,
           status: s.status,
           themes: s.themes,
+        })),
+      })
+    },
+  },
+  {
+    name: 'get_intelligence_briefing',
+    description:
+      'Get the distilled industry & market intelligence — the latest synthesis narrative (the "distillation" briefing about external trends, competitive moves, and market shifts) plus a sample of recent industry inputs (non-feedback market/RSS sources). Use this for questions about industry trends and how they affect positioning, as opposed to internal product signals.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        recent_industry_inputs: {
+          type: 'integer',
+          description: 'How many recent industry (non-feedback) inputs to include, 0-20 (default 8).',
+        },
+      },
+    },
+    async execute(input) {
+      const n = asInt(input.recent_industry_inputs, 0, 20, 8)
+
+      const [latest] = await db
+        .select()
+        .from(syntheses)
+        .orderBy(desc(syntheses.createdAt))
+        .limit(1)
+
+      const industryRows =
+        n > 0
+          ? await db
+              .select()
+              .from(inputs)
+              .where(eq(inputs.isFeedback, false))
+              .orderBy(desc(inputs.createdAt))
+              .limit(n)
+          : []
+
+      return JSON.stringify({
+        synthesis: latest
+          ? {
+              id: latest.id,
+              createdAt: latest.createdAt,
+              periodStart: latest.periodStart,
+              periodEnd: latest.periodEnd,
+              industryInputCount: latest.industryInputIds?.length ?? 0,
+            }
+          : null,
+        // The synthesis narrative is the distilled market/industry briefing
+        // (capped to keep the turn responsive on large digests).
+        narrative: latest?.digestMarkdown
+          ? latest.digestMarkdown.length > 6000
+            ? latest.digestMarkdown.slice(0, 6000) + '…'
+            : latest.digestMarkdown
+          : null,
+        recentIndustryInputs: industryRows.map((row) => ({
+          id: row.id,
+          source: row.source,
+          stream: row.stream,
+          summary: row.summary,
+          themes: row.themes,
+          publishedAt: row.publishedAt,
+          createdAt: row.createdAt,
+          excerpt:
+            row.rawContent.length > 300 ? row.rawContent.slice(0, 300) + '...' : row.rawContent,
         })),
       })
     },
@@ -244,7 +307,7 @@ export const chatTools: ChatTool[] = [
   {
     name: 'search_inputs',
     description:
-      'Keyword search across raw feedback inputs (raw content and LLM-generated summaries, case-insensitive). Use to find the actual source feedback behind a topic, or to check whether something was mentioned.',
+      'Keyword search across raw inputs (raw content and LLM summaries, case-insensitive). Filter by kind with the "feedback" argument: "feedback" for direct product feedback, "industry" for market/RSS inputs, or "all". Use to find the source material behind a topic or trend.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -252,6 +315,12 @@ export const chatTools: ChatTool[] = [
         source: {
           type: 'string',
           description: 'Optional source filter (e.g. "email", "paste", "rss").',
+        },
+        feedback: {
+          type: 'string',
+          enum: ['feedback', 'industry', 'all'],
+          description:
+            'Filter by kind: "feedback" = direct product feedback, "industry" = market/RSS non-feedback inputs, "all" = both (default).',
         },
         limit: {
           type: 'integer',
@@ -266,21 +335,22 @@ export const chatTools: ChatTool[] = [
         return JSON.stringify({ error: 'Missing required "keyword".' })
       }
       const source = asString(input.source)
+      const feedback = asString(input.feedback)
       const limit = asInt(input.limit, 1, 50, 20)
 
       // Escape LIKE wildcards so the keyword is matched literally.
       const sanitized = keyword.replace(/%/g, '\\%').replace(/_/g, '\\_')
       const pattern = `%${sanitized}%`
 
-      const searchCondition = or(ilike(inputs.rawContent, pattern), ilike(inputs.summary, pattern))
-      const whereCondition = source
-        ? and(searchCondition, eq(inputs.source, source))
-        : searchCondition
+      const conditions = [or(ilike(inputs.rawContent, pattern), ilike(inputs.summary, pattern))]
+      if (source) conditions.push(eq(inputs.source, source))
+      if (feedback === 'feedback') conditions.push(eq(inputs.isFeedback, true))
+      else if (feedback === 'industry') conditions.push(eq(inputs.isFeedback, false))
 
       const rows = await db
         .select()
         .from(inputs)
-        .where(whereCondition)
+        .where(and(...conditions))
         .orderBy(desc(inputs.createdAt))
         .limit(limit)
 
@@ -288,6 +358,8 @@ export const chatTools: ChatTool[] = [
         id: row.id,
         source: row.source,
         contributor: row.contributor,
+        isFeedback: row.isFeedback,
+        stream: row.stream,
         rawContent: row.rawContent.length > 500 ? row.rawContent.slice(0, 500) + '...' : row.rawContent,
         summary: row.summary,
         type: row.type,
@@ -334,8 +406,17 @@ export async function buildSignalContext(): Promise<string> {
     .orderBy(desc(syntheses.createdAt))
     .limit(1)
 
+  const [industry] = await db
+    .select({ value: count() })
+    .from(inputs)
+    .where(eq(inputs.isFeedback, false))
+  const industryCount = industry?.value ?? 0
+
   if (!latest) {
-    return 'No synthesis has been run yet, so there are no signals to reference. Encourage the user to add feedback and run a synthesis from the dashboard.'
+    const base = 'No synthesis has been run yet, so there are no distilled signals to reference.'
+    return industryCount > 0
+      ? `${base} ${industryCount} industry/market input(s) have been captured — use get_intelligence_briefing or search_inputs(feedback="industry") to explore them.`
+      : `${base} Encourage the user to add feedback and run a synthesis from the dashboard.`
   }
 
   const topSignals = await db
@@ -351,18 +432,42 @@ export async function buildSignalContext(): Promise<string> {
     .orderBy(desc(signals.strength))
     .limit(8)
 
-  const header = `Latest synthesis run on ${new Date(latest.createdAt).toISOString().slice(0, 10)} — covered ${latest.inputCount} input(s) and produced ${latest.signalCount} signal(s) (trigger: ${latest.trigger}).`
+  const header = `Latest synthesis: ${new Date(latest.createdAt).toISOString().slice(0, 10)} — ${latest.inputCount} input(s), ${latest.signalCount} internal signal(s) (trigger: ${latest.trigger}); ${industryCount} industry/market input(s) captured overall.`
 
-  if (topSignals.length === 0) {
-    return `${header}\nNo signals were detected in this synthesis.`
+  const internalSection =
+    topSignals.length > 0
+      ? `INTERNAL PRODUCT SIGNALS (strongest first):\n${topSignals
+          .map(
+            (s) =>
+              `- [${s.id}] "${s.statement}" (strength ${s.strength}, status ${s.status}${
+                s.themes?.length ? `, themes: ${s.themes.join(', ')}` : ''
+              })`,
+          )
+          .join('\n')}`
+      : 'INTERNAL PRODUCT SIGNALS: none detected in this synthesis.'
+
+  const narrative = latest.digestMarkdown?.trim()
+  const distillSection = narrative
+    ? `INDUSTRY INTELLIGENCE / DISTILLATION (synthesis narrative — external trends & market context; call get_intelligence_briefing for the full briefing):\n${
+        narrative.length > 700 ? narrative.slice(0, 700) + '…' : narrative
+      }`
+    : 'INDUSTRY INTELLIGENCE / DISTILLATION: no narrative for this synthesis yet — use get_intelligence_briefing or search_inputs(feedback="industry") to explore market inputs.'
+
+  return `${header}\n\n${distillSection}\n\n${internalSection}`
+}
+
+/**
+ * Workspace identity from settings — used to personalize the assistant's
+ * framing (whose positioning to reason about) without hardcoding any tenant.
+ */
+export async function getWorkspaceProfile(): Promise<{ companyName?: string; productContext?: string }> {
+  const rows = await db
+    .select()
+    .from(settings)
+    .where(inArray(settings.key, ['company_name', 'product_context']))
+  const map = Object.fromEntries(rows.map((r) => [r.key, r.value]))
+  return {
+    companyName: map.company_name?.trim() || undefined,
+    productContext: map.product_context?.trim() || undefined,
   }
-
-  const lines = topSignals.map(
-    (s) =>
-      `- [${s.id}] "${s.statement}" (strength ${s.strength}, status ${s.status}${
-        s.themes?.length ? `, themes: ${s.themes.join(', ')}` : ''
-      })`,
-  )
-
-  return `${header}\nTop signals (strongest first):\n${lines.join('\n')}`
 }
