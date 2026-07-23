@@ -13,7 +13,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.86.1",
+    "@anthropic-ai/sdk": "^0.113.0",
     "@neondatabase/serverless": "^1.0.2",
     "@tailwindcss/typography": "^0.5.19",
     "@types/bcryptjs": "^2.4.6",
@@ -22,7 +22,7 @@
     "drizzle-orm": "^0.45.2",
     "isomorphic-dompurify": "^3.7.1",
     "marked": "^17.0.5",
-    "next": "16.2.3",
+    "next": "16.2.11",
     "openai": "^6.32.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -39,9 +39,18 @@
     "dotenv": "^17.3.1",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
-    "eslint-config-next": "16.2.1",
+    "eslint-config-next": "16.2.11",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.1"
+  },
+  "overrides": {
+    "postcss": "^8.5.10",
+    "next": {
+      "sharp": "^0.35.3"
+    },
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.25.12"
+    }
   }
 }
