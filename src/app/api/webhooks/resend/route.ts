@@ -7,10 +7,13 @@ import { inputs } from '@/lib/schema'
 import { structureInput } from '@/lib/structurer'
 import { AnthropicProvider } from '@/lib/providers/anthropic'
 
-const resend = new Resend(process.env.RESEND_API_KEY!)
-
 export async function POST(request: NextRequest) {
   try {
+    // Create the client per request, not at module load: the Resend
+    // constructor throws without an API key, which fails `next build` in any
+    // environment where RESEND_API_KEY is not set (e.g. Vercel previews).
+    const resend = new Resend(process.env.RESEND_API_KEY!)
+
     // CRITICAL: Use request.text() not request.json() — signature is over raw bytes
     const rawBody = await request.text()
 

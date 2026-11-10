@@ -36,6 +36,10 @@ export async function GET(request: NextRequest) {
           provider,
         )
 
+        // contentHash is the dedup key assigned at intake (for RSS it is the
+        // hash of the item URL). Leave it alone: rewriting it with a hash of
+        // the raw content collides on the unique index whenever two items
+        // share the same text, and the input then stays unprocessed forever.
         await db
           .update(inputs)
           .set({
@@ -44,7 +48,6 @@ export async function GET(request: NextRequest) {
             themes: structured.themes,
             urgency: structured.urgency,
             confidence: structured.confidence,
-            contentHash: structured.content_hash,
             isFeedback: structured.is_feedback,
             status: 'processed',
           })
