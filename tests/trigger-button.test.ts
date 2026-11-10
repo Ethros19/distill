@@ -39,6 +39,17 @@ describe('triggerSynthesis', () => {
     expect(result).toEqual({ ok: true })
   })
 
+  it('reports a skipped synthesis instead of treating it as a silent success', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ status: 'skipped', reason: 'no inputs in period', inputCount: 0 }),
+    })
+
+    const result = await triggerSynthesis()
+
+    expect(result).toEqual({ ok: true, skipped: true })
+  })
+
   it('returns ok: false with error message on API error', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
