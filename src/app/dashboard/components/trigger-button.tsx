@@ -6,11 +6,23 @@ import { PasteModal } from './paste-form'
 import { UrlModal } from './url-modal'
 import { SynthesisOverlay } from './synthesis-overlay'
 
-export async function triggerSynthesis(): Promise<{ ok: boolean; error?: string }> {
+const SKIPPED_NOTICE =
+  'Nothing to synthesize: no feedback inputs were processed in the last 7 days.'
+
+export async function triggerSynthesis(): Promise<{
+  ok: boolean
+  error?: string
+  skipped?: boolean
+}> {
   const res = await fetch('/api/synthesis', { method: 'POST' })
+  const data = await res.json().catch(() => ({}))
   if (!res.ok) {
-    const data = await res.json()
     return { ok: false, error: data.error ?? 'Synthesis failed' }
+  }
+  // The API answers 200 with status 'skipped' when there is nothing to
+  // synthesize. Surface that instead of silently doing nothing.
+  if (data.status === 'skipped') {
+    return { ok: true, skipped: true }
   }
   return { ok: true }
 }
@@ -18,16 +30,20 @@ export async function triggerSynthesis(): Promise<{ ok: boolean; error?: string 
 export function TriggerButton() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [urlModalOpen, setUrlModalOpen] = useState(false)
   const router = useRouter()
 
   async function handleClick() {
     setError('')
+    setNotice('')
     setLoading(true)
     try {
       const result = await triggerSynthesis()
-      if (result.ok) {
+      if (result.skipped) {
+        setNotice(SKIPPED_NOTICE)
+      } else if (result.ok) {
         router.refresh()
       } else {
         setError(result.error ?? 'Synthesis failed')
@@ -63,6 +79,11 @@ export function TriggerButton() {
         + Add Source
       </button>
       {error && <p className="text-sm text-sig-high">{error}</p>}
+      {notice && (
+        <p role="status" className="text-sm text-dim">
+          {notice}
+        </p>
+      )}
       <PasteModal open={modalOpen} onClose={() => setModalOpen(false)} />
       <UrlModal open={urlModalOpen} onClose={() => setUrlModalOpen(false)} />
       <SynthesisOverlay active={loading} />
